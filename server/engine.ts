@@ -402,9 +402,14 @@ function settleRound(state: GameState): void {
 
 function advanceAfterRescue(state: GameState): void {
   if (state.phase === "ACTIVE_RESCUE") {
+    if (!failingPatients(state).length) {
+      message(state, "ACTIVE_RESCUE", "ACTIVE_RESCUE_COMPLETE", "The active nutritionist brought every patient within the limit. Assistant rescue and patient mutual aid are skipped.");
+      settleRound(state);
+      return;
+    }
     state.phase = "ASSISTANT_RESCUE";
     const target = state.rescueTarget;
-    message(state, "ASSISTANT_RESCUE", "SUPPORT_CHOICE", !failingPatients(state).length ? "Both patients are within the limit. Assistant rescue is skipped." : target === null ? "The active nutritionist did not make a helpful swap. Assistant may choose either patient who is still over the limit." : `Active nutritionist chose Patient Seat ${target + 1}. Assistant may now choose either patient who is still over the limit.`);
+    message(state, "ASSISTANT_RESCUE", "SUPPORT_CHOICE", target === null ? "The active nutritionist did not make a helpful swap. At least one patient is still over the limit, so the assistant gets one rescue attempt and may choose either failing patient." : `Active nutritionist chose Patient Seat ${target + 1}, but at least one patient is still over the limit. The assistant now gets one rescue attempt and may choose either failing patient.`);
   } else if (state.phase === "ASSISTANT_RESCUE") {
     if (!failingPatients(state).length) settleRound(state);
     else {
@@ -420,9 +425,9 @@ export function runAiTurns(state: GameState): void {
     if (state.phase === "ACTIVE_RESCUE") {
       const actor = state.currentRoles.active;
       // Human players must never be left waiting for an impossible card choice.
-      // Both nutritionists get one independently chosen helpful swap before the garden.
+      // If active rescue cannot finish recovery, the assistant receives the next attempt.
       if (!legalRescues(state, actor).length) {
-        message(state, "ACTIVE_RESCUE", "RESCUE_SKIPPED_NO_HELPFUL_ACTION", "Active nutritionist has no helpful swap for either over-limit patient. The assistant phase will be skipped because no patient was chosen.");
+        message(state, "ACTIVE_RESCUE", "RESCUE_SKIPPED_NO_HELPFUL_ACTION", "Active nutritionist has no helpful swap for either over-limit patient. The assistant receives the next rescue attempt.");
         advanceAfterRescue(state);
         continue;
       }

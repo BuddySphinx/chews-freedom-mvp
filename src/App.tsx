@@ -78,7 +78,7 @@ function TurnFlow({ game }: { game: GameState }) {
   const step = currentStep(game);
   const items = [
     { label: `${NAMES[game.currentRoles.active]} · nutritionist`, note: "rescue" },
-    { label: `${NAMES[game.currentRoles.assistant]} · assistant`, note: "support" },
+    { label: `${NAMES[game.currentRoles.assistant]} · assistant`, note: "only if needed" },
     { label: `${NAMES[game.currentRoles.patient1]} + ${NAMES[game.currentRoles.patient2]}`, note: "patient aid" },
     { label: "Vegetable patch", note: "only if needed" }
   ];
@@ -364,7 +364,7 @@ export function App() {
       return hasFailingPatient ? `${NAMES[actor]} may choose either patient who is over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : `${roleFor(game, actor)} has no patient to rescue. The server will continue the round.`;
     }
     const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-    return hasFailingPatient ? `${NAMES[actor]} may independently choose either patient who is still over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : "Both patients are within the limit. The server will continue the round.";
+    return hasFailingPatient ? `The active nutritionist did not bring every patient within the limit. ${NAMES[actor]} gets one support rescue and may independently choose either patient who is still over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : "Both patients are within the limit. The server will continue the round.";
   }, [game]);
 
   if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;

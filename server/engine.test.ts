@@ -19,7 +19,7 @@ describe("Chews Freedom local prototype engine", () => {
     expect(strictTarget(game)).toBe(game.currentRoles.patient1);
   });
 
-  it("lets the active nutritionist choose the less-dangerous patient and keeps that choice for support", () => {
+  it("lets the active nutritionist choose the less-dangerous patient without limiting the assistant's later choice", () => {
     const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 20260717);
     const active = game.currentRoles.active;
     const [patient1, patient2] = [game.currentRoles.patient1, game.currentRoles.patient2];
@@ -33,6 +33,33 @@ describe("Chews Freedom local prototype engine", () => {
     expect(action).toBeDefined();
     command(game, { type: "RESCUE", expectedRevision: game.revision, actor: active, actorIndex: action!.actorIndex, target: action!.target, targetIndex: action!.patientIndex });
     expect(game.rescueTarget).toBe(lowerDangerPatient);
+  });
+
+  it("skips assistant and patient phases when the active nutritionist completes recovery", () => {
+    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 20260717);
+    const active = game.currentRoles.active;
+    const [patient1, patient2] = [game.currentRoles.patient1, game.currentRoles.patient2];
+    const total = (seat: number) => game.hands[seat].reduce((sum, card) => sum + card.value, 0);
+    const completion = legalRescues(game, active)
+      .map((action) => {
+        const before = total(action.target);
+        const after = before - game.hands[action.target][action.patientIndex].value + game.hands[active][action.actorIndex].value;
+        const otherPatient = action.target === patient1 ? patient2 : patient1;
+        return { action, before, after, otherTotal: total(otherPatient) };
+      })
+      .find(({ before, after, otherTotal }) => Math.max(after, otherTotal) < before);
+
+    expect(completion).toBeDefined();
+    const { action, after, otherTotal } = completion!;
+    game.threshold = Math.max(after, otherTotal);
+    const settledRound = game.round;
+
+    command(game, { type: "RESCUE", expectedRevision: game.revision, actor: active, actorIndex: action.actorIndex, target: action.target, targetIndex: action.patientIndex });
+
+    expect(game.log.some((entry) => entry.round === settledRound && entry.type === "ROUND_RESULT" && entry.message.includes("The nutritionists were amazing."))).toBe(true);
+    expect(game.log.some((entry) => entry.round === settledRound && entry.type === "ACTIVE_RESCUE_COMPLETE")).toBe(true);
+    expect(game.log.some((entry) => entry.round === settledRound && entry.type === "SUPPORT_CHOICE")).toBe(false);
+    expect(game.log.some((entry) => entry.round === settledRound && entry.type === "PATIENT_PHASE")).toBe(false);
   });
 
   it("ships the full enabled event-card pool rather than an events-disabled baseline", () => {
