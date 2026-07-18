@@ -21,6 +21,6 @@ python3 reference_simulator.py --self-test
 
 ## Public Vercel preview
 
-The Vercel deployment runs the same rules engine behind `/api/*` and uses polling rather than Socket.IO. It is intentionally an ephemeral shared demo table: a Vercel serverless cold start can reset the current game. For durable games or concurrent multiplayer, connect the API to a persistent store before a production release.
+The Vercel deployment runs the same rules engine behind `/api/*`. Each evaluator's game is saved in that browser and is sent with every command, so serverless cold starts do not erase a round or replace it with someone else's game. Clearing browser data or selecting **New game** starts over. This is an independent public prototype, not real-time shared multiplayer; durable rooms, invite codes, and simultaneous cross-device play still need a persistent database.
 
 Core rules and build decisions are documented in [CHEWS_FREEDOM_ENGLISH_PROJECT_GUIDE.md](./CHEWS_FREEDOM_ENGLISH_PROJECT_GUIDE.md).

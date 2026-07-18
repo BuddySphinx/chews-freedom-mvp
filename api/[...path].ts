@@ -18,9 +18,9 @@ type ApiRequest = IncomingMessage & {
 type CreatePayload = { controllers?: Controller[]; seed?: number };
 type CommandPayload = Parameters<typeof command>[1] & { game?: GameState };
 
-// Vercel may reuse an active Node.js function instance. This gives a group of
-// preview visitors one shared game without exposing a database credential in a
-// prototype. It is deliberately ephemeral: a cold start begins a new table.
+// A warm Vercel function can hold a first-request fallback game. The public
+// client remains authoritative for its own saved preview and sends that state
+// back with each command, so function cold starts cannot erase a player's game.
 declare global {
   // eslint-disable-next-line no-var
   var chewsFreedomPreviewGame: GameState | null | undefined;
