@@ -12,18 +12,36 @@ const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
 const NAMES = ["Rain", "Rice", "Joy", "Sail"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PORTRAITS = ["portrait-a", "portrait-b", "portrait-c", "portrait-d"];
-const FOOD: Record<number, { name: string; art: string; tone: string }> = {
-  0: { name: "Cucumber", art: "cucumber", tone: "leaf" },
-  1: { name: "Pear", art: "pear", tone: "sun" },
-  2: { name: "Banana", art: "banana", tone: "sun" },
-  3: { name: "Apple", art: "apple", tone: "rose" },
-  5: { name: "Potato", art: "potato", tone: "earth" },
-  7: { name: "Corn", art: "corn", tone: "sun" },
-  9: { name: "Cake", art: "cake", tone: "rose" }
+const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string }> = {
+  0: { name: "Garden greens", art: "cucumber", garnish: "cabbage", tone: "leaf" },
+  1: { name: "Orchard pear", art: "pear", garnish: "broccoli", tone: "sun" },
+  2: { name: "Banana plate", art: "banana", garnish: "pear", tone: "sun" },
+  3: { name: "Apple harvest", art: "apple", garnish: "carrot", tone: "rose" },
+  5: { name: "Roast potato", art: "potato", garnish: "broccoli", tone: "earth" },
+  7: { name: "Sweet corn", art: "corn", garnish: "cabbage", tone: "sun" },
+  9: { name: "Berry cake", art: "cake", garnish: "apple", tone: "rose" }
 };
 
 function ArtSprite({ id, className }: { id: string; className: string }) {
   return <svg className={className} aria-hidden="true" viewBox={id.startsWith("portrait") ? "0 0 90 130" : "0 0 64 64"}><use href={`${ART_SPRITE}#${id}`} /></svg>;
+}
+
+function FoodCardFace({ card }: { card: Card }) {
+  const food = card.source === "VEGETABLE_SUPPLY"
+    ? { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf" }
+    : FOOD[card.value] ?? FOOD[0];
+  return (
+    <>
+      <span className="food-card-header" aria-hidden="true"><span>Food card</span><span className="food-value">{card.value}</span></span>
+      <span className="food-illustration" aria-hidden="true">
+        <span className="food-plate" />
+        <ArtSprite className="food-icon food-garnish" id={food.garnish} />
+        <ArtSprite className="food-icon food-main" id={food.art} />
+      </span>
+      <span className="food-name">{food.name}</span>
+      <span className="food-card-caption" aria-hidden="true">freshly drawn</span>
+    </>
+  );
 }
 
 function roleFor(game: GameState, seat: number): string {
@@ -212,9 +230,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
               aria-pressed={cardIsSelected(index)}
               aria-label={`${FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
             >
-              <ArtSprite className="food-icon" id={card.source === "VEGETABLE_SUPPLY" ? "cabbage" : FOOD[card.value]?.art ?? "cabbage"} />
-              <span className="food-name">{card.source === "VEGETABLE_SUPPLY" ? "Garden veg" : FOOD[card.value]?.name}</span>
-              <strong>{card.value}</strong>
+              <FoodCardFace card={card} />
               {vegetableChoice && <span className="garden-replace-mark" aria-hidden="true">🥬 replace</span>}
             </button>
           );
