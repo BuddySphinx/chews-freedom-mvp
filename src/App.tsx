@@ -145,19 +145,20 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   const actor = currentActor(game);
   const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
   const isPatient = seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2;
+  const roleClass = isPatient ? "role-patient" : "role-care-team";
   const isTarget = target === seat;
   const cue = turnCue(game, seat);
   const rescueActorIsHuman = seat === actor && game.controllers[seat] === "HUMAN";
   const patientSwapChoice = game.phase === "PATIENT_SWAP" && isPatient && game.controllers[seat] === "HUMAN";
   const patientPosition = seat === game.currentRoles.patient1 ? 0 : 1;
   const chosenPatientCard = selectedPatientCards[patientPosition];
-  const cardIsSelected = (index: number) => (seat === actor && selectedActorCard === index) || (game.phase === "PATIENT_SWAP" && chosenPatientCard === index);
+  const cardIsSelected = (index: number) => (seat === actor && selectedActorCard === index) || (game.phase === "PATIENT_SWAP" && isPatient && chosenPatientCard === index);
   const handTotal = total(game.hands[seat]);
   const withinLimit = !isPatient || handTotal <= game.threshold;
   const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((card) => card.value)) : -1;
 
   return (
-    <article className={`seat-panel seat-${seat} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
+    <article className={`seat-panel seat-${seat} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div>
           <p className="seat-number">Seat {seat + 1}</p>
