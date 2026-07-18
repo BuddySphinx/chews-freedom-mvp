@@ -2,5 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/health", "destination": "/api/game?route=health" },
+    { "source": "/api/game/command", "destination": "/api/game?route=game/command" }
+  ]
 }

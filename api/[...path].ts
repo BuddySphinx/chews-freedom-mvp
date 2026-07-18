@@ -12,7 +12,7 @@ import {
 
 type ApiRequest = IncomingMessage & {
   body?: unknown;
-  query?: { path?: string | string[] };
+  query?: { path?: string | string[]; route?: string };
 };
 
 type CreatePayload = { controllers?: Controller[]; seed?: number };
@@ -33,6 +33,7 @@ function sendJson(response: ServerResponse, status: number, payload: unknown): v
 }
 
 function routeFor(request: ApiRequest): string {
+  if (request.query?.route) return request.query.route;
   const path = request.query?.path;
   if (Array.isArray(path)) return path.join("/");
   if (path) return path;

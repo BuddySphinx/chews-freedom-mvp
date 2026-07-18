@@ -44,6 +44,17 @@ function strictTarget(game: GameState): Seat | null {
 
 function total(hand: Card[]): number { return hand.reduce((sum, card) => sum + card.value, 0); }
 
+async function responsePayload(response: Response): Promise<{ game?: GameState | null; error?: string }> {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as { game?: GameState | null; error?: string };
+  } catch {
+    throw new Error(response.ok
+      ? "The game service sent an invalid response. Please reload and try again."
+      : `The game service returned ${response.status}. Please reload and try again.`);
+  }
+}
+
 interface SeatPanelProps {
   game: GameState;
   seat: Seat;
@@ -143,9 +154,10 @@ export function App() {
     const refresh = async (initial = false) => {
       try {
         const response = await fetch(`${SERVER_URL}/api/game`);
-        const data = await response.json();
+        const data = await responsePayload(response);
+        if (!response.ok) throw new Error(data.error ?? "The game service could not load the game.");
         if (cancelled) return;
-        setGame(data.game);
+        setGame(data.game ?? null);
         if (initial) setMessage(data.game ? "Restored the most recent game." : "Choose controllers and start a new game.");
       } catch {
         if (!cancelled) setMessage("The game service is not running yet. Start it with pnpm dev.");
@@ -171,8 +183,9 @@ export function App() {
     setLoading(true);
     try {
       const response = await fetch(`${SERVER_URL}/api/game/command`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
-      const data = await response.json();
+      const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Action rejected.");
+      if (!data.game) throw new Error("The game service did not return an updated game.");
       setGame(data.game); setMessage("Action accepted.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Action rejected."); }
     finally { setLoading(false); }
@@ -182,8 +195,9 @@ export function App() {
     setLoading(true);
     try {
       const response = await fetch(`${SERVER_URL}/api/game`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ controllers }) });
-      const data = await response.json();
+      const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Unable to start the game.");
+      if (!data.game) throw new Error("The game service did not return a new game.");
       setGame(data.game); setMessage("A new local game has started. Event cards are enabled.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start the game."); }
     finally { setLoading(false); }
