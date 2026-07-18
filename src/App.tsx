@@ -154,6 +154,13 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
   const isPatient = seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2;
   const roleClass = isPatient ? "role-patient" : "role-care-team";
+  const boardRole = seat === game.currentRoles.active
+    ? "board-active"
+    : seat === game.currentRoles.assistant
+      ? "board-assistant"
+      : seat === game.currentRoles.patient1
+        ? "board-patient-one"
+        : "board-patient-two";
   const isTarget = target === seat;
   const cue = turnCue(game, seat);
   const rescueActorIsHuman = seat === actor && game.controllers[seat] === "HUMAN";
@@ -166,7 +173,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((card) => card.value)) : -1;
 
   return (
-    <article className={`seat-panel seat-${seat} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
+    <article className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div>
           <p className="seat-number">Seat {seat + 1}</p>
@@ -398,11 +405,11 @@ export function App() {
             <p>{game.currentEvent?.summary ?? "The standard rules apply this round."}</p>
             <small>{game.eventPool.length} event cards remain in this game</small>
           </div>
-          <div className={`garden-panel ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><span>Vegetable field</span><GardenField tokens={game.gardenTokens} /><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest from the field: choose a highlighted patient card." : "Each cabbage replaces one food card with value 0."}</p></div>
           {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
           <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
         </aside>
         <section className="table-area" aria-label="Chews Freedom public game table">
+          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-value cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
           <TurnFlow game={game} />
           <div className="table-felt">
             {showRoundTransition && <RoundTransition game={game} />}
