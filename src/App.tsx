@@ -107,6 +107,14 @@ function RoundTransition({ game }: { game: GameState }) {
   );
 }
 
+function GardenField({ tokens }: { tokens: number }) {
+  return (
+    <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The vegetable field is empty" : `${tokens} cabbage plots are available for zero-value vegetable replacements`}>
+      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}>🥬</span>)}
+    </div>
+  );
+}
+
 async function responsePayload(response: Response): Promise<{ game?: GameState | null; error?: string }> {
   const body = await response.text();
   try {
@@ -390,7 +398,7 @@ export function App() {
             <p>{game.currentEvent?.summary ?? "The standard rules apply this round."}</p>
             <small>{game.eventPool.length} event cards remain in this game</small>
           </div>
-          <div className={`garden-panel ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><span>Garden supply</span><strong>{game.gardenTokens}</strong><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn: click a highlighted patient card to take one zero-value vegetable." : "Vegetables replace the highest remaining food with value 0 and never give points."}</p></div>
+          <div className={`garden-panel ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><span>Vegetable field</span><GardenField tokens={game.gardenTokens} /><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest from the field: choose a highlighted patient card." : "Each cabbage replaces one food card with value 0."}</p></div>
           {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
           <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
         </aside>
