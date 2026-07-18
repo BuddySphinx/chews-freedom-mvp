@@ -12,31 +12,61 @@ const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
 const NAMES = ["Rain", "Rice", "Joy", "Sail"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PORTRAITS = ["portrait-a", "portrait-b", "portrait-c", "portrait-d"];
-const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string }> = {
-  0: { name: "Garden greens", art: "cucumber", garnish: "cabbage", tone: "leaf" },
-  1: { name: "Orchard pear", art: "pear", garnish: "broccoli", tone: "sun" },
-  2: { name: "Banana plate", art: "banana", garnish: "pear", tone: "sun" },
-  3: { name: "Apple harvest", art: "apple", garnish: "carrot", tone: "rose" },
-  5: { name: "Roast potato", art: "potato", garnish: "broccoli", tone: "earth" },
-  7: { name: "Sweet corn", art: "corn", garnish: "cabbage", tone: "sun" },
-  9: { name: "Berry cake", art: "cake", garnish: "apple", tone: "rose" }
+const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string; dish: string }> = {
+  0: { name: "Herb tea", art: "cabbage", garnish: "cucumber", tone: "leaf", dish: "tea" },
+  1: { name: "Rice porridge", art: "pear", garnish: "broccoli", tone: "sun", dish: "porridge" },
+  2: { name: "Scrambled tofu", art: "corn", garnish: "carrot", tone: "sun", dish: "tofu" },
+  3: { name: "Lentil stew", art: "potato", garnish: "carrot", tone: "rose", dish: "stew" },
+  5: { name: "Bean & quinoa bowl", art: "broccoli", garnish: "apple", tone: "earth", dish: "quinoa" },
+  7: { name: "Chickpea curry", art: "corn", garnish: "cabbage", tone: "sun", dish: "curry" },
+  9: { name: "Nutty pasta", art: "cucumber", garnish: "carrot", tone: "rose", dish: "pasta" }
 };
 
 function ArtSprite({ id, className }: { id: string; className: string }) {
   return <svg className={className} aria-hidden="true" viewBox={id.startsWith("portrait") ? "0 0 90 130" : "0 0 64 64"}><use href={`${ART_SPRITE}#${id}`} /></svg>;
 }
 
+type FoodCardDetail = { name: string; art: string; garnish: string; tone: string; dish: string };
+
+function FoodDish({ food }: { food: FoodCardDetail }) {
+  const isTea = food.dish === "tea";
+  return (
+    <svg className={`food-dish food-dish-${food.dish}`} aria-hidden="true" viewBox="0 0 88 72">
+      <ellipse className="dish-shadow" cx="44" cy="61" rx="32" ry="5" />
+      {isTea ? (
+        <>
+          <path className="tea-steam" d="M31 11c-6 7 5 8-1 16M43 7c-6 7 5 8-1 16M55 12c-5 6 5 8 0 15" />
+          <path className="tea-cup" d="M22 30h42v22c0 8-7 12-21 12s-21-4-21-12z" />
+          <path className="tea-handle" d="M64 36c15-2 15 18 1 18" />
+          <ellipse className="tea-surface" cx="43" cy="31" rx="21" ry="6" />
+          <use href={`${ART_SPRITE}#${food.art}`} x="31" y="21" width="23" height="23" />
+        </>
+      ) : (
+        <>
+          <ellipse className="dish-plate-rim" cx="44" cy="54" rx="33" ry="12" />
+          <path className="dish-bowl" d="M16 43c3 17 11 23 28 23s25-6 28-23c-14 5-42 5-56 0z" />
+          <ellipse className="dish-food" cx="44" cy="43" rx="28" ry="10" />
+          <path className="dish-swirl" d="M25 43c7-7 13 5 20-1 7-6 12 5 19-1M28 48c6-5 11 4 17-1 7-5 11 4 17-1" />
+          <circle className="dish-speck dish-speck-one" cx="28" cy="40" r="2" />
+          <circle className="dish-speck dish-speck-two" cx="58" cy="44" r="2.5" />
+          <circle className="dish-speck dish-speck-three" cx="46" cy="37" r="1.7" />
+          <use className="dish-main-art" href={`${ART_SPRITE}#${food.art}`} x="28" y="19" width="32" height="32" />
+          <use className="dish-garnish-art" href={`${ART_SPRITE}#${food.garnish}`} x="54" y="30" width="20" height="20" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function FoodCardFace({ card }: { card: Card }) {
   const food = card.source === "VEGETABLE_SUPPLY"
-    ? { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf" }
+    ? { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf", dish: "greens" }
     : FOOD[card.value] ?? FOOD[0];
   return (
     <>
       <span className="food-card-header" aria-hidden="true"><span>Food card</span><span className="food-value">{card.value}</span></span>
       <span className="food-illustration" aria-hidden="true">
-        <span className="food-plate" />
-        <ArtSprite className="food-icon food-garnish" id={food.garnish} />
-        <ArtSprite className="food-icon food-main" id={food.art} />
+        <FoodDish food={food} />
       </span>
       <span className="food-name">{food.name}</span>
       <span className="food-card-caption" aria-hidden="true">freshly drawn</span>
