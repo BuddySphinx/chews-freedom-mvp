@@ -16,6 +16,7 @@ type ApiRequest = IncomingMessage & {
 };
 
 type CreatePayload = { controllers?: Controller[]; seed?: number };
+type CommandPayload = Parameters<typeof command>[1] & { game?: GameState };
 
 // Vercel may reuse an active Node.js function instance. This gives a group of
 // preview visitors one shared game without exposing a database credential in a
@@ -76,8 +77,16 @@ export default async function handler(request: ApiRequest, response: ServerRespo
     }
 
     if (route === "game/command" && request.method === "POST") {
+      const payload = payloadFor(request) as CommandPayload;
+      if (payload.game) {
+        validateState(payload.game);
+        payload.game.rulesVersion = LOCAL_RULES_VERSION;
+        payload.game.rescueTarget ??= null;
+        payload.game.lastRoundOutcome ??= null;
+        globalThis.chewsFreedomPreviewGame = payload.game;
+      }
       const game = currentGame();
-      command(game, payloadFor(request) as Parameters<typeof command>[1]);
+      command(game, payload);
       validateState(game);
       sendJson(response, 200, { game: view() });
       return;

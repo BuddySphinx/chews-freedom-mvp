@@ -7,6 +7,8 @@ import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 const isLocalVite = window.location.hostname === "127.0.0.1" && window.location.port === "5173";
 const SERVER_URL = isLocalVite ? "http://127.0.0.1:5174" : window.location.origin;
 const supportsSocketUpdates = isLocalVite || window.location.port === "5174";
+const usesBrowserGameSave = !supportsSocketUpdates;
+const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
 const NAMES = ["Rain", "Rice", "Joy", "Sail"];
 const FOOD: Record<number, { name: string; icon: string; tone: string }> = {
   0: { name: "Cucumber", icon: "🥒", tone: "leaf" },
@@ -116,6 +118,21 @@ async function responsePayload(response: Response): Promise<{ game?: GameState |
   }
 }
 
+function savedBrowserGame(): GameState | null {
+  if (!usesBrowserGameSave) return null;
+  try {
+    const raw = window.localStorage.getItem(BROWSER_GAME_KEY);
+    return raw ? JSON.parse(raw) as GameState : null;
+  } catch {
+    window.localStorage.removeItem(BROWSER_GAME_KEY);
+    return null;
+  }
+}
+
+function saveBrowserGame(game: GameState): void {
+  if (usesBrowserGameSave) window.localStorage.setItem(BROWSER_GAME_KEY, JSON.stringify(game));
+}
+
 interface SeatPanelProps {
   game: GameState;
   seat: Seat;
@@ -220,6 +237,14 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     const refresh = async (initial = false) => {
+      const saved = savedBrowserGame();
+      if (saved) {
+        if (!cancelled) {
+          setGame(saved);
+          if (initial) setMessage("Restored this browser's saved game.");
+        }
+        return;
+      }
       try {
         const response = await fetch(`${SERVER_URL}/api/game`);
         const data = await responsePayload(response);
@@ -232,6 +257,10 @@ export function App() {
       }
     };
     void refresh(true);
+
+    // A public Vercel preview is browser-owned. Polling a serverless function
+    // could replace this evaluator's table with another warm function instance.
+    if (usesBrowserGameSave) return () => { cancelled = true; };
 
     if (supportsSocketUpdates) {
       const socket = io(SERVER_URL);
@@ -250,11 +279,11 @@ export function App() {
   const send = async (input: Command) => {
     setLoading(true);
     try {
-      const response = await fetch(`${SERVER_URL}/api/game/command`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+      const response = await fetch(`${SERVER_URL}/api/game/command`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(usesBrowserGameSave ? { ...input, game } : input) });
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Action rejected.");
       if (!data.game) throw new Error("The game service did not return an updated game.");
-      setGame(data.game); setMessage("Action accepted.");
+      saveBrowserGame(data.game); setGame(data.game); setMessage("Action accepted.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Action rejected."); }
     finally { setLoading(false); }
   };
@@ -266,7 +295,7 @@ export function App() {
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Unable to start the game.");
       if (!data.game) throw new Error("The game service did not return a new game.");
-      setGame(data.game); setShowSetup(false); setMessage("A new game has started. Event cards are enabled.");
+      saveBrowserGame(data.game); setGame(data.game); setShowSetup(false); setMessage("A new game has started. Event cards are enabled.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start the game."); }
     finally { setLoading(false); }
   };
@@ -350,7 +379,7 @@ export function App() {
     <main className="app-shell">
       <header className="app-header">
         <a className="wordmark" href="/" aria-label="Chews Freedom home"><span className="wordmark-leaf">✦</span><span>Chews Freedom</span></a>
-        <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
+        <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY); setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
       </header>
       <section className="game-layout">
         <aside className="left-rail">
