@@ -10,15 +10,21 @@ const supportsSocketUpdates = isLocalVite || window.location.port === "5174";
 const usesBrowserGameSave = !supportsSocketUpdates;
 const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
 const NAMES = ["Rain", "Rice", "Joy", "Sail"];
-const FOOD: Record<number, { name: string; icon: string; tone: string }> = {
-  0: { name: "Cucumber", icon: "🥒", tone: "leaf" },
-  1: { name: "Pear", icon: "🍐", tone: "sun" },
-  2: { name: "Banana", icon: "🍌", tone: "sun" },
-  3: { name: "Apple", icon: "🍎", tone: "rose" },
-  5: { name: "Potato", icon: "🥔", tone: "earth" },
-  7: { name: "Corn", icon: "🌽", tone: "sun" },
-  9: { name: "Cake", icon: "🍰", tone: "rose" }
+const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
+const PORTRAITS = ["portrait-a", "portrait-b", "portrait-c", "portrait-d"];
+const FOOD: Record<number, { name: string; art: string; tone: string }> = {
+  0: { name: "Cucumber", art: "cucumber", tone: "leaf" },
+  1: { name: "Pear", art: "pear", tone: "sun" },
+  2: { name: "Banana", art: "banana", tone: "sun" },
+  3: { name: "Apple", art: "apple", tone: "rose" },
+  5: { name: "Potato", art: "potato", tone: "earth" },
+  7: { name: "Corn", art: "corn", tone: "sun" },
+  9: { name: "Cake", art: "cake", tone: "rose" }
 };
+
+function ArtSprite({ id, className }: { id: string; className: string }) {
+  return <svg className={className} aria-hidden="true" viewBox={id.startsWith("portrait") ? "0 0 90 130" : "0 0 64 64"}><use href={`${ART_SPRITE}#${id}`} /></svg>;
+}
 
 function roleFor(game: GameState, seat: number): string {
   if (game.currentRoles.active === seat) return "Active nutritionist";
@@ -110,7 +116,7 @@ function RoundTransition({ game }: { game: GameState }) {
 function GardenField({ tokens }: { tokens: number }) {
   return (
     <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The vegetable field is empty" : `${tokens} cabbage plots are available for zero-value vegetable replacements`}>
-      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}>🥬</span>)}
+      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}><ArtSprite className="garden-crop-art" id="cabbage" /></span>)}
     </div>
   );
 }
@@ -175,11 +181,14 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   return (
     <article className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
-        <div>
-          <p className="seat-number">Seat {seat + 1}</p>
-          <h3>{NAMES[seat]}</h3>
-          <span className="role-label">{roleFor(game, seat)}</span>
-          {cue && <span className={`turn-cue ${cue.current ? "current" : ""}`}>{cue.label}</span>}
+        <div className="seat-identity">
+          <ArtSprite className="portrait-token" id={PORTRAITS[seat]} />
+          <div>
+            <p className="seat-number">Seat {seat + 1}</p>
+            <h3>{NAMES[seat]}</h3>
+            <span className="role-label">{roleFor(game, seat)}</span>
+            {cue && <span className={`turn-cue ${cue.current ? "current" : ""}`}>{cue.label}</span>}
+          </div>
         </div>
         <div className={`control-badge ${game.controllers[seat] === "AI" ? "ai" : "human"}`}>{game.controllers[seat] === "AI" ? "AI" : "Human"}</div>
       </div>
@@ -203,7 +212,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
               aria-pressed={cardIsSelected(index)}
               aria-label={`${FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
             >
-              <span className="food-icon">{card.source === "VEGETABLE_SUPPLY" ? "🥬" : FOOD[card.value]?.icon}</span>
+              <ArtSprite className="food-icon" id={card.source === "VEGETABLE_SUPPLY" ? "cabbage" : FOOD[card.value]?.art ?? "cabbage"} />
               <span className="food-name">{card.source === "VEGETABLE_SUPPLY" ? "Garden veg" : FOOD[card.value]?.name}</span>
               <strong>{card.value}</strong>
               {vegetableChoice && <span className="garden-replace-mark" aria-hidden="true">🥬 replace</span>}
