@@ -143,6 +143,7 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
 
 export function App() {
   const [game, setGame] = useState<GameState | null>(null);
+  const [showSetup, setShowSetup] = useState(false);
   const [controllers, setControllers] = useState<Controller[]>(["HUMAN", "HUMAN", "HUMAN", "HUMAN"]);
   const [message, setMessage] = useState("Loading the local game service...");
   const [loading, setLoading] = useState(false);
@@ -198,7 +199,7 @@ export function App() {
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Unable to start the game.");
       if (!data.game) throw new Error("The game service did not return a new game.");
-      setGame(data.game); setMessage("A new local game has started. Event cards are enabled.");
+      setGame(data.game); setShowSetup(false); setMessage("A new game has started. Event cards are enabled.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start the game."); }
     finally { setLoading(false); }
   };
@@ -239,7 +240,7 @@ export function App() {
     return hasFailingPatient ? `${NAMES[actor]} may independently choose either patient who is still over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : "Both patients are within the limit. The server will continue the round.";
   }, [game]);
 
-  if (!game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
+  if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
 
   const actor = currentActor(game);
   const canSubmitPatientSwap = selectedPatientCards[0] !== null && selectedPatientCards[1] !== null;
@@ -249,7 +250,7 @@ export function App() {
     <main className="app-shell">
       <header className="app-header">
         <a className="wordmark" href="/" aria-label="Chews Freedom home"><span className="wordmark-leaf">✦</span><span>Chews Freedom</span></a>
-        <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { setGame(null); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
+        <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
       </header>
       <section className="game-layout">
         <aside className="left-rail">
