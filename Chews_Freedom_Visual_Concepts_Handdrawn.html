@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chews Freedom - Warm Hand-drawn Concepts</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --display: "Kaiti SC", "STKaiti", "FZKai-Z03", "PingFang SC", sans-serif;
+        --body: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html { background: #6f675f; }
+      body { margin: 0; color: var(--ink); background: #6f675f; font-family: var(--body); }
+
+      .svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+      .concept {
+        --paper: #f4eee5;
+        --paper-bright: #fbf7ef;
+        --paper-deep: #ded2c3;
+        --ink: #383a35;
+        --ink-soft: #655f57;
+        --wall: #ddd0c1;
+        --wall-deep: #baa99a;
+        --floor: #9d806c;
+        --floor-dark: #745b4d;
+        --wood: #a97b5f;
+        --wood-deep: #745441;
+        --sage: #7f9278;
+        --blue: #7f959b;
+        --accent: #c87567;
+        --sun: #e5c987;
+        --shadow: rgba(63, 49, 40, 0.27);
+        position: relative;
+        width: min(100%, 1440px);
+        min-height: 900px;
+        margin: 0 auto 32px;
+        overflow: hidden;
+        isolation: isolate;
+        background: var(--paper);
+      }
+
+      .theme-b {
+        --paper: #eee6da;
+        --paper-bright: #f8f1e5;
+        --paper-deep: #cfc0ac;
+        --ink: #292d2a;
+        --ink-soft: #5d5a51;
+        --wall: #8a887f;
+        --wall-deep: #646963;
+        --floor: #746353;
+        --floor-dark: #4d4138;
+        --wood: #9a6f52;
+        --wood-deep: #654837;
+        --sage: #74846d;
+        --blue: #687f85;
+        --accent: #cd7562;
+        --sun: #efc875;
+        --shadow: rgba(31, 31, 27, 0.36);
+      }
+
+      .theme-c {
+        --paper: #f6f0e6;
+        --paper-bright: #fcf8ef;
+        --paper-deep: #ddcfbc;
+        --ink: #47423a;
+        --ink-soft: #686158;
+        --wall: #ced7c7;
+        --wall-deep: #aab9a4;
+        --floor: #aa8d73;
+        --floor-dark: #806653;
+        --wood: #a77d61;
+        --wood-deep: #765744;
+        --sage: #829878;
+        --blue: #829aa3;
+        --accent: #c97a6c;
+        --sun: #e7cc91;
+        --shadow: rgba(69, 55, 43, 0.25);
+      }
+
+      .scene { position: absolute; inset: 0; z-index: -4; overflow: hidden; pointer-events: none; }
+      .wall {
+        position: absolute;
+        inset: 0 0 33%;
+        background:
+          radial-gradient(circle at 70% 10%, rgba(255,255,255,0.36), transparent 32%),
+          linear-gradient(168deg, var(--wall), var(--wall-deep));
+      }
+
+      .wall::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.22;
+        background:
+          repeating-linear-gradient(4deg, transparent 0 10px, rgba(56,58,53,0.08) 11px 12px),
+          repeating-linear-gradient(94deg, transparent 0 37px, rgba(255,255,255,0.1) 38px 39px);
+      }
+
+      .floor {
+        position: absolute;
+        right: -7%;
+        bottom: -12%;
+        left: -7%;
+        height: 49%;
+        transform: perspective(900px) rotateX(58deg);
+        transform-origin: bottom;
+        border-top: 4px double var(--ink);
+        background:
+          repeating-linear-gradient(94deg, transparent 0 120px, rgba(47,47,42,0.22) 122px 125px),
+          repeating-linear-gradient(2deg, transparent 0 29px, rgba(255,255,255,0.08) 30px 32px),
+          linear-gradient(180deg, var(--floor), var(--floor-dark));
+        box-shadow: inset 0 22px 32px rgba(50,40,34,0.18);
+      }
+
+      .paper-grain {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        width: 100%;
+        height: 100%;
+        opacity: 0.11;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .window {
+        position: absolute;
+        top: 118px;
+        left: 70px;
+        width: 332px;
+        height: 208px;
+        transform: rotate(-0.6deg);
+        border: 4px solid var(--ink);
+        border-radius: 46% 54% 48% 52% / 52% 47% 53% 48%;
+        background:
+          linear-gradient(17deg, transparent 0 70%, rgba(255,255,255,0.24) 71% 74%, transparent 75%),
+          linear-gradient(180deg, var(--blue), #c8d0c2 68%, var(--sage) 69%);
+        box-shadow: 5px 7px 0 rgba(56,58,53,0.15), inset 0 0 0 5px rgba(244,238,229,0.62);
+      }
+
+      .window::before,
+      .window::after {
+        content: "";
+        position: absolute;
+        background: var(--ink);
+      }
+
+      .window::before { top: 0; bottom: 0; left: calc(50% - 2px); width: 4px; transform: rotate(1.2deg); }
+      .window::after { top: calc(51% - 2px); right: 0; left: 0; height: 4px; transform: rotate(-0.8deg); }
+
+      .curtain {
+        position: absolute;
+        top: 92px;
+        left: 45px;
+        width: 80px;
+        height: 268px;
+        transform: rotate(1deg);
+        border: 3px solid var(--ink);
+        border-radius: 35% 14% 42% 18% / 8% 12% 15% 9%;
+        background:
+          repeating-linear-gradient(86deg, rgba(255,255,255,0.2) 0 11px, rgba(83,105,96,0.12) 12px 20px),
+          var(--sage);
+        box-shadow: 5px 8px 0 rgba(57,50,43,0.16);
+      }
+
+      .curtain.right { left: 350px; transform: scaleX(-1) rotate(1deg); }
+      .shelf {
+        position: absolute;
+        top: 133px;
+        right: 66px;
+        width: 295px;
+        height: 185px;
+        transform: rotate(0.8deg);
+        border: 4px solid var(--ink);
+        border-radius: 13px 17px 12px 16px;
+        background:
+          linear-gradient(90deg, transparent 32%, var(--ink) 33% 34%, transparent 35% 66%, var(--ink) 67% 68%, transparent 69%),
+          linear-gradient(180deg, transparent 48%, var(--ink) 49% 51%, transparent 52%),
+          var(--wood);
+        box-shadow: 8px 9px 0 var(--shadow), inset 5px 4px 0 rgba(255,255,255,0.1);
+      }
+
+      .jar {
+        position: absolute;
+        top: 163px;
+        right: 271px;
+        width: 37px;
+        height: 61px;
+        transform: rotate(-3deg);
+        border: 3px solid var(--ink);
+        border-radius: 9px 9px 16px 14px;
+        background: var(--paper-bright);
+        box-shadow: 68px 8px 0 -2px var(--sage), 138px -3px 0 -1px var(--blue);
+      }
+
+      .plant {
+        position: absolute;
+        right: 375px;
+        bottom: 238px;
+        width: 102px;
+        height: 162px;
+      }
+
+      .plant::before {
+        content: "";
+        position: absolute;
+        right: 24px;
+        bottom: 51px;
+        width: 52px;
+        height: 94px;
+        transform: rotate(13deg);
+        border: 3px solid var(--ink);
+        border-radius: 78% 17% 73% 22%;
+        background: var(--sage);
+        box-shadow: -31px 20px 0 -2px #99a685, 24px 24px 0 -2px #657f69;
+      }
+
+      .plant::after {
+        content: "";
+        position: absolute;
+        right: 7px;
+        bottom: 0;
+        width: 88px;
+        height: 65px;
+        transform: rotate(-1deg);
+        border: 4px solid var(--ink);
+        border-radius: 12px 15px 28px 24px;
+        background: var(--accent);
+        box-shadow: 5px 7px 0 var(--shadow), inset 5px 4px 0 rgba(255,255,255,0.14);
+      }
+
+      .lamp {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        width: 4px;
+        height: 130px;
+        transform-origin: top;
+        background: var(--ink);
+      }
+
+      .lamp::before {
+        content: "";
+        position: absolute;
+        left: -78px;
+        bottom: -45px;
+        width: 160px;
+        height: 70px;
+        transform: rotate(-1deg);
+        border: 4px solid var(--ink);
+        border-radius: 74% 68% 19% 21% / 78% 77% 24% 24%;
+        background: var(--sun);
+        box-shadow: 5px 7px 0 var(--shadow), inset 0 -12px 0 rgba(85,62,45,0.12);
+      }
+
+      .lamp::after {
+        content: "";
+        position: absolute;
+        left: -190px;
+        top: 102px;
+        width: 384px;
+        height: 280px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse, rgba(255,229,165,0.44), transparent 68%);
+      }
+
+      .theme-b .window {
+        background:
+          radial-gradient(circle at 70% 24%, #e7d8ae 0 8px, transparent 9px),
+          linear-gradient(180deg, #53686d, #829399 65%, #626f62 66%);
+      }
+
+      .theme-b .wall::after { opacity: 0.3; }
+      .theme-c .wall::before {
+        content: "";
+        position: absolute;
+        top: 60px;
+        left: 440px;
+        width: 420px;
+        height: 290px;
+        border-radius: 48%;
+        background: radial-gradient(ellipse, rgba(255,250,231,0.28), transparent 70%);
+      }
+
+      .topbar {
+        position: absolute;
+        top: 25px;
+        right: 38px;
+        left: 38px;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: start;
+        gap: 22px;
+      }
+
+      .brand-sign,
+      .round-note,
+      .event-note,
+      .concept-note,
+      .garden-note {
+        position: relative;
+        border: 3px solid var(--ink);
+        color: var(--ink);
+        background: var(--paper-bright);
+        box-shadow: 5px 6px 0 var(--shadow);
+      }
+
+      .brand-sign {
+        justify-self: start;
+        min-width: 270px;
+        padding: 12px 20px 13px 58px;
+        transform: rotate(-0.6deg);
+        border-radius: 13px 17px 12px 16px;
+      }
+
+      .brand-sign::before {
+        content: "L";
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        transform: rotate(-5deg);
+        border: 3px solid var(--ink);
+        border-radius: 48% 52% 44% 56%;
+        color: var(--paper-bright);
+        background: var(--sage);
+        font: 700 18px/1 var(--display);
+      }
+
+      .brand-sign strong { display: block; font: 700 20px/1 var(--display); letter-spacing: 0.02em; }
+      .brand-sign small { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; }
+
+      .round-note {
+        justify-self: center;
+        padding: 10px 17px;
+        transform: rotate(0.5deg);
+        border-radius: 44% 56% 48% 52% / 55% 48% 52% 45%;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .round-note b { color: var(--accent); font: 800 18px/1 var(--display); }
+      .event-note {
+        justify-self: end;
+        min-width: 310px;
+        padding: 11px 15px 12px 60px;
+        transform: rotate(0.8deg);
+        border-radius: 16px 12px 17px 13px;
+      }
+
+      .event-note::before {
+        content: attr(data-glyph);
+        position: absolute;
+        top: 8px;
+        left: 11px;
+        display: grid;
+        place-items: center;
+        width: 39px;
+        height: 39px;
+        transform: rotate(-4deg);
+        border: 3px solid var(--ink);
+        border-radius: 52% 48% 55% 45%;
+        color: var(--paper-bright);
+        background: var(--blue);
+        font: 700 17px/1 var(--display);
+      }
+
+      .event-note::after {
+        content: "";
+        position: absolute;
+        top: -9px;
+        left: 49%;
+        width: 52px;
+        height: 18px;
+        transform: rotate(-2deg);
+        background: rgba(225,204,160,0.72);
+        box-shadow: inset 0 0 0 1px rgba(91,73,54,0.12);
+      }
+
+      .event-note strong { display: block; font: 700 15px/1.2 var(--display); }
+      .event-note span { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 10px; }
+
+      .table {
+        position: absolute;
+        top: 184px;
+        left: 50%;
+        width: 1010px;
+        height: 610px;
+        transform: translateX(-50%) rotate(-0.3deg);
+        border: 5px solid var(--ink);
+        border-radius: 50% 47% 51% 49% / 47% 53% 49% 51%;
+        background:
+          repeating-radial-gradient(ellipse at 46% 43%, transparent 0 42px, rgba(58,49,40,0.08) 44px 46px),
+          linear-gradient(155deg, rgba(255,255,255,0.13), transparent 25%),
+          var(--wood);
+        box-shadow:
+          0 30px 0 -12px var(--wood-deep),
+          0 54px 45px var(--shadow),
+          inset 7px 6px 0 rgba(255,255,255,0.1);
+      }
+
+      .table::before {
+        content: "";
+        position: absolute;
+        inset: 18px 24px 22px 19px;
+        transform: rotate(0.6deg);
+        border: 2px solid rgba(56,58,53,0.55);
+        border-radius: inherit;
+      }
+
+      .table::after {
+        content: "";
+        position: absolute;
+        right: 15%;
+        bottom: 18%;
+        left: 13%;
+        height: 22%;
+        border-radius: 50%;
+        background: rgba(65,43,34,0.08);
+        filter: blur(12px);
+      }
+
+      .focus-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 7;
+        width: 230px;
+        height: 186px;
+        transform: translate(-50%, -50%) rotate(1.2deg);
+        border: 4px solid var(--ink);
+        border-radius: 17px 13px 20px 14px;
+        background:
+          repeating-linear-gradient(-7deg, transparent 0 15px, rgba(63,65,60,0.035) 16px 17px),
+          var(--paper-bright);
+        box-shadow: 7px 8px 0 var(--shadow), inset 4px 4px 0 rgba(255,255,255,0.42);
+        text-align: center;
+      }
+
+      .focus-card::before {
+        content: "";
+        position: absolute;
+        inset: 9px;
+        transform: rotate(-1deg);
+        border: 2px dashed rgba(56,58,53,0.35);
+        border-radius: 12px 9px 15px 10px;
+      }
+
+      .focus-card .label { position: relative; margin-top: 28px; color: var(--ink-soft); font-size: 11px; }
+      .focus-card .score { position: relative; margin: 6px 0 5px; font: 800 47px/1 var(--display); letter-spacing: -0.07em; }
+      .focus-card .hint { position: relative; color: var(--accent); font: 700 13px/1.3 var(--display); }
+      .focus-card .scribble { position: relative; width: 115px; height: 6px; margin: 9px auto 0; border-top: 2px solid var(--accent); border-radius: 50%; transform: rotate(-2deg); }
+
+      .seat { position: absolute; z-index: 10; width: 266px; text-align: center; }
+      .seat.top { top: 140px; left: 50%; transform: translateX(-50%) rotate(-0.4deg); }
+      .seat.bottom { bottom: 32px; left: 50%; transform: translateX(-50%) rotate(0.5deg); }
+      .seat.left { top: 417px; left: 22px; transform: translateY(-50%) rotate(-0.7deg); }
+      .seat.right { top: 417px; right: 22px; transform: translateY(-50%) rotate(0.6deg); }
+
+      .seat-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 7px;
+        padding: 6px 11px 7px;
+        border: 3px solid var(--ink);
+        border-radius: 12px 9px 13px 10px;
+        background: var(--paper-bright);
+        box-shadow: 3px 4px 0 var(--shadow);
+        font: 700 13px/1 var(--display);
+      }
+
+      .seat-label span { color: var(--sage); font: 700 10px/1 var(--body); }
+      .plate {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 108px;
+        border: 4px solid var(--ink);
+        border-radius: 48% 52% 46% 54% / 51% 48% 52% 49%;
+        background:
+          repeating-linear-gradient(3deg, transparent 0 12px, rgba(58,58,53,0.035) 13px 14px),
+          var(--paper-deep);
+        box-shadow: 6px 8px 0 var(--shadow), inset 4px 4px 0 rgba(255,255,255,0.22);
+      }
+
+      .plate::before {
+        content: "";
+        position: absolute;
+        inset: 11px 13px 10px 12px;
+        transform: rotate(0.7deg);
+        border: 2px solid rgba(56,58,53,0.25);
+        border-radius: inherit;
+      }
+
+      .food-art {
+        position: relative;
+        z-index: 3;
+        width: 62px;
+        height: 62px;
+        transform: rotate(var(--turn, 0deg));
+        filter: drop-shadow(4px 6px 0 rgba(58,46,38,0.18));
+        transition: transform 180ms ease, filter 180ms ease;
+      }
+
+      .food-art svg { display: block; width: 100%; height: 100%; overflow: visible; }
+      .food-art .food-shape { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+      .food-art .hatch { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; opacity: 0.42; vector-effect: non-scaling-stroke; }
+      .food-art:hover { transform: rotate(0deg) translateY(-7px) scale(1.06); filter: drop-shadow(5px 10px 0 rgba(58,46,38,0.2)); }
+
+      .value-chip {
+        position: absolute;
+        right: 19px;
+        bottom: -13px;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        width: 39px;
+        height: 39px;
+        transform: rotate(-4deg);
+        border: 3px solid var(--ink);
+        border-radius: 48% 52% 45% 55%;
+        color: var(--paper-bright);
+        background: var(--ink);
+        box-shadow: 3px 4px 0 var(--shadow);
+        font: 800 16px/1 var(--display);
+      }
+
+      .seat-copy { margin-top: 9px; color: var(--ink); font-size: 11px; font-weight: 650; text-shadow: 0 1px var(--paper-bright); }
+      .seat-copy strong { color: var(--accent); font: 800 16px/1 var(--display); }
+
+      .garden-note {
+        position: absolute;
+        bottom: 24px;
+        left: 27px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 14px 10px;
+        transform: rotate(0.8deg);
+        border-radius: 12px 9px 14px 10px;
+        font-size: 11px;
+      }
+
+      .garden-note b { color: var(--sage); font: 800 18px/1 var(--display); }
+      .garden-note .leaf-row { color: var(--sage); font: 800 15px/1 var(--display); letter-spacing: 3px; }
+      .concept-note {
+        position: absolute;
+        right: 26px;
+        bottom: 23px;
+        z-index: 20;
+        width: 340px;
+        padding: 10px 13px 11px;
+        transform: rotate(-0.5deg);
+        border-radius: 11px 14px 10px 13px;
+        color: var(--ink-soft);
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .concept-note strong { color: var(--accent); font-family: var(--display); font-size: 14px; }
+
+      @keyframes settle-in {
+        from { opacity: 0; transform: translateY(13px) rotate(1deg); }
+        to { opacity: 1; }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .event-note { animation: settle-in 480ms cubic-bezier(.2,.8,.2,1) both; }
+        .seat { animation: settle-in 540ms cubic-bezier(.2,.8,.2,1) both; }
+        .seat:nth-of-type(2) { animation-delay: 60ms; }
+        .seat:nth-of-type(3) { animation-delay: 120ms; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      }
+
+      @media (max-width: 900px) {
+        body { background: var(--paper); }
+        .concept { min-height: 1120px; margin-bottom: 12px; }
+        .topbar { top: 13px; right: 13px; left: 13px; grid-template-columns: 1fr auto; gap: 8px; }
+        .brand-sign { min-width: 0; padding-right: 12px; }
+        .round-note { grid-column: 1 / -1; grid-row: 2; }
+        .event-note { min-width: 0; width: 185px; padding-right: 8px; padding-left: 47px; }
+        .event-note::before { width: 31px; height: 31px; font-size: 14px; }
+        .event-note::after { display: none; }
+        .window { top: 153px; left: 19px; width: 228px; height: 145px; opacity: 0.75; }
+        .curtain { top: 137px; left: 7px; width: 57px; height: 188px; opacity: 0.75; }
+        .curtain.right { left: 217px; }
+        .shelf, .jar, .plant, .lamp { opacity: 0.52; }
+        .table { top: 257px; width: 700px; height: 590px; }
+        .seat { width: 205px; }
+        .seat.top { top: 223px; }
+        .seat.bottom { bottom: 98px; }
+        .seat.left { top: 567px; left: 3px; }
+        .seat.right { top: 567px; right: 3px; }
+        .plate { height: 94px; gap: 2px; }
+        .food-art { width: 48px; height: 48px; }
+        .focus-card { top: 548px; width: 183px; height: 158px; }
+        .focus-card .label { margin-top: 23px; }
+        .focus-card .score { font-size: 37px; }
+        .garden-note { bottom: 70px; left: 13px; }
+        .concept-note { right: 13px; bottom: 11px; left: 13px; width: auto; }
+      }
+
+      /* D: a scene-first composition with deliberately irregular staging. */
+      .artful {
+        --paper: #eee4d5;
+        --paper-bright: #faf1e2;
+        --ink: #302f2a;
+        --ink-soft: #5f574c;
+        --wood: #9e6f50;
+        --wood-deep: #654532;
+        --sage: #76866b;
+        --blue: #748b8c;
+        --accent: #c76d5b;
+        --sun: #e2bd72;
+        --shadow: rgba(42, 35, 29, 0.34);
+        background: #a89277;
+      }
+
+      .art-scene,
+      .art-table,
+      .art-arrows {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .art-scene { z-index: -2; }
+      .art-table { z-index: 1; }
+      .art-arrows { z-index: 8; }
+      .art-scene .ink,
+      .art-table .ink,
+      .art-arrows .ink {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .art-scene .thin,
+      .art-table .thin,
+      .art-arrows .thin { stroke-width: 2; opacity: 0.55; }
+      .art-scene .hatch,
+      .art-table .hatch { fill: none; stroke: var(--ink); stroke-width: 2; opacity: 0.22; }
+
+      .art-wordmark {
+        position: absolute;
+        top: 29px;
+        left: 49px;
+        z-index: 20;
+        transform: rotate(-2.5deg);
+        color: var(--ink);
+        font: 800 34px/0.95 var(--display);
+        letter-spacing: -0.04em;
+        text-shadow: 2px 2px 0 rgba(255,255,255,0.2);
+      }
+
+      .art-wordmark small {
+        display: block;
+        margin: 8px 0 0 17px;
+        color: var(--ink-soft);
+        font: 700 12px/1 var(--body);
+        letter-spacing: 0.08em;
+      }
+
+      .art-wordmark::after {
+        content: "";
+        display: block;
+        width: 243px;
+        height: 11px;
+        margin-top: 3px;
+        transform: rotate(1deg);
+        border-top: 4px solid var(--ink);
+        border-radius: 50%;
+      }
+
+      .art-round {
+        position: absolute;
+        top: 39px;
+        left: 475px;
+        z-index: 20;
+        transform: rotate(1.8deg);
+        color: var(--ink);
+        font: 800 14px/1 var(--display);
+      }
+
+      .art-round b { color: var(--accent); font-size: 24px; }
+      .art-event {
+        position: absolute;
+        top: 31px;
+        right: 43px;
+        z-index: 20;
+        width: 326px;
+        min-height: 94px;
+        padding: 18px 22px 15px 91px;
+        transform: rotate(2.7deg);
+        clip-path: polygon(3% 8%, 22% 3%, 46% 7%, 67% 2%, 97% 11%, 94% 92%, 75% 96%, 52% 91%, 28% 97%, 5% 88%);
+        color: var(--ink);
+        background:
+          repeating-linear-gradient(-8deg, transparent 0 13px, rgba(48,47,42,0.04) 14px 15px),
+          var(--paper-bright);
+        filter: drop-shadow(7px 9px 0 var(--shadow));
+      }
+
+      .art-event::before {
+        content: "R";
+        position: absolute;
+        top: 19px;
+        left: 25px;
+        display: grid;
+        place-items: center;
+        width: 50px;
+        height: 50px;
+        transform: rotate(-8deg);
+        border: 4px solid var(--ink);
+        border-radius: 58% 42% 46% 54%;
+        color: var(--paper-bright);
+        background: var(--blue);
+        font: 800 20px/1 var(--display);
+      }
+
+      .art-event strong { display: block; font: 800 18px/1.1 var(--display); }
+      .art-event span { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 11px; }
+
+      .art-focus {
+        position: absolute;
+        top: 357px;
+        left: 517px;
+        z-index: 12;
+        width: 245px;
+        min-height: 190px;
+        padding: 30px 27px 24px;
+        transform: rotate(-4.2deg);
+        clip-path: polygon(5% 3%, 27% 7%, 49% 2%, 73% 8%, 97% 4%, 94% 31%, 98% 54%, 93% 78%, 96% 96%, 70% 92%, 47% 98%, 26% 92%, 3% 96%, 7% 72%, 2% 49%, 7% 25%);
+        color: var(--ink);
+        background:
+          repeating-linear-gradient(3deg, transparent 0 17px, rgba(48,47,42,0.045) 18px 19px),
+          var(--paper-bright);
+        filter: drop-shadow(9px 11px 0 var(--shadow));
+        text-align: center;
+      }
+
+      .art-focus::before {
+        content: "";
+        position: absolute;
+        inset: 14px 19px 15px 14px;
+        transform: rotate(1.4deg);
+        border: 3px dashed rgba(48,47,42,0.38);
+        border-radius: 47% 53% 45% 55%;
+      }
+
+      .art-focus .label { position: relative; color: var(--ink-soft); font-size: 12px; }
+      .art-focus .score { position: relative; margin: 9px 0 5px; font: 900 52px/0.9 var(--display); letter-spacing: -0.08em; }
+      .art-focus .hint { position: relative; color: var(--accent); font: 800 14px/1.3 var(--display); }
+
+      .art-player {
+        position: absolute;
+        z-index: 11;
+        width: 305px;
+        height: 170px;
+        color: var(--ink);
+      }
+
+      .art-top { top: 111px; left: 488px; transform: rotate(-2.4deg); }
+      .art-left { top: 332px; left: 31px; transform: rotate(-5deg); }
+      .art-right { top: 300px; right: 25px; transform: rotate(3.8deg); }
+      .art-bottom { bottom: 36px; left: 628px; transform: rotate(2.8deg); }
+
+      .art-avatar {
+        position: absolute;
+        top: 14px;
+        left: 0;
+        width: 84px;
+        height: 122px;
+        overflow: visible;
+        filter: drop-shadow(4px 6px 0 rgba(48,39,32,0.18));
+      }
+
+      .art-right .art-avatar { right: 0; left: auto; transform: scaleX(-1); }
+      .art-avatar .skin { fill: #e5c4a1; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .art-avatar .hair { fill: var(--ink); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+      .art-avatar .shirt { fill: var(--shirt, var(--sage)); stroke: var(--ink); stroke-width: 3.2; stroke-linejoin: round; }
+      .art-avatar .face { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
+      .art-avatar .shade { fill: none; stroke: var(--ink); stroke-width: 1.6; opacity: 0.35; }
+
+      .art-name {
+        position: absolute;
+        top: 0;
+        left: 72px;
+        min-width: 132px;
+        padding: 6px 10px 7px;
+        transform: rotate(1.7deg);
+        clip-path: polygon(2% 8%, 97% 2%, 94% 90%, 5% 98%);
+        background: var(--paper-bright);
+        filter: drop-shadow(3px 4px 0 var(--shadow));
+        font: 900 15px/1 var(--display);
+      }
+
+      .art-name small { display: block; margin-top: 5px; color: var(--sage); font: 750 10px/1 var(--body); }
+      .art-right .art-name { right: 69px; left: auto; transform: rotate(-2deg); }
+      .art-foods {
+        position: absolute;
+        top: 48px;
+        left: 79px;
+        width: 216px;
+        height: 90px;
+      }
+
+      .art-right .art-foods { right: 79px; left: auto; }
+      .art-foods::before {
+        content: "";
+        position: absolute;
+        top: 23px;
+        right: 0;
+        left: -4px;
+        height: 58px;
+        transform: rotate(-1.2deg);
+        border: 3px dashed rgba(48,47,42,0.35);
+        border-radius: 47% 53% 45% 55%;
+        background: rgba(250,241,226,0.2);
+      }
+
+      .art-foods .food-art { position: absolute; width: 68px; height: 68px; }
+      .art-foods .food-art:nth-child(1) { top: 8px; left: 4px; transform: rotate(-12deg); }
+      .art-foods .food-art:nth-child(2) { top: 1px; left: 73px; transform: rotate(6deg) scale(1.08); }
+      .art-foods .food-art:nth-child(3) { top: 13px; left: 143px; transform: rotate(-4deg); }
+      .art-total {
+        position: absolute;
+        right: 7px;
+        bottom: 0;
+        transform: rotate(-1.8deg);
+        color: var(--ink-soft);
+        font: 750 11px/1 var(--body);
+      }
+
+      .art-total b { color: var(--accent); font: 900 20px/1 var(--display); }
+      .art-right .art-total { right: auto; left: 4px; }
+      .art-garden {
+        position: absolute;
+        bottom: 33px;
+        left: 33px;
+        z-index: 14;
+        width: 245px;
+        height: 126px;
+        transform: rotate(-3deg);
+        color: var(--ink);
+      }
+
+      .art-garden svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .art-garden .copy { position: absolute; top: 27px; left: 78px; font: 800 12px/1.35 var(--body); }
+      .art-garden .copy b { display: block; margin-top: 5px; color: var(--sage); font: 900 24px/1 var(--display); }
+      .art-caption {
+        position: absolute;
+        right: 24px;
+        bottom: 19px;
+        z-index: 21;
+        width: 335px;
+        padding: 12px 17px 14px;
+        transform: rotate(1.5deg);
+        clip-path: polygon(2% 9%, 25% 3%, 50% 7%, 76% 2%, 98% 8%, 95% 92%, 70% 96%, 48% 91%, 23% 97%, 4% 90%);
+        color: var(--ink-soft);
+        background: rgba(250,241,226,0.92);
+        filter: drop-shadow(5px 6px 0 var(--shadow));
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .art-caption strong { color: var(--accent); font: 900 15px/1 var(--display); }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .art-event { animation: settle-in 560ms cubic-bezier(.2,.8,.2,1) both; }
+        .art-focus { animation: settle-in 680ms 110ms cubic-bezier(.2,.8,.2,1) both; }
+      }
+
+      @media (max-width: 900px) {
+        .artful { min-height: 1070px; }
+        .art-wordmark { top: 21px; left: 19px; font-size: 28px; }
+        .art-wordmark small { font-size: 10px; }
+        .art-round { top: 86px; left: 25px; }
+        .art-event { top: 119px; right: 14px; left: 14px; width: auto; }
+        .art-table { top: 115px; left: 50%; width: 860px; transform: translateX(-50%); }
+        .art-arrows { display: none; }
+        .art-focus { top: 565px; left: calc(50% - 92px); width: 184px; min-height: 158px; padding: 25px 15px 19px; }
+        .art-focus .score { font-size: 39px; }
+        .art-player { width: 220px; height: 155px; }
+        .art-player .art-avatar { width: 64px; height: 96px; }
+        .art-player .art-name { left: 53px; min-width: 115px; font-size: 13px; }
+        .art-player .art-foods { top: 42px; left: 56px; width: 164px; }
+        .art-player .art-foods .food-art { width: 50px; height: 50px; }
+        .art-player .art-foods .food-art:nth-child(1) { left: 0; }
+        .art-player .art-foods .food-art:nth-child(2) { left: 52px; }
+        .art-player .art-foods .food-art:nth-child(3) { left: 105px; }
+        .art-top { top: 260px; left: calc(50% - 110px); }
+        .art-left { top: 420px; left: 0; }
+        .art-right { top: 414px; right: 0; }
+        .art-bottom { top: 730px; bottom: auto; left: calc(50% - 110px); }
+        .art-right .art-name { right: 50px; left: auto; }
+        .art-right .art-foods { right: 56px; left: auto; }
+        .art-garden { bottom: 59px; left: 5px; transform: scale(.8) rotate(-3deg); transform-origin: left bottom; }
+        .art-caption { right: 12px; bottom: 12px; width: 245px; }
+      }
+    </style>
+  </head>
+  <body>
+    <svg class="svg-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="paper-noise-filter" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="3" seed="12" result="noise" />
+          <feColorMatrix in="noise" type="saturate" values="0" />
+        </filter>
+        <filter id="ink-wobble" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.022" numOctaves="2" seed="31" result="wobble" />
+          <feDisplacementMap in="SourceGraphic" in2="wobble" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <symbol id="portrait-rain" viewBox="0 0 90 130">
+          <path class="shirt" d="M17 126c0-28 8-43 28-43 21 0 29 15 29 43z" />
+          <path class="skin" d="M22 40c2-22 15-33 31-29 18 5 23 22 16 44-7 22-19 32-33 24-12-7-17-22-14-39z" />
+          <path class="hair" d="M20 43C9 27 19 8 37 7c7-8 22-1 25 7 13 2 17 14 10 25-4-9-8-15-14-19-3 7-11 12-21 14-5 1-10 4-17 9z" />
+          <path class="face" d="M34 49l1 1M55 48l1 1M40 65c6 3 11 3 15-1" />
+          <path class="shade" d="M23 90c16 6 31 6 46 0M28 99l-8 22M61 98l10 22" />
+        </symbol>
+        <symbol id="portrait-sail" viewBox="0 0 90 130">
+          <path class="shirt" d="M13 127c2-29 12-43 32-43 22 0 30 17 32 43z" />
+          <path class="skin" d="M20 39c4-22 19-32 36-25 16 7 19 24 11 43-8 19-21 28-34 20-12-8-17-22-13-38z" />
+          <path class="hair" d="M18 38C14 20 27 7 45 9c20 1 29 13 24 33-6-11-15-18-27-19-8 0-15 5-24 15z" />
+          <path class="face" d="M32 47l1 1M53 48l1 1M37 63c5 4 10 4 15 0" />
+          <path class="shade" d="M19 101c17-7 36-7 53 0M29 86l-9 37M60 87l11 36" />
+        </symbol>
+        <symbol id="portrait-rice" viewBox="0 0 90 130">
+          <path class="shirt" d="M12 127c2-31 12-45 33-45 22 0 31 17 33 45z" />
+          <path class="skin" d="M21 40c1-23 14-34 32-31 17 3 24 19 19 40-5 22-17 33-32 29-14-4-20-18-19-38z" />
+          <path class="hair" d="M19 45C8 32 15 14 29 9c1-10 17-12 22-3 18-2 28 12 23 31-7-9-14-15-24-18-8 9-17 17-31 26z" />
+          <path class="face" d="M34 48l1 1M55 46l1 1M39 63c5 2 10 1 14-3" />
+          <path class="shade" d="M17 104c19-8 38-8 57 0M29 87l-11 35M61 88l12 35" />
+        </symbol>
+        <symbol id="portrait-joy" viewBox="0 0 90 130">
+          <path class="shirt" d="M11 127c3-30 14-43 34-43 21 0 31 16 34 43z" />
+          <path class="skin" d="M22 39c3-22 16-32 34-27 17 5 22 22 15 42-7 21-19 31-33 24-13-6-19-21-16-39z" />
+          <path class="hair" d="M20 43C7 37 9 21 20 16c-1-10 12-16 20-10 8-9 23-3 23 8 13 1 18 14 9 24-5-8-12-14-22-17-10 8-19 14-30 22z" />
+          <path class="face" d="M34 48l1 1M55 47l1 1M38 63c6 5 12 5 17 0" />
+          <path class="shade" d="M17 102c18-6 37-6 56 0M28 87l-10 36M61 88l12 35" />
+        </symbol>
+        <symbol id="food-pear" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#a8b77a" d="M31 15c-5 7-4 12-11 18-9 8-7 21 4 25 11 4 25-1 24-13-1-9-9-11-11-19-1-5-3-8-6-11z" />
+          <path class="food-shape" fill="none" d="M31 16c1-7 4-10 8-12" />
+          <path class="food-shape" fill="#78906c" d="M38 7c5-3 10-1 12 2-5 3-9 3-12-2z" />
+          <path class="hatch" d="M19 39c8-4 17-4 25 0M21 47c7-3 14-3 22-1" />
+        </symbol>
+        <symbol id="food-bread" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#d9b880" d="M10 25c1-10 10-17 22-17 13 0 23 8 23 19v23c0 4-3 7-7 7H17c-4 0-7-3-7-7z" />
+          <path class="hatch" d="M19 20c5 1 8 4 10 8M31 16c5 2 8 5 10 10M44 17c4 3 6 6 7 10M15 43c11-4 24-4 35 0" />
+        </symbol>
+        <symbol id="food-broccoli" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#8ea477" d="M25 29h16l5 28H20z" />
+          <path class="food-shape" fill="#738f6e" d="M13 30c-5-8 2-16 10-13 1-9 13-11 18-4 7-4 15 2 13 10 7 5 2 15-7 15H19c-7 0-11-4-6-8z" />
+          <path class="hatch" d="M18 25c10 2 20 2 30 0M26 39l7 15M40 38l-4 16" />
+        </symbol>
+        <symbol id="food-cabbage" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#91a982" d="M11 34c0-14 9-24 21-24 14 0 23 11 22 25-1 13-10 22-22 22-13 0-21-9-21-23z" />
+          <path class="hatch" d="M32 12c-8 10-8 28 0 43M31 20c9 3 16 9 21 17M31 27c-8 2-14 7-18 13M31 39c7 0 13 3 17 8" />
+        </symbol>
+        <symbol id="food-orange" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#d99362" d="M11 34c0-14 9-24 22-24s22 10 22 24-9 23-22 23-22-9-22-23z" />
+          <path class="food-shape" fill="none" d="M32 12c0-5 2-8 5-10" />
+          <path class="food-shape" fill="#7f9875" d="M36 8c5-4 11-2 13 2-5 4-10 3-13-2z" />
+          <path class="hatch" d="M17 29c9-4 22-4 31 1M18 42c8 3 20 3 29-1" />
+        </symbol>
+        <symbol id="food-corn" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#d8be72" d="M23 7c13-4 23 6 22 22-1 17-7 29-16 29-9 0-14-11-13-27 0-11 2-20 7-24z" />
+          <path class="food-shape" fill="#7f9671" d="M17 28C9 36 12 50 25 58c-4-12-4-21-8-30zM44 27c9 8 7 23-12 31 7-11 9-20 12-31z" />
+          <path class="hatch" d="M20 17c7 3 14 3 21 0M18 27c8 3 17 3 25 0M18 37c8 3 16 3 23 0M25 9c-1 15 1 30 5 45M34 9c2 14 1 30-3 44" />
+        </symbol>
+        <symbol id="food-cake" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#d8a090" d="M12 28l39-12v37H12z" />
+          <path class="food-shape" fill="#f0ddd0" d="M12 28l39-12-9 17-30 8z" />
+          <path class="food-shape" fill="#c96f67" d="M30 17c-3-5 1-10 6-8 6 2 5 10-1 11z" />
+          <path class="hatch" d="M15 46c11-3 23-6 34-10M37 25l-5 31" />
+        </symbol>
+        <symbol id="food-banana" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#dec97c" d="M11 18c7 21 20 30 40 23-7 15-24 20-36 7-8-9-9-21-4-30z" />
+          <path class="hatch" d="M15 24c8 16 19 22 34 19M18 43c8 8 17 10 27 6" />
+        </symbol>
+        <symbol id="food-carrot" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#cf815e" d="M21 20l29 5-23 33z" />
+          <path class="food-shape" fill="#7c956e" d="M23 22C9 16 10 7 12 5c8 4 12 9 11 17zM27 21c0-13 8-18 12-17 0 8-3 14-12 17zM26 21c9-10 17-8 20-5-6 6-12 8-20 5z" />
+          <path class="hatch" d="M25 30l12 2M23 39l9 2M21 47l6 1" />
+        </symbol>
+        <symbol id="food-cucumber" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#86a276" d="M15 51c-8-7-6-18 1-28C23 13 34 5 44 11c11 7 7 19 1 29-7 11-21 18-30 11z" />
+          <path class="hatch" d="M18 45c9-12 17-22 28-29M20 31l5 3M30 20l5 3M34 40l5 2" />
+        </symbol>
+        <symbol id="food-apple" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#c87567" d="M31 18c-8-8-20-2-20 12 0 16 9 27 20 27 13 0 23-11 22-27-1-13-13-19-22-12z" />
+          <path class="food-shape" fill="none" d="M31 19c-1-8 2-13 7-16" />
+          <path class="food-shape" fill="#7c9371" d="M36 9c6-4 11-2 14 2-5 4-10 3-14-2z" />
+          <path class="hatch" d="M17 31c9-4 20-4 30 0M19 43c8 3 17 3 26-1" />
+        </symbol>
+        <symbol id="food-potato" viewBox="0 0 64 64">
+          <path class="food-shape" fill="#b89570" d="M13 25c5-13 15-17 29-13 13 4 17 16 11 29-6 13-20 19-32 12C9 46 8 36 13 25z" />
+          <path class="hatch" d="M22 23l3 2M39 19l4 1M18 38l4 2M37 43l3 2M28 51l3-1" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main>
+      <section class="concept theme-a" id="handdrawn-a" aria-label="Concept A: Warm Wood Ink and Watercolour">
+        <div class="scene" aria-hidden="true"><div class="wall"></div><div class="floor"></div><div class="window"></div><div class="curtain"></div><div class="curtain right"></div><div class="shelf"></div><div class="jar"></div><div class="plant"></div><div class="lamp"></div></div>
+        <svg class="paper-grain" aria-hidden="true"><rect width="100%" height="100%" fill="#54483f" filter="url(#paper-noise-filter)" /></svg>
+        <header class="topbar"><div class="brand-sign"><strong>Chews Freedom</strong><small>Warm Wood Ink &amp; Watercolour</small></div><div class="round-note">Round <b>8</b> / Food is public</div><div class="event-note" data-glyph="R"><strong>This round: Rain</strong><span>Revealed before deal / this round only</span></div></header>
+        <div class="table"><div class="focus-card"><div class="label">Help first</div><div class="score">13 / 10</div><div class="hint">Patient 1 is over the limit</div><div class="scribble"></div></div></div>
+        <div class="seat top"><div class="seat-label">Rain <span>Active Nutritionist</span></div><div class="plate"><span class="food-art" style="--turn:-5deg"><svg><use href="#food-pear" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-bread" /></svg></span><span class="food-art" style="--turn:-3deg"><svg><use href="#food-broccoli" /></svg></span><span class="value-chip">3</span></div><div class="seat-copy">Your move: choose a swap</div></div>
+        <div class="seat bottom"><div class="seat-label">Sail <span>Assistant</span></div><div class="plate"><span class="food-art" style="--turn:4deg"><svg><use href="#food-cabbage" /></svg></span><span class="food-art" style="--turn:-4deg"><svg><use href="#food-orange" /></svg></span><span class="food-art" style="--turn:5deg"><svg><use href="#food-corn" /></svg></span><span class="value-chip">7</span></div><div class="seat-copy">Waiting for active nutritionist</div></div>
+        <div class="seat left"><div class="seat-label">Rice <span>Patient 1</span></div><div class="plate"><span class="food-art" style="--turn:-4deg"><svg><use href="#food-cake" /></svg></span><span class="food-art" style="--turn:3deg"><svg><use href="#food-banana" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-carrot" /></svg></span><span class="value-chip">9</span></div><div class="seat-copy">Current total <strong>13</strong> / 10</div></div>
+        <div class="seat right"><div class="seat-label">Joy <span>Patient 2</span></div><div class="plate"><span class="food-art" style="--turn:3deg"><svg><use href="#food-cucumber" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-apple" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-potato" /></svg></span><span class="value-chip">5</span></div><div class="seat-copy">Current total 9 / 10</div></div>
+        <div class="garden-note"><span>Garden supply</span><b>7 left</b><span class="leaf-row">L L L</span></div>
+        <div class="concept-note"><strong>Concept A: Warm Wood Ink &amp; Watercolour</strong><br />A warm family kitchen, wooden table, and irregular ink lines. Artistic without becoming dark: the best-balanced direction for the formal game.</div>
+      </section>
+
+      <section class="concept theme-b" id="handdrawn-b" aria-label="Concept B: Twilight Picture Book">
+        <div class="scene" aria-hidden="true"><div class="wall"></div><div class="floor"></div><div class="window"></div><div class="curtain"></div><div class="curtain right"></div><div class="shelf"></div><div class="jar"></div><div class="plant"></div><div class="lamp"></div></div>
+        <svg class="paper-grain" aria-hidden="true"><rect width="100%" height="100%" fill="#393531" filter="url(#paper-noise-filter)" /></svg>
+        <header class="topbar"><div class="brand-sign"><strong>Chews Freedom</strong><small>Twilight Picture Book</small></div><div class="round-note">Round <b>8</b> / Food is public</div><div class="event-note" data-glyph="V"><strong>This round: Follow-up Visit</strong><span>Revealed before deal / resolve this round</span></div></header>
+        <div class="table"><div class="focus-card"><div class="label">Help first</div><div class="score">13 / 10</div><div class="hint">Patient 1 is over the limit</div><div class="scribble"></div></div></div>
+        <div class="seat top"><div class="seat-label">Rain <span>Active Nutritionist</span></div><div class="plate"><span class="food-art" style="--turn:-5deg"><svg><use href="#food-pear" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-bread" /></svg></span><span class="food-art" style="--turn:-3deg"><svg><use href="#food-broccoli" /></svg></span><span class="value-chip">3</span></div><div class="seat-copy">Your move: choose a swap</div></div>
+        <div class="seat bottom"><div class="seat-label">Sail <span>Assistant</span></div><div class="plate"><span class="food-art" style="--turn:4deg"><svg><use href="#food-cabbage" /></svg></span><span class="food-art" style="--turn:-4deg"><svg><use href="#food-orange" /></svg></span><span class="food-art" style="--turn:5deg"><svg><use href="#food-corn" /></svg></span><span class="value-chip">7</span></div><div class="seat-copy">Waiting for active nutritionist</div></div>
+        <div class="seat left"><div class="seat-label">Rice <span>Patient 1</span></div><div class="plate"><span class="food-art" style="--turn:-4deg"><svg><use href="#food-cake" /></svg></span><span class="food-art" style="--turn:3deg"><svg><use href="#food-banana" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-carrot" /></svg></span><span class="value-chip">9</span></div><div class="seat-copy">Current total <strong>13</strong> / 10</div></div>
+        <div class="seat right"><div class="seat-label">Joy <span>Patient 2</span></div><div class="plate"><span class="food-art" style="--turn:3deg"><svg><use href="#food-cucumber" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-apple" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-potato" /></svg></span><span class="value-chip">5</span></div><div class="seat-copy">Current total 9 / 10</div></div>
+        <div class="garden-note"><span>Garden supply</span><b>7 left</b><span class="leaf-row">L L L</span></div>
+        <div class="concept-note"><strong>Concept B: Twilight Picture Book</strong><br />Heavier ink and stronger contrast, with warm pendant light around the table. Closest to a whimsical hand-drawn game, but darkness must be controlled so children do not feel tense.</div>
+      </section>
+
+      <section class="concept theme-c" id="handdrawn-c" aria-label="Concept C: Coloured-Pencil Garden Diary">
+        <div class="scene" aria-hidden="true"><div class="wall"></div><div class="floor"></div><div class="window"></div><div class="curtain"></div><div class="curtain right"></div><div class="shelf"></div><div class="jar"></div><div class="plant"></div><div class="lamp"></div></div>
+        <svg class="paper-grain" aria-hidden="true"><rect width="100%" height="100%" fill="#61574c" filter="url(#paper-noise-filter)" /></svg>
+        <header class="topbar"><div class="brand-sign"><strong>Chews Freedom</strong><small>Coloured-Pencil Garden Diary</small></div><div class="round-note">Round <b>8</b> / Food is public</div><div class="event-note" data-glyph="T"><strong>This round: Nutritionist Training</strong><span>This round only / leaves after settlement</span></div></header>
+        <div class="table"><div class="focus-card"><div class="label">Help first</div><div class="score">13 / 10</div><div class="hint">Patient 1 is over the limit</div><div class="scribble"></div></div></div>
+        <div class="seat top"><div class="seat-label">Rain <span>Active Nutritionist</span></div><div class="plate"><span class="food-art" style="--turn:-5deg"><svg><use href="#food-pear" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-bread" /></svg></span><span class="food-art" style="--turn:-3deg"><svg><use href="#food-broccoli" /></svg></span><span class="value-chip">3</span></div><div class="seat-copy">Your move: choose a swap</div></div>
+        <div class="seat bottom"><div class="seat-label">Sail <span>Assistant</span></div><div class="plate"><span class="food-art" style="--turn:4deg"><svg><use href="#food-cabbage" /></svg></span><span class="food-art" style="--turn:-4deg"><svg><use href="#food-orange" /></svg></span><span class="food-art" style="--turn:5deg"><svg><use href="#food-corn" /></svg></span><span class="value-chip">7</span></div><div class="seat-copy">Waiting for active nutritionist</div></div>
+        <div class="seat left"><div class="seat-label">Rice <span>Patient 1</span></div><div class="plate"><span class="food-art" style="--turn:-4deg"><svg><use href="#food-cake" /></svg></span><span class="food-art" style="--turn:3deg"><svg><use href="#food-banana" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-carrot" /></svg></span><span class="value-chip">9</span></div><div class="seat-copy">Current total <strong>13</strong> / 10</div></div>
+        <div class="seat right"><div class="seat-label">Joy <span>Patient 2</span></div><div class="plate"><span class="food-art" style="--turn:3deg"><svg><use href="#food-cucumber" /></svg></span><span class="food-art" style="--turn:-5deg"><svg><use href="#food-apple" /></svg></span><span class="food-art" style="--turn:4deg"><svg><use href="#food-potato" /></svg></span><span class="value-chip">5</span></div><div class="seat-copy">Current total 9 / 10</div></div>
+        <div class="garden-note"><span>Garden supply</span><b>7 left</b><span class="leaf-row">L L L</span></div>
+        <div class="concept-note"><strong>Concept C: Coloured-Pencil Garden Diary</strong><br />Lighter lines and more plant colour, like a coloured-pencil picture book made together by a child and family. The warmest and safest option, though less dramatic than A and B.</div>
+      </section>
+
+      <section class="concept artful" id="handdrawn-d" aria-label="Concept D: Whimsical Family Sketch">
+        <svg class="art-scene" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+          <g filter="url(#ink-wobble)">
+            <path fill="#c8b69d" stroke="#302f2a" stroke-width="5" d="M-20-20H1460V605c-105 22-224 7-340 18-175 17-296-20-456 4-186 28-331-16-480 5-75 10-140-7-204-18z" />
+            <path fill="#7f634e" stroke="#302f2a" stroke-width="5" d="M-18 588c174 27 301 1 454 24 196 30 322-17 501 7 185 26 331-10 521-28v329H-18z" />
+            <path class="hatch" d="M0 644c210-28 427 41 641 2M778 652c213 28 420-36 662-12M31 716c183-31 338 23 527 3M648 735c251 28 500-43 771-21M-4 805c220-31 438 32 660 3M758 812c210 17 430-30 690-17" />
+            <path fill="#7c9290" stroke="#302f2a" stroke-width="5" d="M65 118l306-28 17 229-315 24z" />
+            <path fill="#d7cbb7" stroke="#302f2a" stroke-width="4" d="M80 132l137-12 5 195-133 11zM237 117l119-11 15 191-132 13z" />
+            <path class="thin ink" d="M222 113l13 198M75 227l296-23M103 302c37-45 69-68 114-78M248 290c35-57 71-83 112-102" />
+            <path fill="#77866d" stroke="#302f2a" stroke-width="5" d="M36 85c39 18 62 41 73 84l-27 179-58 7zM362 77c-33 28-47 66-43 108l25 154 62-8z" />
+            <path class="hatch" d="M50 112c25 48 27 110 15 188M381 103c-28 51-30 116-12 184" />
+            <path fill="#966b4f" stroke="#302f2a" stroke-width="5" d="M1124 128l251 23-19 190-248-9z" />
+            <path class="ink thin" d="M1135 180l230 16M1125 253l232 7M1195 139l-13 194M1284 146l-9 191" />
+            <path fill="#eee4d5" stroke="#302f2a" stroke-width="4" d="M1161 201c19-14 47-9 48 16 1 27-35 29-48 11zM1251 268c-5-24 29-35 43-16 15 21-8 43-29 35z" />
+            <path fill="#72856d" stroke="#302f2a" stroke-width="5" d="M1025 309c-12-46 12-84 43-102 8 38-2 72-43 102zM1040 316c25-39 59-48 91-35-19 35-48 50-91 35zM1017 313c-29-24-49-16-69 3 18 25 42 31 69-3z" />
+            <path fill="#bd6e5b" stroke="#302f2a" stroke-width="5" d="M981 324l120 1-13 109-94 4z" />
+            <path class="hatch" d="M992 351c36 15 67 16 97 1M989 382c35 13 67 13 101-2" />
+            <path class="ink" d="M735-15l-6 122M667 117c35-36 106-39 145-5l-18 56-118-4z" />
+            <path fill="#e2bd72" stroke="#302f2a" stroke-width="5" d="M664 120c37-37 112-40 151-5l-19 57-121-5z" />
+            <path class="hatch" d="M685 130c32 12 70 12 106-1M696 145c29 10 56 10 84 0" />
+            <path class="ink thin" d="M446 83c18 12 23 31 14 54M467 74c26 17 34 42 22 72M923 91c-20 9-29 30-24 54M903 76c-28 15-39 43-31 73" />
+          </g>
+        </svg>
+        <svg class="paper-grain" aria-hidden="true"><rect width="100%" height="100%" fill="#54483f" filter="url(#paper-noise-filter)" /></svg>
+        <div class="art-wordmark">Chews Freedom<small>Whimsical Family Sketch</small></div>
+        <div class="art-round">Round <b>8</b> / All food is public</div>
+        <div class="art-event"><strong>This round: Rain</strong><span>Revealed before deal / this round only</span></div>
+        <svg class="art-table" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+          <g filter="url(#ink-wobble)">
+            <path fill="#684632" opacity="0.55" d="M157 315c63-135 271-175 499-172 299 3 554 51 642 201 82 139 22 348-105 438-154 109-719 98-929-3C93 697 74 493 157 315z" transform="translate(10 24)" />
+            <path fill="#9e6f50" stroke="#302f2a" stroke-width="7" d="M152 282c79-119 270-146 508-141 308 6 546 53 638 198 85 134 24 331-111 416-169 105-706 100-918-1-164-78-202-343-117-472z" />
+            <path class="ink thin" d="M185 302c95-96 279-122 476-116 261 8 486 44 596 171M139 470c115-73 299-88 511-70 251 21 446-3 649 85M165 640c170-60 348-40 535-20 195 20 372 3 554-62" />
+            <path class="hatch" d="M219 256c55 22 104 32 156 32M1046 270c60 9 112 28 163 59M160 559c60 7 111 25 157 58M1107 664c48-20 92-31 133-30M426 748c80-17 155-19 225-9" />
+          </g>
+        </svg>
+        <svg class="art-arrows" viewBox="0 0 1440 900" aria-hidden="true">
+          <path class="ink" stroke-dasharray="9 12" d="M535 465c-118 42-198 36-289-8" />
+          <path class="ink" d="M260 441l-25 16 29 9" />
+          <path class="thin ink" d="M777 436c88-64 168-78 272-64" />
+        </svg>
+        <div class="art-focus"><div class="label">Help first</div><div class="score">13 / 10</div><div class="hint">Patient 1 is over the limit</div></div>
+
+        <div class="art-player art-top" style="--shirt:#748b8c"><svg class="art-avatar"><use href="#portrait-rain" /></svg><div class="art-name">Rain<small>Active Nutritionist</small></div><div class="art-foods"><span class="food-art"><svg><use href="#food-pear" /></svg></span><span class="food-art"><svg><use href="#food-bread" /></svg></span><span class="food-art"><svg><use href="#food-broccoli" /></svg></span></div><div class="art-total">Your move: <b>swap</b></div></div>
+        <div class="art-player art-left" style="--shirt:#c76d5b"><svg class="art-avatar"><use href="#portrait-rice" /></svg><div class="art-name">Rice<small>Patient 1 / help first</small></div><div class="art-foods"><span class="food-art"><svg><use href="#food-cake" /></svg></span><span class="food-art"><svg><use href="#food-banana" /></svg></span><span class="food-art"><svg><use href="#food-carrot" /></svg></span></div><div class="art-total">Current total <b>13</b> / 10</div></div>
+        <div class="art-player art-right" style="--shirt:#76866b"><svg class="art-avatar"><use href="#portrait-joy" /></svg><div class="art-name">Joy<small>Patient 2 / within limit</small></div><div class="art-foods"><span class="food-art"><svg><use href="#food-cucumber" /></svg></span><span class="food-art"><svg><use href="#food-apple" /></svg></span><span class="food-art"><svg><use href="#food-potato" /></svg></span></div><div class="art-total">Current total <b>9</b> / 10</div></div>
+        <div class="art-player art-bottom" style="--shirt:#b68e68"><svg class="art-avatar"><use href="#portrait-sail" /></svg><div class="art-name">Sail<small>Assistant / next to act</small></div><div class="art-foods"><span class="food-art"><svg><use href="#food-cabbage" /></svg></span><span class="food-art"><svg><use href="#food-orange" /></svg></span><span class="food-art"><svg><use href="#food-corn" /></svg></span></div><div class="art-total">Waiting for active nutritionist</div></div>
+
+        <div class="art-garden"><svg viewBox="0 0 245 126" aria-hidden="true"><path fill="#eee4d5" stroke="#302f2a" stroke-width="4" d="M10 70c27-41 80-53 124-35 41 17 74 48 100 74-58-9-113-6-165 2-31 5-54-8-59-41z" /><path fill="#76866b" stroke="#302f2a" stroke-width="4" d="M36 73c-5-30 15-47 36-53 1 24-7 41-36 53zM41 78c23-28 48-31 68-19-17 26-38 34-68 19z" /><path fill="none" stroke="#302f2a" stroke-width="2" opacity=".35" d="M18 80c49-9 103 1 147 27M65 39c-12 19-20 37-25 55" /></svg><div class="copy">Garden supply<b>7 left</b></div></div>
+        <div class="art-caption"><strong>Concept D: Whimsical Family Sketch</strong><br />No rigid top bar, mirrored plates, or central symmetry. Characters, food, event notes, and a hand-drawn room form one scene; rules retain only the necessary stable anchors.</div>
+      </section>
+    </main>
+  </body>
+</html>

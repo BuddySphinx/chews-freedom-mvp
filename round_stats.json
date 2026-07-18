@@ -1,0 +1,49 @@
+{
+  "spec_version": "2.0-codex-1",
+  "mode": "independent_base_rounds",
+  "rounds": 500000,
+  "seed": 20260716,
+  "events_enabled": false,
+  "active_score_probability": 0.506494,
+  "active_score_probability_95ci": [
+    0.5051081876087244,
+    0.5078798123912756
+  ],
+  "assistant_score_probability": 0.288134,
+  "assistant_score_probability_95ci": [
+    0.28687864242148636,
+    0.28938935757851364
+  ],
+  "patient_score_probabilities": {
+    "0_points": 0.761116,
+    "1_point": 0.225522,
+    "2_points": 0.013362,
+    "any_points": 0.238884
+  },
+  "patient_expected_points_per_patient_round": 0.252246,
+  "patient_expected_points_95ci": [
+    0.25095972035996267,
+    0.2535322796400374
+  ],
+  "expected_points_per_player_per_four_round_role_cycle": 1.29912,
+  "initial_patient_compliance": {
+    "both_compliant": 0.116076,
+    "exactly_one_compliant": 0.477662,
+    "neither_compliant": 0.406262
+  },
+  "patient_phase_trigger_probability": 0.343686,
+  "expected_vegetable_tokens_per_round": 0.584218,
+  "vegetable_tokens_distribution": {
+    "0": 0.669676,
+    "1": 0.135836,
+    "2": 0.13949,
+    "3": 0.05059,
+    "4": 0.004408
+  },
+  "nutritionist_joint_outcomes": {
+    "active_0_assistant_0": 0.3873,
+    "active_0_assistant_1": 0.106206,
+    "active_1_assistant_0": 0.324566,
+    "active_1_assistant_1": 0.181928
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "spec_version": "2.0-codex-1",
+  "mode": "complete_games",
+  "games": 30000,
+  "seed": 20260717,
+  "vegetable_supply": 10,
+  "starting_active_seat": "uniform_random",
+  "mean_rounds": 17.702266666666667,
+  "median_rounds": 17.0,
+  "round_quantiles": {
+    "q10": 11.0,
+    "q25": 14.0,
+    "q75": 21.0,
+    "q90": 25.0,
+    "q95": 28.0
+  },
+  "mean_total_points_per_game": 23.103,
+  "mean_points_by_fixed_seat": [
+    5.762733333333333,
+    5.772266666666667,
+    5.783266666666667,
+    5.7847333333333335
+  ],
+  "win_share_by_fixed_seat": [
+    0.24842499999999643,
+    0.2492027777777741,
+    0.24983055555555178,
+    0.25254166666666295
+  ]
+}

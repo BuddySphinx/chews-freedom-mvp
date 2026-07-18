@@ -1,0 +1,21 @@
+{
+  "rules_version": "3.0-local-mvp-draft.5-player-chosen-rescue-target-events-enabled",
+  "prototype_status": "playable local MVP; event effects are game-only placeholders pending content approval",
+  "rescue_recovery_chain": "The active nutritionist chooses either patient who is over the limit and may make one helpful swap (incoming value must be lower than the replaced value). The assistant then independently chooses either patient who is still over the limit and may make one helpful swap. A swap that completes compliance earns its nutritionist point. After the existing player-controlled patient mutual-aid swap, the players enter a visible garden phase: they click the highlighted highest-value patient card for each zero-value vegetable replacement until all patients are compliant or the field is exhausted.",
+  "events_enabled": true,
+  "event_occurrence_percent_per_round": 72,
+  "event_pool_policy": "draw zero or one event before each deal; remove a drawn event for the rest of the game",
+  "event_duration": "CURRENT_ROUND",
+  "events": [
+    { "id": "COLD", "kind": "THRESHOLD", "amount": -1 },
+    { "id": "FOLLOW_UP_VISIT", "kind": "THRESHOLD", "amount": -1 },
+    { "id": "PARTY_CAKE", "kind": "THRESHOLD", "amount": -2 },
+    { "id": "SNACK_SHARING", "kind": "THRESHOLD", "amount": -1 },
+    { "id": "SUPERMARKET_RESTOCK", "kind": "GARDEN", "amount": 1 },
+    { "id": "MENU_UPDATE", "kind": "THRESHOLD", "amount": 1 },
+    { "id": "STORM", "kind": "GARDEN", "amount": -1 },
+    { "id": "RAIN", "kind": "GARDEN", "amount": 1 },
+    { "id": "NUTRITIONIST_TRAINING", "kind": "THRESHOLD", "amount": 1 },
+    { "id": "TRAVEL_MODE", "kind": "THRESHOLD", "amount": -2 }
+  ]
+}

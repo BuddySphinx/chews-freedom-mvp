@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Chews Freedom Whimsical Family Sketch sample</title>
+  <desc id="desc">A warm hand-drawn family scene: four players arrange food around a tilted wooden table and help patients meet their limit together.</desc>
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011 0.021" numOctaves="2" seed="31" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%">
+      <feDropShadow dx="8" dy="10" stdDeviation="0" flood-color="#30261f" flood-opacity=".28" />
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".74" numOctaves="3" seed="18" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+    <style>
+      .ink { fill: none; stroke: #302f2a; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+      .thin { stroke-width: 2; opacity: .55; }
+      .hatch { fill: none; stroke: #302f2a; stroke-width: 2; stroke-linecap: round; opacity: .23; }
+      .food-shape { stroke: #302f2a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .food-hatch { fill: none; stroke: #302f2a; stroke-width: 1.5; stroke-linecap: round; opacity: .4; }
+      .display { font-family: "Kaiti SC", "STKaiti", "PingFang SC", sans-serif; font-weight: 800; fill: #302f2a; }
+      .body { font-family: "Avenir Next", "PingFang SC", sans-serif; fill: #302f2a; }
+      .muted { fill: #5f574c; }
+      .accent { fill: #c76d5b; }
+    </style>
+
+    <symbol id="pear" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#a8b77a" d="M31 15c-5 7-4 12-11 18-9 8-7 21 4 25 11 4 25-1 24-13-1-9-9-11-11-19-1-5-3-8-6-11z" />
+      <path class="food-shape" fill="none" d="M31 16c1-7 4-10 8-12" />
+      <path class="food-shape" fill="#78906c" d="M38 7c5-3 10-1 12 2-5 3-9 3-12-2z" />
+      <path class="food-hatch" d="M19 39c8-4 17-4 25 0M21 47c7-3 14-3 22-1" />
+    </symbol>
+    <symbol id="bread" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#d9b880" d="M10 25c1-10 10-17 22-17 13 0 23 8 23 19v23c0 4-3 7-7 7H17c-4 0-7-3-7-7z" />
+      <path class="food-hatch" d="M19 20c5 1 8 4 10 8M31 16c5 2 8 5 10 10M44 17c4 3 6 6 7 10M15 43c11-4 24-4 35 0" />
+    </symbol>
+    <symbol id="broccoli" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#8ea477" d="M25 29h16l5 28H20z" />
+      <path class="food-shape" fill="#738f6e" d="M13 30c-5-8 2-16 10-13 1-9 13-11 18-4 7-4 15 2 13 10 7 5 2 15-7 15H19c-7 0-11-4-6-8z" />
+      <path class="food-hatch" d="M18 25c10 2 20 2 30 0M26 39l7 15M40 38l-4 16" />
+    </symbol>
+    <symbol id="cake" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#d8a090" d="M12 28l39-12v37H12z" />
+      <path class="food-shape" fill="#f0ddd0" d="M12 28l39-12-9 17-30 8z" />
+      <path class="food-shape" fill="#c96f67" d="M30 17c-3-5 1-10 6-8 6 2 5 10-1 11z" />
+      <path class="food-hatch" d="M15 46c11-3 23-6 34-10M37 25l-5 31" />
+    </symbol>
+    <symbol id="banana" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#dec97c" d="M11 18c7 21 20 30 40 23-7 15-24 20-36 7-8-9-9-21-4-30z" />
+      <path class="food-hatch" d="M15 24c8 16 19 22 34 19M18 43c8 8 17 10 27 6" />
+    </symbol>
+    <symbol id="carrot" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#cf815e" d="M21 20l29 5-23 33z" />
+      <path class="food-shape" fill="#7c956e" d="M23 22C9 16 10 7 12 5c8 4 12 9 11 17zM27 21c0-13 8-18 12-17 0 8-3 14-12 17zM26 21c9-10 17-8 20-5-6 6-12 8-20 5z" />
+      <path class="food-hatch" d="M25 30l12 2M23 39l9 2M21 47l6 1" />
+    </symbol>
+    <symbol id="cucumber" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#86a276" d="M15 51c-8-7-6-18 1-28C23 13 34 5 44 11c11 7 7 19 1 29-7 11-21 18-30 11z" />
+      <path class="food-hatch" d="M18 45c9-12 17-22 28-29M20 31l5 3M30 20l5 3M34 40l5 2" />
+    </symbol>
+    <symbol id="apple" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#c87567" d="M31 18c-8-8-20-2-20 12 0 16 9 27 20 27 13 0 23-11 22-27-1-13-13-19-22-12z" />
+      <path class="food-shape" fill="none" d="M31 19c-1-8 2-13 7-16" />
+      <path class="food-shape" fill="#7c9371" d="M36 9c6-4 11-2 14 2-5 4-10 3-14-2z" />
+      <path class="food-hatch" d="M17 31c9-4 20-4 30 0M19 43c8 3 17 3 26-1" />
+    </symbol>
+    <symbol id="potato" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#b89570" d="M13 25c5-13 15-17 29-13 13 4 17 16 11 29-6 13-20 19-32 12C9 46 8 36 13 25z" />
+      <path class="food-hatch" d="M22 23l3 2M39 19l4 1M18 38l4 2M37 43l3 2M28 51l3-1" />
+    </symbol>
+    <symbol id="cabbage" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#91a982" d="M11 34c0-14 9-24 21-24 14 0 23 11 22 25-1 13-10 22-22 22-13 0-21-9-21-23z" />
+      <path class="food-hatch" d="M32 12c-8 10-8 28 0 43M31 20c9 3 16 9 21 17M31 27c-8 2-14 7-18 13M31 39c7 0 13 3 17 8" />
+    </symbol>
+    <symbol id="orange" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#d99362" d="M11 34c0-14 9-24 22-24s22 10 22 24-9 23-22 23-22-9-22-23z" />
+      <path class="food-shape" fill="#7f9875" d="M36 8c5-4 11-2 13 2-5 4-10 3-13-2z" />
+      <path class="food-hatch" d="M17 29c9-4 22-4 31 1M18 42c8 3 20 3 29-1" />
+    </symbol>
+    <symbol id="corn" viewBox="0 0 64 64">
+      <path class="food-shape" fill="#d8be72" d="M23 7c13-4 23 6 22 22-1 17-7 29-16 29-9 0-14-11-13-27 0-11 2-20 7-24z" />
+      <path class="food-shape" fill="#7f9671" d="M17 28C9 36 12 50 25 58c-4-12-4-21-8-30zM44 27c9 8 7 23-12 31 7-11 9-20 12-31z" />
+      <path class="food-hatch" d="M20 17c7 3 14 3 21 0M18 27c8 3 17 3 25 0M25 9c-1 15 1 30 5 45M34 9c2 14 1 30-3 44" />
+    </symbol>
+
+    <symbol id="portrait-a" viewBox="0 0 90 130">
+      <path fill="#748b8c" stroke="#302f2a" stroke-width="3.2" d="M17 126c0-28 8-43 28-43 21 0 29 15 29 43z" />
+      <path fill="#e5c4a1" stroke="#302f2a" stroke-width="3.2" d="M22 40c2-22 15-33 31-29 18 5 23 22 16 44-7 22-19 32-33 24-12-7-17-22-14-39z" />
+      <path fill="#302f2a" stroke="#302f2a" stroke-width="2.5" d="M20 43C9 27 19 8 37 7c7-8 22-1 25 7 13 2 17 14 10 25-4-9-8-15-14-19-3 7-11 12-21 14-5 1-10 4-17 9z" />
+      <path class="ink thin" d="M34 49l1 1M55 48l1 1M40 65c6 3 11 3 15-1M23 90c16 6 31 6 46 0" />
+    </symbol>
+    <symbol id="portrait-b" viewBox="0 0 90 130">
+      <path fill="#c76d5b" stroke="#302f2a" stroke-width="3.2" d="M12 127c2-31 12-45 33-45 22 0 31 17 33 45z" />
+      <path fill="#e5c4a1" stroke="#302f2a" stroke-width="3.2" d="M21 40c1-23 14-34 32-31 17 3 24 19 19 40-5 22-17 33-32 29-14-4-20-18-19-38z" />
+      <path fill="#302f2a" stroke="#302f2a" stroke-width="2.5" d="M19 45C8 32 15 14 29 9c1-10 17-12 22-3 18-2 28 12 23 31-7-9-14-15-24-18-8 9-17 17-31 26z" />
+      <path class="ink thin" d="M34 48l1 1M55 46l1 1M39 63c5 2 10 1 14-3M17 104c19-8 38-8 57 0" />
+    </symbol>
+    <symbol id="portrait-c" viewBox="0 0 90 130">
+      <path fill="#76866b" stroke="#302f2a" stroke-width="3.2" d="M11 127c3-30 14-43 34-43 21 0 31 16 34 43z" />
+      <path fill="#e5c4a1" stroke="#302f2a" stroke-width="3.2" d="M22 39c3-22 16-32 34-27 17 5 22 22 15 42-7 21-19 31-33 24-13-6-19-21-16-39z" />
+      <path fill="#302f2a" stroke="#302f2a" stroke-width="2.5" d="M20 43C7 37 9 21 20 16c-1-10 12-16 20-10 8-9 23-3 23 8 13 1 18 14 9 24-5-8-12-14-22-17-10 8-19 14-30 22z" />
+      <path class="ink thin" d="M34 48l1 1M55 47l1 1M38 63c6 5 12 5 17 0M17 102c18-6 37-6 56 0" />
+    </symbol>
+    <symbol id="portrait-d" viewBox="0 0 90 130">
+      <path fill="#b68e68" stroke="#302f2a" stroke-width="3.2" d="M13 127c2-29 12-43 32-43 22 0 30 17 32 43z" />
+      <path fill="#e5c4a1" stroke="#302f2a" stroke-width="3.2" d="M20 39c4-22 19-32 36-25 16 7 19 24 11 43-8 19-21 28-34 20-12-8-17-22-13-38z" />
+      <path fill="#302f2a" stroke="#302f2a" stroke-width="2.5" d="M18 38C14 20 27 7 45 9c20 1 29 13 24 33-6-11-15-18-27-19-8 0-15 5-24 15z" />
+      <path class="ink thin" d="M32 47l1 1M53 48l1 1M37 63c5 4 10 4 15 0M19 101c17-7 36-7 53 0" />
+    </symbol>
+  </defs>
+
+  <g filter="url(#rough)">
+    <path fill="#c8b69d" stroke="#302f2a" stroke-width="5" d="M-20-20H1460V605c-105 22-224 7-340 18-175 17-296-20-456 4-186 28-331-16-480 5-75 10-140-7-204-18z" />
+    <path fill="#7f634e" stroke="#302f2a" stroke-width="5" d="M-18 588c174 27 301 1 454 24 196 30 322-17 501 7 185 26 331-10 521-28v329H-18z" />
+    <path class="hatch" d="M0 644c210-28 427 41 641 2M778 652c213 28 420-36 662-12M31 716c183-31 338 23 527 3M648 735c251 28 500-43 771-21M-4 805c220-31 438 32 660 3M758 812c210 17 430-30 690-17" />
+
+    <path fill="#7c9290" stroke="#302f2a" stroke-width="5" d="M65 118l306-28 17 229-315 24z" />
+    <path fill="#d7cbb7" stroke="#302f2a" stroke-width="4" d="M80 132l137-12 5 195-133 11zM237 117l119-11 15 191-132 13z" />
+    <path class="ink thin" d="M222 113l13 198M75 227l296-23M103 302c37-45 69-68 114-78M248 290c35-57 71-83 112-102" />
+    <path fill="#77866d" stroke="#302f2a" stroke-width="5" d="M36 85c39 18 62 41 73 84l-27 179-58 7zM362 77c-33 28-47 66-43 108l25 154 62-8z" />
+    <path class="hatch" d="M50 112c25 48 27 110 15 188M381 103c-28 51-30 116-12 184" />
+
+    <path fill="#966b4f" stroke="#302f2a" stroke-width="5" d="M1124 128l251 23-19 190-248-9z" />
+    <path class="ink thin" d="M1135 180l230 16M1125 253l232 7M1195 139l-13 194M1284 146l-9 191" />
+    <path fill="#72856d" stroke="#302f2a" stroke-width="5" d="M1025 309c-12-46 12-84 43-102 8 38-2 72-43 102zM1040 316c25-39 59-48 91-35-19 35-48 50-91 35zM1017 313c-29-24-49-16-69 3 18 25 42 31 69-3z" />
+    <path fill="#bd6e5b" stroke="#302f2a" stroke-width="5" d="M981 324l120 1-13 109-94 4z" />
+
+    <path class="ink" d="M735-15l-6 122M667 117c35-36 106-39 145-5l-18 56-118-4z" />
+    <path fill="#e2bd72" stroke="#302f2a" stroke-width="5" d="M664 120c37-37 112-40 151-5l-19 57-121-5z" />
+    <path class="hatch" d="M685 130c32 12 70 12 106-1M696 145c29 10 56 10 84 0" />
+  </g>
+
+  <g filter="url(#rough)">
+    <path fill="#684632" opacity=".55" d="M157 315c63-135 271-175 499-172 299 3 554 51 642 201 82 139 22 348-105 438-154 109-719 98-929-3C93 697 74 493 157 315z" transform="translate(10 24)" />
+    <path fill="#9e6f50" stroke="#302f2a" stroke-width="7" d="M152 282c79-119 270-146 508-141 308 6 546 53 638 198 85 134 24 331-111 416-169 105-706 100-918-1-164-78-202-343-117-472z" />
+    <path class="ink thin" d="M185 302c95-96 279-122 476-116 261 8 486 44 596 171M139 470c115-73 299-88 511-70 251 21 446-3 649 85M165 640c170-60 348-40 535-20 195 20 372 3 554-62" />
+    <path class="hatch" d="M219 256c55 22 104 32 156 32M1046 270c60 9 112 28 163 59M160 559c60 7 111 25 157 58M1107 664c48-20 92-31 133-30M426 748c80-17 155-19 225-9" />
+  </g>
+
+  <g transform="translate(49 36) rotate(-2)">
+    <text class="display" font-size="38">Chews Freedom</text>
+    <text class="body muted" x="18" y="34" font-size="12" font-weight="700" letter-spacing="2">WHIMSICAL FAMILY SKETCH</text>
+    <path class="ink" d="M0 48c74-9 161 9 248-3" />
+  </g>
+  <text class="display" x="475" y="56" font-size="15" transform="rotate(2 475 56)">ROUND <tspan class="accent" font-size="25">8</tspan> / ALL FOOD IS PUBLIC</text>
+
+  <g filter="url(#shadow)" transform="rotate(3 1216 76)">
+    <path fill="#faf1e2" d="M1074 39l65-6 72 6 76-7 103 11-6 76-77 7-79-6-74 8-73-9z" />
+    <path fill="#748b8c" stroke="#302f2a" stroke-width="4" d="M1098 55c18-7 37 2 39 20 2 20-18 34-36 23-17-10-19-36-3-43z" />
+    <text class="display" x="1111" y="84" font-size="20" fill="#faf1e2">RAIN</text>
+    <text class="display" x="1153" y="69" font-size="18">THIS ROUND: RAIN</text>
+    <text class="body muted" x="1153" y="91" font-size="11">REVEALED BEFORE DEAL / THIS ROUND ONLY</text>
+  </g>
+
+  <g transform="translate(500 350) rotate(-4)" filter="url(#shadow)">
+    <path fill="#faf1e2" d="M12 10l55 5 53-9 60 7 55-5-7 50 8 49-8 72-58-6-54 10-52-9-58 7 8-55-9-52z" />
+    <path fill="none" stroke="#302f2a" stroke-width="3" stroke-dasharray="8 8" d="M27 28c51-11 120-4 182-3 1 40 5 82-4 128-58 7-111 0-174 4-8-43-2-85-4-129z" />
+    <text class="body muted" x="120" y="59" text-anchor="middle" font-size="12">HELP FIRST</text>
+    <text class="display" x="120" y="111" text-anchor="middle" font-size="50">13 / 10</text>
+    <text class="display accent" x="120" y="139" text-anchor="middle" font-size="15">PATIENT 1 IS OVER THE LIMIT</text>
+  </g>
+
+  <path class="ink" stroke-dasharray="9 12" d="M535 466c-118 42-198 36-289-8" />
+  <path class="ink" d="M260 442l-25 16 29 9" />
+
+  <g transform="translate(488 112) rotate(-2)">
+    <use href="#portrait-a" width="84" height="122" />
+    <path fill="#faf1e2" d="M72 0l137 4-5 38-134-2z" filter="url(#shadow)" />
+    <text class="display" x="83" y="18" font-size="16">RAIN</text>
+    <text class="body" x="83" y="34" font-size="10" fill="#76866b">ACTIVE NUTRITIONIST</text>
+    <path class="ink thin" stroke-dasharray="7 6" d="M76 69c48-17 142-12 212 2" />
+    <use href="#pear" x="78" y="47" width="68" height="68" transform="rotate(-10 112 81)" />
+    <use href="#bread" x="146" y="40" width="72" height="72" transform="rotate(6 182 76)" />
+    <use href="#broccoli" x="216" y="52" width="68" height="68" transform="rotate(-4 250 86)" />
+    <text class="body muted" x="178" y="145" font-size="11">YOUR MOVE:</text>
+    <text class="display accent" x="238" y="146" font-size="19">SWAP</text>
+  </g>
+
+  <g transform="translate(31 330) rotate(-5)">
+    <use href="#portrait-b" width="84" height="122" />
+    <path fill="#faf1e2" d="M71 2l145-2-8 42-138-3z" filter="url(#shadow)" />
+    <text class="display" x="82" y="19" font-size="16">RICE</text>
+    <text class="body accent" x="82" y="35" font-size="10">PATIENT 1 / HELP FIRST</text>
+    <path class="ink thin" stroke-dasharray="7 6" d="M75 69c57-12 143-10 213 4" />
+    <use href="#cake" x="75" y="48" width="69" height="69" transform="rotate(-9 109 82)" />
+    <use href="#banana" x="145" y="40" width="73" height="73" transform="rotate(5 181 76)" />
+    <use href="#carrot" x="217" y="53" width="66" height="66" transform="rotate(-6 250 86)" />
+    <text class="body muted" x="164" y="147" font-size="11">CURRENT TOTAL</text>
+    <text class="display accent" x="228" y="149" font-size="21">13</text>
+    <text class="body" x="254" y="147" font-size="11">/ 10</text>
+  </g>
+
+  <g transform="translate(1115 305) rotate(4)">
+    <use href="#portrait-c" x="218" width="84" height="122" transform="scale(-1 1) translate(-520 0)" />
+    <path fill="#faf1e2" d="M88 0l143 5-4 39-144-7z" filter="url(#shadow)" />
+    <text class="display" x="99" y="19" font-size="16">JOY</text>
+    <text class="body" x="99" y="35" font-size="10" fill="#76866b">PATIENT 2 / WITHIN LIMIT</text>
+    <path class="ink thin" stroke-dasharray="7 6" d="M8 73c62-17 145-12 216 0" />
+    <use href="#cucumber" x="8" y="49" width="68" height="68" transform="rotate(-8 42 83)" />
+    <use href="#apple" x="79" y="41" width="72" height="72" transform="rotate(6 115 77)" />
+    <use href="#potato" x="150" y="53" width="67" height="67" transform="rotate(-5 183 86)" />
+    <text class="body muted" x="12" y="147" font-size="11">CURRENT TOTAL</text>
+    <text class="display" x="76" y="149" font-size="21">9</text>
+    <text class="body" x="91" y="147" font-size="11">/ 10</text>
+  </g>
+
+  <g transform="translate(628 700) rotate(3)">
+    <use href="#portrait-d" width="84" height="122" />
+    <path fill="#faf1e2" d="M72 1l146 3-8 39-139-5z" filter="url(#shadow)" />
+    <text class="display" x="83" y="19" font-size="16">SAIL</text>
+    <text class="body" x="83" y="35" font-size="10" fill="#76866b">ASSISTANT / NEXT TO ACT</text>
+    <path class="ink thin" stroke-dasharray="7 6" d="M76 71c54-14 141-11 213 3" />
+    <use href="#cabbage" x="77" y="48" width="68" height="68" transform="rotate(-9 111 82)" />
+    <use href="#orange" x="146" y="41" width="72" height="72" transform="rotate(6 182 77)" />
+    <use href="#corn" x="218" y="52" width="67" height="67" transform="rotate(-5 251 85)" />
+    <text class="body muted" x="169" y="147" font-size="11">WAITING FOR ACTIVE NUTRITIONIST</text>
+  </g>
+
+  <g transform="translate(24 746) rotate(-3)">
+    <path fill="#eee4d5" stroke="#302f2a" stroke-width="4" d="M10 70c27-41 80-53 124-35 41 17 74 48 100 74-58-9-113-6-165 2-31 5-54-8-59-41z" />
+    <path fill="#76866b" stroke="#302f2a" stroke-width="4" d="M36 73c-5-30 15-47 36-53 1 24-7 41-36 53zM41 78c23-28 48-31 68-19-17 26-38 34-68 19z" />
+    <text class="body" x="85" y="57" font-size="12" font-weight="800">GARDEN SUPPLY</text>
+    <text class="display" x="85" y="86" font-size="25" fill="#76866b">7 LEFT</text>
+  </g>
+
+  <g transform="translate(1080 805) rotate(1)" filter="url(#shadow)">
+    <path fill="#faf1e2" d="M0 9l88-7 93 6 87-7 92 9-7 72-103 3-91-6-80 7-74-8z" />
+    <text class="display accent" x="18" y="32" font-size="15">CONCEPT D: WHIMSICAL FAMILY SKETCH</text>
+    <text class="body muted" x="18" y="54" font-size="11">No rigid top bar, mirrored plates, or central symmetry.</text>
+    <text class="body muted" x="18" y="70" font-size="11">Characters, food, and room together create the game scene.</text>
+  </g>
+
+  <rect width="1440" height="900" fill="#54483f" opacity=".075" filter="url(#grain)" style="mix-blend-mode:multiply" pointer-events="none" />
+</svg>

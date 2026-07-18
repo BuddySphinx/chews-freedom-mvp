@@ -1,0 +1,8 @@
+node_modules/
+dist/
+data/
+.vercel/
+.pnpm-store/
+.obsidian/
+__pycache__/
+*.log
