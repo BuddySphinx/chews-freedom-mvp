@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 
@@ -44,6 +44,67 @@ function strictTarget(game: GameState): Seat | null {
 
 function total(hand: Card[]): number { return hand.reduce((sum, card) => sum + card.value, 0); }
 
+function aiDecisionIsDue(game: GameState): boolean {
+  const actor = currentActor(game);
+  if (actor !== null) return game.controllers[actor] === "AI";
+  return game.phase === "PATIENT_SWAP"
+    && game.controllers[game.currentRoles.patient1] === "AI"
+    && game.controllers[game.currentRoles.patient2] === "AI";
+}
+
+function turnCue(game: GameState, seat: Seat): { label: string; current: boolean } | null {
+  const actor = currentActor(game);
+  if (actor === seat) return { label: game.controllers[seat] === "AI" ? "AI is moving" : "Make a move", current: true };
+  if (game.phase === "PATIENT_SWAP" && (seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2)) {
+    return game.controllers[seat] === "AI"
+      ? { label: "AI chooses with partner", current: false }
+      : { label: "Choose a card", current: true };
+  }
+  if (game.phase === "VEGETABLE_RESOLUTION" && strictTarget(game) === seat) return { label: "Choose a garden card", current: true };
+  return null;
+}
+
+function currentStep(game: GameState): number {
+  if (game.phase === "ACTIVE_RESCUE") return 0;
+  if (game.phase === "ASSISTANT_RESCUE") return 1;
+  if (game.phase === "PATIENT_SWAP") return 2;
+  if (game.phase === "VEGETABLE_RESOLUTION") return 3;
+  return 4;
+}
+
+function TurnFlow({ game }: { game: GameState }) {
+  const step = currentStep(game);
+  const items = [
+    { label: `${NAMES[game.currentRoles.active]} · nutritionist`, note: "rescue" },
+    { label: `${NAMES[game.currentRoles.assistant]} · assistant`, note: "support" },
+    { label: `${NAMES[game.currentRoles.patient1]} + ${NAMES[game.currentRoles.patient2]}`, note: "patient aid" },
+    { label: "Vegetable patch", note: "only if needed" }
+  ];
+  return (
+    <nav className="turn-flow" aria-label="Round turn order">
+      {items.map((item, index) => {
+        const status = index < step ? "complete" : index === step ? "current" : "upcoming";
+        return <div className={`flow-step ${status}`} key={item.note}><span>{index + 1}</span><div><strong>{item.label}</strong><small>{status === "current" ? "Now" : status === "complete" ? "Done" : item.note}</small></div></div>;
+      })}
+    </nav>
+  );
+}
+
+function RoundTransition({ game }: { game: GameState }) {
+  const outcome = game.lastRoundOutcome?.round === game.round - 1 ? game.lastRoundOutcome : null;
+  return (
+    <section className="round-transition" aria-live="polite" aria-label={`Day ${game.round} begins`}>
+      <div className="round-transition-card">
+        {outcome && <p className={`outcome-kicker ${outcome.kind.toLowerCase()}`}>Yesterday · {outcome.title}</p>}
+        <p className="day-number">Day {game.round}</p>
+        <h2>Good morning.</h2>
+        <p>{outcome ? outcome.detail : "A new round is ready. Follow the turn order around the table."}</p>
+        <small>First move · {NAMES[game.currentRoles.active]}, active nutritionist</small>
+      </div>
+    </section>
+  );
+}
+
 async function responsePayload(response: Response): Promise<{ game?: GameState | null; error?: string }> {
   const body = await response.text();
   try {
@@ -68,7 +129,9 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
   const isPatient = seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2;
   const isTarget = target === seat;
+  const cue = turnCue(game, seat);
   const rescueActorIsHuman = seat === actor && game.controllers[seat] === "HUMAN";
+  const patientSwapChoice = game.phase === "PATIENT_SWAP" && isPatient && game.controllers[seat] === "HUMAN";
   const patientPosition = seat === game.currentRoles.patient1 ? 0 : 1;
   const chosenPatientCard = selectedPatientCards[patientPosition];
   const cardIsSelected = (index: number) => (seat === actor && selectedActorCard === index) || (game.phase === "PATIENT_SWAP" && chosenPatientCard === index);
@@ -77,12 +140,13 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
   const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((card) => card.value)) : -1;
 
   return (
-    <article className={`seat-panel seat-${seat} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""}`}>
+    <article className={`seat-panel seat-${seat} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div>
           <p className="seat-number">Seat {seat + 1}</p>
           <h3>{NAMES[seat]}</h3>
           <span className="role-label">{roleFor(game, seat)}</span>
+          {cue && <span className={`turn-cue ${cue.current ? "current" : ""}`}>{cue.label}</span>}
         </div>
         <div className={`control-badge ${game.controllers[seat] === "AI" ? "ai" : "human"}`}>{game.controllers[seat] === "AI" ? "AI" : "Human"}</div>
       </div>
@@ -92,7 +156,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
           const activeRescueChoice = game.phase === "ACTIVE_RESCUE" && isPatient && !withinLimit && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
           const assistantRescueChoice = game.phase === "ASSISTANT_RESCUE" && isPatient && !withinLimit && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
           const cardInteractive = game.phase === "PATIENT_SWAP"
-            ? isPatient
+            ? patientSwapChoice
             : game.phase === "VEGETABLE_RESOLUTION"
               ? vegetableChoice
               : rescueActorIsHuman || activeRescueChoice || assistantRescueChoice;
@@ -135,7 +199,7 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
         <div className="controller-grid">
           {controllers.map((controller, index) => <label className="controller-choice" key={NAMES[index]}><span><strong>{NAMES[index]}</strong><small>Seat {index + 1}</small></span><select value={controller} onChange={(event) => { const next = [...controllers]; next[index] = event.target.value as Controller; setControllers(next); }}><option value="HUMAN">Human</option><option value="AI">AI</option></select></label>)}
         </div>
-        <p className="tiny-note">All food cards stay visible. You can start with any mix of human and AI players.</p>
+        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; in a mixed patient pair, the AI chooses its own card after the human patient chooses theirs.</p>
       </section>
     </main>
   );
@@ -149,6 +213,9 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [selectedActorCard, setSelectedActorCard] = useState<number | null>(null);
   const [selectedPatientCards, setSelectedPatientCards] = useState<[number | null, number | null]>([null, null]);
+  const [showRoundTransition, setShowRoundTransition] = useState(false);
+  const seenRound = useRef<number | null>(null);
+  const autoAdvancedRevision = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,6 +271,30 @@ export function App() {
     finally { setLoading(false); }
   };
 
+  useEffect(() => {
+    if (!game || showSetup) {
+      seenRound.current = null;
+      setShowRoundTransition(false);
+      return;
+    }
+    if (seenRound.current === game.round) return;
+    seenRound.current = game.round;
+    setShowRoundTransition(true);
+    const timer = window.setTimeout(() => setShowRoundTransition(false), 2_650);
+    return () => window.clearTimeout(timer);
+  }, [game?.round, showSetup]);
+
+  useEffect(() => {
+    if (!game || showSetup || loading || !aiDecisionIsDue(game)) {
+      if (!game || !aiDecisionIsDue(game)) autoAdvancedRevision.current = null;
+      return;
+    }
+    if (autoAdvancedRevision.current === game.revision) return;
+    autoAdvancedRevision.current = game.revision;
+    setMessage("AI is taking the next turn...");
+    void send({ type: "ADVANCE_AI", expectedRevision: game.revision });
+  }, [game?.revision, game?.phase, loading, showSetup]);
+
   const onSelect = (seat: Seat, index: number) => {
     if (!game) return;
     if (game.phase === "VEGETABLE_RESOLUTION") {
@@ -211,6 +302,7 @@ export function App() {
       return;
     }
     if (game.phase === "PATIENT_SWAP") {
+      if (game.controllers[seat] === "AI") return;
       if (seat === game.currentRoles.patient1) setSelectedPatientCards(([_, second]) => [index, second]);
       if (seat === game.currentRoles.patient2) setSelectedPatientCards(([first]) => [first, index]);
       return;
@@ -226,7 +318,13 @@ export function App() {
   const prompt = useMemo(() => {
     if (!game) return "Set up a local game.";
     if (game.phase === "GAME_OVER") return game.endReason ?? "The game has ended.";
-    if (game.phase === "PATIENT_SWAP") return "Patients may each select one card to swap, or choose not to swap. If either patient is still over the limit afterward, the players move to the garden step.";
+    if (game.phase === "PATIENT_SWAP") {
+      const { patient1, patient2 } = game.currentRoles;
+      const humanPatients = [patient1, patient2].filter((seat) => game.controllers[seat] === "HUMAN");
+      if (!humanPatients.length) return "Both patients are AI-controlled. They are choosing whether to swap.";
+      if (humanPatients.length === 1) return `${NAMES[humanPatients[0]]}, choose one card. The AI patient will choose its own best card when you swap.`;
+      return "Each patient chooses one card to swap, or the patients may pass. If either patient is still over the limit afterward, the players move to the garden step.";
+    }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       const target = strictTarget(game);
       return target === null ? "All patients are within the limit." : `Garden turn: click a highlighted highest-value card on ${NAMES[target]}. It will be replaced by one zero-value vegetable. Keep taking vegetables until every patient is within the limit or the field is empty.`;
@@ -243,8 +341,10 @@ export function App() {
   if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
 
   const actor = currentActor(game);
-  const canSubmitPatientSwap = selectedPatientCards[0] !== null && selectedPatientCards[1] !== null;
-  const canAdvanceAi = actor !== null ? game.controllers[actor] === "AI" : game.phase === "PATIENT_SWAP" && game.controllers[game.currentRoles.patient1] === "AI" && game.controllers[game.currentRoles.patient2] === "AI";
+  const patient1Ai = game.controllers[game.currentRoles.patient1] === "AI";
+  const patient2Ai = game.controllers[game.currentRoles.patient2] === "AI";
+  const canSubmitPatientSwap = (patient1Ai || selectedPatientCards[0] !== null) && (patient2Ai || selectedPatientCards[1] !== null);
+  const aiTurn = aiDecisionIsDue(game);
 
   return (
     <main className="app-shell">
@@ -261,26 +361,28 @@ export function App() {
             <small>{game.eventPool.length} event cards remain in this game</small>
           </div>
           <div className={`garden-panel ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><span>Garden supply</span><strong>{game.gardenTokens}</strong><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn: click a highlighted patient card to take one zero-value vegetable." : "Vegetables replace the highest remaining food with value 0 and never give points."}</p></div>
+          {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
           <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
         </aside>
         <section className="table-area" aria-label="Chews Freedom public game table">
+          <TurnFlow game={game} />
           <div className="table-felt">
+            {showRoundTransition && <RoundTransition game={game} />}
             <SeatPanel game={game} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
             <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
             <section className="centre-status" aria-live="polite">
               <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
-              <strong>{game.phase === "GAME_OVER" ? "Game complete" : game.phase === "VEGETABLE_RESOLUTION" ? "Choose a garden card" : `${game.threshold} limit`}</strong>
-              <span>{game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : game.currentEvent ? "Event modifier active" : "Standard round"}</span>
+              <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} limit`}</strong>
+              <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
               {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
             </section>
             <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
             <SeatPanel game={game} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
           </div>
           <div className="action-tray">
-            <div><strong>{loading ? "Checking action..." : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn — players choose the replacement" : "Your turn board"}</strong><p>{message}</p></div>
+            <div><strong>{loading ? "Checking action..." : aiTurn ? "AI turn — choosing a move" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn — players choose the replacement" : "Your turn board"}</strong><p>{message}</p></div>
             <div className="action-buttons">
-              {game.phase === "PATIENT_SWAP" && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0]!, patient2Index: selectedPatientCards[1]! })} disabled={loading || !canSubmitPatientSwap}>Swap selected food</button></>}
-              {canAdvanceAi && <button className="primary-button" type="button" onClick={() => void send({ type: "ADVANCE_AI", expectedRevision: game.revision })} disabled={loading}>Let AI continue</button>}
+              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}
             </div>
           </div>
         </section>

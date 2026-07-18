@@ -13,8 +13,8 @@ If macOS asks for confirmation the first time, choose **Open**. If the browser d
 
 ## What you can play now
 
-- Four fixed seats, using any mix of human and AI controllers.
-- Public food cards, a two-nutritionist helpful-rescue chain, player-controlled patient swap, a visible click-to-replace zero-value garden phase, scores on every seat, garden end condition, and replayable local state.
+- Four fixed seats, using any mix of human and AI controllers. AI nutritionists and assistants take their turns automatically; in a mixed patient pair, the AI chooses its own card after the human patient chooses theirs.
+- Public food cards, a two-nutritionist helpful-rescue chain, player-controlled patient swap, a visible click-to-replace zero-value garden phase, scores on every seat, garden end condition, and replayable local state. Each round opens with a Day / Good morning transition, highlights the current decision-maker, and preserves the previous round's outcome summary.
 - Ten event cards are enabled. At most one is drawn before a round's deal; it is then removed from that game.
 - Event effects are clearly marked as prototype game mechanics. They are not medical guidance and need approved content before a formal release.
 

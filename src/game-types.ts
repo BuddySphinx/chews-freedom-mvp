@@ -4,6 +4,8 @@ export type Phase = "ACTIVE_RESCUE" | "ASSISTANT_RESCUE" | "PATIENT_SWAP" | "VEG
 
 export interface Card { id: string; value: number; source: "MAIN_DECK" | "VEGETABLE_SUPPLY"; }
 export interface Score { nutritionistPoints: number; patientMutualAidPoints: number; totalPoints: number; }
+export type RoundOutcomeKind = "NUTRITIONIST" | "PATIENT" | "GARDEN" | "UNRESOLVED";
+export interface RoundOutcome { round: number; kind: RoundOutcomeKind; title: string; detail: string; }
 export interface EventCard { id: string; name: string; shortName: string; summary: string; kind: "THRESHOLD" | "GARDEN"; amount: number; }
 export interface GameLog { id: string; round: number; phase: string; type: string; message: string; }
 export interface GameState {
@@ -26,6 +28,7 @@ export interface GameState {
   currentEvent: EventCard | null;
   currentRoles: { active: Seat; assistant: Seat; patient1: Seat; patient2: Seat };
   rescueTarget: Seat | null;
+  lastRoundOutcome: RoundOutcome | null;
   log: GameLog[];
   endReason?: string;
 }
@@ -33,7 +36,7 @@ export interface GameState {
 export type Command =
   | { type: "RESCUE"; expectedRevision: number; actor: number; actorIndex: number; target: number; targetIndex: number }
   | { type: "RESCUE_PASS"; expectedRevision: number; actor: number }
-  | { type: "PATIENT_SWAP"; expectedRevision: number; patient1Index: number; patient2Index: number }
+  | { type: "PATIENT_SWAP"; expectedRevision: number; patient1Index?: number; patient2Index?: number }
   | { type: "PATIENT_PASS"; expectedRevision: number }
   | { type: "TAKE_VEGETABLE"; expectedRevision: number; patient: number; cardIndex: number }
   | { type: "ADVANCE_AI"; expectedRevision: number };

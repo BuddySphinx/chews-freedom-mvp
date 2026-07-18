@@ -14,6 +14,15 @@ export interface Score {
   totalPoints: number;
 }
 
+export type RoundOutcomeKind = "NUTRITIONIST" | "PATIENT" | "GARDEN" | "UNRESOLVED";
+
+export interface RoundOutcome {
+  round: number;
+  kind: RoundOutcomeKind;
+  title: string;
+  detail: string;
+}
+
 export interface EventCard {
   id: string;
   name: string;
@@ -52,6 +61,7 @@ export interface GameState {
   currentEvent: EventCard | null;
   currentRoles: { active: Seat; assistant: Seat; patient1: Seat; patient2: Seat };
   rescueTarget: Seat | null;
+  lastRoundOutcome: RoundOutcome | null;
   log: GameLog[];
   endReason?: string;
 }
@@ -247,6 +257,24 @@ function choosePatientSwap(state: GameState): { firstIndex: number; secondIndex:
   })[0];
 }
 
+function chooseAiPatientCard(state: GameState, aiSeat: Seat, humanSeat: Seat, humanIndex: number): { firstIndex: number; secondIndex: number } {
+  const { patient1, patient2 } = state.currentRoles;
+  if (!Number.isInteger(humanIndex) || humanIndex < 0 || humanIndex >= 3) throw new Error("Choose one of the human patient's cards.");
+  const candidates = [0, 1, 2].map((aiIndex) => ({
+    firstIndex: patient1 === aiSeat ? aiIndex : humanIndex,
+    secondIndex: patient2 === aiSeat ? aiIndex : humanIndex
+  }));
+  return candidates.sort((left, right) => {
+    const evaluate = (candidate: typeof left) => {
+      const copy = copyForSimulation(state);
+      swap(copy, patient1, candidate.firstIndex, patient2, candidate.secondIndex);
+      const compliant = patients(copy).filter((seat) => isCompliant(copy.hands[seat], copy.threshold)).length;
+      return [compliant, -patientNeed(copy), -totalPatientExcess(copy), -candidate.firstIndex, -candidate.secondIndex];
+    };
+    return compareRank(evaluate(left), evaluate(right));
+  })[0];
+}
+
 function chooseActive(state: GameState): RescueAction | null {
   const actions = legalRescues(state, state.currentRoles.active);
   if (!actions.length) return null;
@@ -348,6 +376,15 @@ function executeVegetableReplacement(state: GameState, patient: Seat, cardIndex:
 
 function settleRound(state: GameState): void {
   const unresolvedPatients = failingPatients(state).length > 0;
+  const outcome: RoundOutcome = unresolvedPatients
+    ? { round: state.round, kind: "UNRESOLVED", title: "The garden ran out.", detail: "At least one patient remained over the limit." }
+    : state.phase === "VEGETABLE_RESOLUTION"
+      ? { round: state.round, kind: "GARDEN", title: "The vegetable patch came through.", detail: "A zero-value vegetable completed the rescue." }
+      : state.phase === "PATIENT_SWAP"
+        ? { round: state.round, kind: "PATIENT", title: "We succeeded together.", detail: "Patient mutual aid completed the rescue." }
+        : { round: state.round, kind: "NUTRITIONIST", title: "The nutritionists were amazing.", detail: "The rescue was completed before patient aid was needed." };
+  state.lastRoundOutcome = outcome;
+  message(state, "SETTLEMENT", "ROUND_RESULT", `${outcome.title} ${outcome.detail}`);
   for (let seat = 0; seat < 4; seat += 1) {
     for (const card of state.hands[seat]) if (card.source === "MAIN_DECK") state.discardPile.push(card);
     state.hands[seat] = [];
@@ -480,6 +517,7 @@ export function createGame(controllers: Controller[] = ["HUMAN", "AI", "AI", "AI
     currentEvent: null,
     currentRoles: rolesFor(0),
     rescueTarget: null,
+    lastRoundOutcome: null,
     log: []
   });
   const deck = Object.entries(DECK_COUNTS).flatMap(([value, count]) => Array.from({ length: count }, (_, index) => ({ id: `main-${value}-${index + 1}`, value: Number(value), source: "MAIN_DECK" as const })));
@@ -511,7 +549,23 @@ export function command(state: GameState, input: { type: "RESCUE" | "RESCUE_PASS
     advanceAfterRescue(state);
   } else if (input.type === "PATIENT_SWAP") {
     if (state.phase !== "PATIENT_SWAP") throw new Error("Patient swapping is not available now.");
-    executePatientSwap(state, input.patient1Index ?? -1, input.patient2Index ?? -1, false);
+    const { patient1, patient2 } = state.currentRoles;
+    const patient1Ai = state.controllers[patient1] === "AI";
+    const patient2Ai = state.controllers[patient2] === "AI";
+    if (patient1Ai && patient2Ai) {
+      const action = choosePatientSwap(state);
+      if (action && action.firstIndex >= 0) executePatientSwap(state, action.firstIndex, action.secondIndex, true);
+      else { message(state, "PATIENT_SWAP", "AI_PASS", "AI patients chose not to swap."); beginVegetableResolution(state); }
+    } else if (patient1Ai || patient2Ai) {
+      const aiSeat = patient1Ai ? patient1 : patient2;
+      const humanSeat = patient1Ai ? patient2 : patient1;
+      const humanIndex = patient1Ai ? input.patient2Index : input.patient1Index;
+      const action = chooseAiPatientCard(state, aiSeat, humanSeat, humanIndex ?? -1);
+      message(state, "PATIENT_SWAP", "AI_PATIENT_CHOICE", `AI Seat ${aiSeat + 1} chose its best card to support Patient Seat ${humanSeat + 1}.`);
+      executePatientSwap(state, action.firstIndex, action.secondIndex, false);
+    } else {
+      executePatientSwap(state, input.patient1Index ?? -1, input.patient2Index ?? -1, false);
+    }
   } else if (input.type === "PATIENT_PASS") {
     if (state.phase !== "PATIENT_SWAP") throw new Error("A patient pass is not available now.");
     message(state, "PATIENT_SWAP", "PATIENT_PASS", "Patients chose not to swap this round.");

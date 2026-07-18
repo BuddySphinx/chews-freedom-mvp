@@ -29,6 +29,7 @@ async function restoreGame(): Promise<void> {
     validateState(parsed);
     parsed.rulesVersion = LOCAL_RULES_VERSION;
     parsed.rescueTarget ??= null;
+    parsed.lastRoundOutcome ??= null;
     game = parsed;
     // Bring saves created before automatic no-action skipping forward as well.
     runAiTurns(game);

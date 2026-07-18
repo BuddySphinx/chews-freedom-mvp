@@ -42,6 +42,21 @@ describe("Chews Freedom local prototype engine", () => {
     expect(EVENT_DEFINITIONS.some((event) => event.kind === "GARDEN")).toBe(true);
   });
 
+  it("lets a human patient swap with an AI patient without choosing the AI card", () => {
+    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 7);
+    const { patient1, patient2 } = game.currentRoles;
+    game.phase = "PATIENT_SWAP";
+    game.threshold = 0;
+    game.controllers[patient1] = "AI";
+    const humanCard = game.hands[patient2][0].id;
+
+    command(game, { type: "PATIENT_SWAP", expectedRevision: game.revision, patient2Index: 0 });
+
+    expect(game.log.some((entry) => entry.type === "AI_PATIENT_CHOICE")).toBe(true);
+    expect(game.hands[patient1].some((card) => card.id === humanCard)).toBe(true);
+    expect(() => validateState(game)).not.toThrow();
+  });
+
   it("lets the assistant choose a different patient, then keeps garden recovery player-controlled", () => {
     const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 20260717);
     expect(game.phase).toBe("ACTIVE_RESCUE");
@@ -85,6 +100,7 @@ describe("Chews Freedom local prototype engine", () => {
     expect(game.log.some((entry) => entry.type === "VEGETABLE_REPLACEMENT")).toBe(true);
     expect(game.log.some((entry) => entry.type === "GARDEN_EXHAUSTED")).toBe(true);
     expect(game.phase).toBe("GAME_OVER");
+    expect(game.lastRoundOutcome?.kind).toBe("UNRESOLVED");
     expect(() => validateState(game)).not.toThrow();
   });
 });
