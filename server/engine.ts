@@ -1,3 +1,5 @@
+import { FOOD_DECK } from "../src/food-deck.js";
+
 export type Seat = 0 | 1 | 2 | 3;
 export type Controller = "HUMAN" | "AI";
 export type Phase = "ACTIVE_RESCUE" | "ASSISTANT_RESCUE" | "PATIENT_SWAP" | "VEGETABLE_RESOLUTION" | "GAME_OVER";
@@ -6,6 +8,7 @@ export interface Card {
   id: string;
   value: number;
   source: "MAIN_DECK" | "VEGETABLE_SUPPLY";
+  foodId?: string;
 }
 
 export interface Score {
@@ -67,7 +70,6 @@ export interface GameState {
 }
 
 const BASE_THRESHOLD = 10;
-const DECK_COUNTS: Record<number, number> = { 0: 6, 1: 4, 2: 7, 3: 7, 5: 7, 7: 13, 9: 4 };
 const EVENT_OCCURRENCE_PERCENT = 72;
 export const LOCAL_RULES_VERSION = "3.0-local-mvp-draft.5-player-chosen-rescue-target-events-enabled";
 
@@ -502,7 +504,7 @@ export function createGame(controllers: Controller[] = ["HUMAN", "AI", "AI", "AI
   if (controllers.length !== 4) throw new Error("Choose a controller for each of the four seats.");
   const initial = {} as GameState;
   Object.assign(initial, {
-    specVersion: "2.0-codex-1",
+    specVersion: "2.1-codex-48-unique-foods",
     rulesVersion: LOCAL_RULES_VERSION,
     eventsEnabled: true,
     revision: 0,
@@ -525,7 +527,7 @@ export function createGame(controllers: Controller[] = ["HUMAN", "AI", "AI", "AI
     lastRoundOutcome: null,
     log: []
   });
-  const deck = Object.entries(DECK_COUNTS).flatMap(([value, count]) => Array.from({ length: count }, (_, index) => ({ id: `main-${value}-${index + 1}`, value: Number(value), source: "MAIN_DECK" as const })));
+  const deck = FOOD_DECK.map((food) => ({ id: food.id, foodId: food.id, value: food.score, source: "MAIN_DECK" as const }));
   initial.drawPile = shuffle(deck, initial);
   startRound(initial);
   runAiTurns(initial);

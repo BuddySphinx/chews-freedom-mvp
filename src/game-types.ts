@@ -2,7 +2,7 @@ export type Seat = 0 | 1 | 2 | 3;
 export type Controller = "HUMAN" | "AI";
 export type Phase = "ACTIVE_RESCUE" | "ASSISTANT_RESCUE" | "PATIENT_SWAP" | "VEGETABLE_RESOLUTION" | "GAME_OVER";
 
-export interface Card { id: string; value: number; source: "MAIN_DECK" | "VEGETABLE_SUPPLY"; }
+export interface Card { id: string; value: number; source: "MAIN_DECK" | "VEGETABLE_SUPPLY"; foodId?: string; }
 export interface Score { nutritionistPoints: number; patientMutualAidPoints: number; totalPoints: number; }
 export type RoundOutcomeKind = "NUTRITIONIST" | "PATIENT" | "GARDEN" | "UNRESOLVED";
 export interface RoundOutcome { round: number; kind: RoundOutcomeKind; title: string; detail: string; }

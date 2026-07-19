@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
+import { FOOD_DECK_BY_ID } from "./food-deck";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
 // Vercel deployment, the serverless API shares the page's origin instead.
@@ -8,8 +9,8 @@ const isLocalVite = window.location.hostname === "127.0.0.1" && window.location.
 const SERVER_URL = isLocalVite ? "http://127.0.0.1:5174" : window.location.origin;
 const supportsSocketUpdates = isLocalVite || window.location.port === "5174";
 const usesBrowserGameSave = !supportsSocketUpdates;
-const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
-const NAMES = ["Rain", "Rice", "Joy", "Sail"];
+const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
+const NAMES = ["Sam", "Maya", "Leo", "Zoe"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string; dish: string }> = {
   0: { name: "Herb tea", art: "cabbage", garnish: "cucumber", tone: "leaf", dish: "tea" },
@@ -21,7 +22,31 @@ const FOOD: Record<number, { name: string; art: string; garnish: string; tone: s
   9: { name: "Nutty pasta", art: "cucumber", garnish: "carrot", tone: "rose", dish: "pasta" }
 };
 
-type FoodCardDetail = { name: string; art: string; garnish: string; tone: string; dish: string };
+type FoodCardDetail = { name: string; art: string; garnish: string; tone: string; dish: string; category?: string; portion?: string };
+
+const CATEGORY_CARD_DETAILS: Record<string, Omit<FoodCardDetail, "name" | "category" | "portion">> = {
+  Fruit: { art: "apple", garnish: "pear", tone: "rose", dish: "porridge" },
+  Vegetable: { art: "broccoli", garnish: "carrot", tone: "leaf", dish: "greens" },
+  Grain: { art: "corn", garnish: "broccoli", tone: "sun", dish: "porridge" },
+  Legume: { art: "broccoli", garnish: "cabbage", tone: "earth", dish: "stew" },
+  Dairy: { art: "pear", garnish: "cabbage", tone: "sun", dish: "porridge" },
+  Protein: { art: "corn", garnish: "carrot", tone: "sun", dish: "tofu" },
+  Spread: { art: "potato", garnish: "cucumber", tone: "earth", dish: "curry" },
+  Dip: { art: "cucumber", garnish: "carrot", tone: "earth", dish: "curry" },
+  Soy: { art: "corn", garnish: "broccoli", tone: "sun", dish: "tofu" },
+  Fish: { art: "cucumber", garnish: "corn", tone: "rose", dish: "pasta" },
+  Poultry: { art: "carrot", garnish: "broccoli", tone: "earth", dish: "stew" },
+  Meat: { art: "potato", garnish: "carrot", tone: "rose", dish: "stew" },
+  Nuts: { art: "pear", garnish: "broccoli", tone: "earth", dish: "quinoa" },
+  Seafood: { art: "cucumber", garnish: "carrot", tone: "rose", dish: "curry" }
+};
+
+function foodForCard(card: Card): FoodCardDetail {
+  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf", dish: "greens", category: "Vegetable" };
+  const workbookFood = card.foodId ? FOOD_DECK_BY_ID[card.foodId] : undefined;
+  if (workbookFood) return { name: workbookFood.name, category: workbookFood.category, portion: workbookFood.portion, ...CATEGORY_CARD_DETAILS[workbookFood.category] };
+  return FOOD[card.value] ?? FOOD[0];
+}
 
 function FoodDish({ food }: { food: FoodCardDetail }) {
   const isTea = food.dish === "tea";
@@ -54,45 +79,85 @@ function FoodDish({ food }: { food: FoodCardDetail }) {
 }
 
 function FoodCardFace({ card }: { card: Card }) {
-  const food = card.source === "VEGETABLE_SUPPLY"
-    ? { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf", dish: "greens" }
-    : FOOD[card.value] ?? FOOD[0];
+  const food = foodForCard(card);
   return (
     <>
-      <span className="food-card-header" aria-hidden="true"><span>Food card</span><span className="food-value">{card.value}</span></span>
+      <span className="food-card-header" aria-hidden="true"><span>{food.category ?? "Food card"}</span><span className="food-value">{card.value}</span></span>
       <span className="food-illustration" aria-hidden="true">
         <FoodDish food={food} />
       </span>
       <span className="food-name">{food.name}</span>
-      <span className="food-card-caption" aria-hidden="true">freshly drawn</span>
+      <span className="food-card-caption" aria-hidden="true">{food.portion ?? "freshly drawn"}</span>
     </>
   );
 }
 
 function PlayerCharacter({ seat }: { seat: Seat }) {
-  const palette = [
-    { skin: "#9b684c", hair: "#3d2925", shirt: "#557e57", accent: "#d89a4e" },
-    { skin: "#d09a70", hair: "#2d2928", shirt: "#d39a37", accent: "#f4d66b" },
-    { skin: "#6d4639", hair: "#242326", shirt: "#4c8090", accent: "#a6d1bd" },
-    { skin: "#d69c7b", hair: "#342635", shirt: "#8863a2", accent: "#dc91b7" }
+  const faces = <g className="character-face-details">
+    <path className="character-brow" d="M34.5 36.7c2.5-2 5.2-2.2 7.6-.4M53.6 36.3c2.4-1.9 5.2-1.7 7.6.4" />
+    <ellipse className="character-eye-sclera" cx="39" cy="45" rx="6.1" ry="7.55" />
+    <ellipse className="character-eye-sclera" cx="57" cy="45" rx="6.1" ry="7.55" />
+    <ellipse className="character-eye" cx="39" cy="45.4" rx="4.55" ry="6.35" />
+    <ellipse className="character-eye" cx="57" cy="45.4" rx="4.55" ry="6.35" />
+    <ellipse className="character-pupil" cx="39" cy="46.7" rx="2.35" ry="3.85" />
+    <ellipse className="character-pupil" cx="57" cy="46.7" rx="2.35" ry="3.85" />
+    <ellipse className="character-eye-shine" cx="37.25" cy="42.65" rx="1.85" ry="2.25" />
+    <ellipse className="character-eye-shine" cx="55.25" cy="42.65" rx="1.85" ry="2.25" />
+    <circle className="character-eye-spark" cx="41.1" cy="49.5" r=".95" />
+    <circle className="character-eye-spark" cx="59.1" cy="49.5" r=".95" />
+    <ellipse className="character-cheek" cx="29.8" cy="54" rx="5.4" ry="2.8" />
+    <ellipse className="character-cheek" cx="66.2" cy="54" rx="5.4" ry="2.8" />
+    <path className="character-cheek-stroke character-detail" d="M26.5 54l3.5 1.4M65.5 55.4l3.5-1.4" />
+    <path className="character-nose" d="M48 49.5l-1 4 2.3.3" />
+    <path className="character-smile" d="M43 57c3.1 3.5 7.8 3.5 10.8 0" />
+    <path className="character-mouth-light character-detail" d="M45.5 58.6c1.8 1.2 3.8 1.2 5.6 0" />
+  </g>;
+
+  const figures = [
+    <>
+      <g className="character-legs-body"><path className="character-trouser" d="M31 93l-5 23h14l5-18 4 18h14l-6-24z" /><path className="character-shoe" d="M22 114h20c2 3-1 6-6 6H22z" /><path className="character-shoe" d="M49 114h19c2 3-1 6-6 6H48z" /></g>
+      <g className="character-clothing"><path className="character-coat" d="M27 76c7-6 30-6 38 0l5 29H22z" /><path className="character-coat-dark" d="M43 76l5 12 5-12 7 7-12 13-12-13z" /><path className="character-sleeve" d="M27 78c-8 4-10 12-7 19l8 3 7-16z" /><path className="character-sleeve" d="M64 78c8 4 10 12 7 19l-8 3-7-16z" /><circle className="character-button character-detail" cx="49" cy="94" r="1.2" /><circle className="character-button character-detail" cx="49" cy="100" r="1.2" /></g>
+      <g className="character-head"><ellipse className="character-ear" cx="25" cy="46" rx="4.2" ry="5.7" /><ellipse className="character-ear" cx="71" cy="46" rx="4.2" ry="5.7" /><path className="character-head-shape" d="M25 38c0-16 10-25 23-25s23 9 23 25c0 17-9 30-23 30S25 55 25 38z" /></g>
+      <g className="character-hair"><path className="character-hair-fill" d="M23 39c-5-17 3-29 15-29l3-6 5 5 7-5 3 6c14 1 21 13 16 29-4-8-10-13-18-16-3 5-9 8-15 9-3 4-10 7-17 7z" /><path className="character-hair-fill" d="M28 26c-7-3-5-12 2-11 2-8 11-10 14-3 6-6 14-3 14 4 8-2 11 8 5 12-11-6-25-6-35-2z" /></g>
+      {faces}
+      <g className="character-prop"><path className="character-hand" d="M60 82c4-3 7 0 5 4l-4 5-4-3z" /><path className="character-clipboard" d="M61 73l14 4-6 23-14-4z" /><path className="character-paper" d="M62 77l9 3-4 14-9-3z" /><path className="character-clip character-detail" d="M65 75c1-4 5-3 5 0" /><path className="character-pencil character-detail" d="M60 91l12 4" /></g>
+      <g className="character-accessory"><path className="character-token-leaf" d="M24 111c-8-4-9-11-7-16 7 1 12 6 10 14" /><path className="character-token-leaf" d="M66 111c8-4 9-11 7-16-7 1-12 6-10 14" /><path className="character-token-vein character-detail" d="M18 99l7 9M72 99l-7 9" /></g>
+    </>,
+    <>
+      <g className="character-legs-body"><path className="character-trouser" d="M31 94l-4 21h13l5-16 5 16h13l-5-22z" /><path className="character-shoe" d="M23 113h19c2 3-1 6-6 6H23z" /><path className="character-shoe" d="M50 113h19c2 3-1 6-6 6H49z" /></g>
+      <g className="character-clothing"><path className="character-coat" d="M26 75c7-5 31-5 39 1l5 29H22z" /><path className="character-rain-flap" d="M31 78l17 10 17-9-2 24H33z" /><path className="character-sleeve" d="M27 78c-9 4-10 14-7 20l9 2 6-15z" /><path className="character-sleeve" d="M65 78c7 4 9 13 6 19l-8 3-6-15z" /><circle className="character-button character-detail" cx="48" cy="93" r="1.2" /><circle className="character-button character-detail" cx="48" cy="100" r="1.2" /></g>
+      <g className="character-head"><ellipse className="character-ear" cx="25" cy="46" rx="4.2" ry="5.7" /><ellipse className="character-ear" cx="71" cy="46" rx="4.2" ry="5.7" /><path className="character-head-shape" d="M25 38c0-16 10-25 23-25s23 9 23 25c0 17-9 30-23 30S25 55 25 38z" /></g>
+      <g className="character-hair"><path className="character-hair-fill" d="M21 48c-5-19 5-36 25-36 18 0 29 13 26 36l-7-8V27c-8-8-23-8-33 0v20z" /><path className="character-hair-fill" d="M23 26c-6 3-7 15 1 20l7-4V25z" /><path className="character-hair-fill" d="M73 28c6 5 4 15-2 19l-6-5V29z" /></g>
+      {faces}
+      <g className="character-prop"><path className="character-hand" d="M28 82c4-2 6 1 4 5l-4 5-5-3z" /><path className="character-basket" d="M10 87c5-5 17-4 21 1l-2 14H13z" /><path className="character-basket-weave character-detail" d="M12 91l17 4M13 97l15 3M18 85c1-6 8-7 10 1" /><circle className="character-fruit character-detail" cx="17" cy="89" r="2" /><circle className="character-fruit character-detail" cx="23" cy="90" r="2" /></g>
+      <g className="character-accessory"><path className="character-bow" d="M33 16c-6-8-12-2-7 4-7 4-1 11 5 7l3-5 4 5c7 4 10-4 3-7 5-8-4-11-8-4z" /><circle className="character-bow-centre" cx="34" cy="21" r="2.2" /></g>
+    </>,
+    <>
+      <g className="character-wheelchair"><circle className="character-wheel" cx="35" cy="101" r="18" /><circle className="character-wheel-inner" cx="35" cy="101" r="11" /><path className="character-wheel-spoke character-detail" d="M35 84v34M18 101h34M23 89l24 24M47 89l-24 24" /><path className="character-chair-frame" d="M45 74v26h17M45 91H31l-7 17M62 100l4 12h8" /><path className="character-chair-seat" d="M39 79h24l-3 15H40z" /></g>
+      <g className="character-legs-body"><path className="character-trouser" d="M38 88l23 2 8 13-13 5-7-9-12 1z" /><path className="character-shoe" d="M60 103l14-4c4 2 3 6-1 7l-12 4z" /></g>
+      <g className="character-clothing"><path className="character-coat" d="M26 75c8-6 30-6 38 1l2 21H29z" /><path className="character-coat-dark" d="M43 76l5 12 5-12 7 7-12 12-12-12z" /><path className="character-sleeve" d="M28 78c-8 4-9 14-5 20l10-2 4-14z" /><path className="character-sleeve" d="M64 79c7 4 8 12 5 18l-9-1-4-14z" /></g>
+      <g className="character-head"><ellipse className="character-ear" cx="25" cy="46" rx="4.2" ry="5.7" /><ellipse className="character-ear" cx="71" cy="46" rx="4.2" ry="5.7" /><path className="character-head-shape" d="M25 38c0-16 10-25 23-25s23 9 23 25c0 17-9 30-23 30S25 55 25 38z" /></g>
+      <g className="character-hair"><path className="character-hair-fill" d="M23 39c-4-14 3-28 17-29 2-7 13-8 16-1 12-1 20 12 16 30-4-8-10-13-18-16-8 6-16 8-31 16z" /><circle className="character-hair-fill" cx="27" cy="20" r="7" /><circle className="character-hair-fill" cx="39" cy="13" r="8" /><circle className="character-hair-fill" cx="52" cy="14" r="8" /><circle className="character-hair-fill" cx="64" cy="21" r="7" /></g>
+      {faces}
+      <g className="character-prop"><path className="character-hand" d="M61 84c4-3 6 0 4 4l-4 4-4-3z" /><path className="character-book" d="M61 78l14 4-4 15-14-4z" /><path className="character-book-page character-detail" d="M64 82l7 2M63 87l7 2" /></g>
+      <g className="character-accessory"><path className="character-token-spark character-detail" d="M73 64l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" /></g>
+    </>,
+    <>
+      <g className="character-legs-body"><path className="character-skirt" d="M29 91h36l6 18H24z" /><path className="character-leg" d="M34 107v10M58 107v10" /><path className="character-shoe" d="M27 115h15c2 3-1 5-6 5H27z" /><path className="character-shoe" d="M54 115h15c2 3-1 5-6 5H54z" /></g>
+      <g className="character-clothing"><path className="character-coat" d="M27 76c7-6 30-6 38 1l3 22H27z" /><path className="character-sleeve" d="M28 78c-7 4-10 12-7 19l9 3 6-15z" /><path className="character-sleeve" d="M64 78c7 4 9 13 6 19l-8 3-6-15z" /><path className="character-collar" d="M40 77l8 10 8-10 5 5-13 11-13-11z" /></g>
+      <g className="character-head"><ellipse className="character-ear" cx="25" cy="46" rx="4.2" ry="5.7" /><ellipse className="character-ear" cx="71" cy="46" rx="4.2" ry="5.7" /><path className="character-head-shape" d="M25 38c0-16 10-25 23-25s23 9 23 25c0 17-9 30-23 30S25 55 25 38z" /></g>
+      <g className="character-hair"><path className="character-hair-fill" d="M22 48c-5-20 6-36 26-36 19 0 30 16 26 36l-8-9V28c-8-8-23-8-35 0v18z" /><path className="character-hair-fill" d="M65 27c15 1 18 16 9 27l-8-2c5-9 4-16-1-25z" /></g>
+      {faces}
+      <g className="character-prop"><path className="character-hand" d="M63 88c4-3 6 1 4 4l-4 5-5-3z" /><path className="character-cat" d="M69 94c7-6 17-1 16 9 5 6 1 14-7 14H64c-8 0-10-10-4-15l-1-8 5 3z" /><path className="character-cat-ear" d="M62 98l1-8 6 6M76 96l6-5-1 9" /><circle className="character-cat-eye" cx="68" cy="104" r="1.3" /><circle className="character-cat-eye" cx="77" cy="104" r="1.3" /><path className="character-cat-face" d="M71 109l2 1 2-1M70 111l-3 1M76 111l3 1" /><path className="character-cat-stripe character-detail" d="M63 108l4 1M78 108l3-1" /></g>
+      <g className="character-accessory"><path className="character-ribbon" d="M27 18c-7-7-12 2-5 7-8 5 0 12 6 6l4-6-5-7z" /><path className="character-ribbon" d="M68 18c7-7 12 2 5 7 8 5 0 12-6 6l-4-6 5-7z" /><circle className="character-ribbon-centre" cx="28" cy="24" r="2" /><circle className="character-ribbon-centre" cx="68" cy="24" r="2" /></g>
+    </>
   ][seat];
-  const hair = seat === 0 ? <><path d="M21 51C6 41 11 20 26 18c4-13 26-15 35-3 18 1 20 23 8 35-5-10-13-17-24-19-8 10-16 15-24 20z" /><circle cx="17" cy="35" r="10" /><circle cx="71" cy="36" r="10" /></>
-    : seat === 1 ? <path d="M18 49C8 31 19 12 34 15c8-10 26-5 31 7 12 3 14 21 4 31-4-12-12-20-23-23-9 10-18 15-28 19z" />
-      : seat === 2 ? <><path d="M15 50c-10-19 4-37 21-34 10-11 29-3 31 12 15 5 12 25 2 31-4-12-13-19-23-21-9 8-18 13-31 12z" /><circle cx="19" cy="24" r="7" /><circle cx="29" cy="15" r="7" /><circle cx="42" cy="13" r="8" /><circle cx="56" cy="19" r="8" /><circle cx="68" cy="29" r="7" /></>
-        : <><path d="M19 47C10 29 24 12 39 16c13-9 29 2 29 18 9 3 9 18 1 26-4-12-12-19-23-22-10 8-18 12-27 9z" /><path d="M64 30c15-9 22 6 14 18-4 6-10 8-15 7" /><path d="M69 27l5-8 5 7-3 4z" fill={palette.accent} /></>;
+
   return (
-    <svg className={`portrait-token character-${seat}`} viewBox="0 0 92 126" aria-hidden="true">
-      <ellipse className="character-shadow" cx="46" cy="117" rx="33" ry="6" />
-      <path className="character-body" fill={palette.shirt} d="M14 117c2-26 13-39 32-39s30 13 32 39z" />
-      <path className="character-collar" fill={palette.accent} d="M34 78l12 14 12-14 7 10-19 17-19-17z" />
-      <path className="character-neck" fill={palette.skin} d="M38 69h16v17c-5 6-11 6-16 0z" />
-      <g className="character-hair" fill={palette.hair} stroke="#382923" strokeWidth="2.4" strokeLinejoin="round">{hair}</g>
-      <ellipse className="character-face" fill={palette.skin} cx="46" cy="49" rx="23" ry="28" />
-      <path className="character-fringe" fill={palette.hair} stroke="#382923" strokeWidth="2.1" strokeLinecap="round" d={seat === 0 ? "M25 38c7-12 28-16 42-2-9-1-17-5-23-10-5 7-11 10-19 12z" : seat === 1 ? "M25 39c8-14 29-16 42-3-11-1-18-6-23-11-4 8-10 11-19 14z" : seat === 2 ? "M24 38c6-12 30-17 43-1-8-1-16-5-22-10-6 7-12 10-21 11z" : "M24 38c8-13 29-16 43-2-10 0-18-5-24-10-4 8-11 11-19 12z"} />
-      <g className="character-face-lines"><ellipse cx="37" cy="51" rx="3.3" ry="4.1" /><ellipse cx="55" cy="51" rx="3.3" ry="4.1" /><circle cx="38" cy="50" r="1" fill="#fff8e9" stroke="none" /><circle cx="56" cy="50" r="1" fill="#fff8e9" stroke="none" /><path d="M41 63c3 3 7 3 10 0" /></g>
-      <ellipse className="character-cheek" cx="30" cy="59" rx="4" ry="2" /><ellipse className="character-cheek" cx="62" cy="59" rx="4" ry="2" />
-      {seat === 2 && <g className="character-glasses"><circle cx="37" cy="51" r="7" /><circle cx="55" cy="51" r="7" /><path d="M44 51h4M30 49l-5-2M62 49l5-2" /></g>}
-      {seat === 3 && <path className="character-bow" fill={palette.accent} d="M25 31c-9-6-10 6-3 9-7 7 5 10 9 2l5-6-5-5c-2-3-4-2-6 0z" />}
+    <svg className={`portrait-token character-${seat}`} viewBox="0 0 96 132" aria-hidden="true" focusable="false">
+      <g className="character-shadow"><ellipse cx="48" cy="122" rx="35" ry="6.5" /></g>
+      <g className="character-token"><ellipse className="character-token-base" cx="48" cy="113" rx="34" ry="12" /><ellipse className="character-token-rim" cx="48" cy="110" rx="30" ry="9" /><path className="character-token-glow character-detail" d="M28 109c11-5 27-6 39-1" /></g>
+      {figures}
     </svg>
   );
 }
@@ -310,11 +375,11 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
             <button
               key={card.id}
               type="button"
-              className={`food-card ${FOOD[card.value]?.tone ?? "leaf"} ${cardIsSelected(index) ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${helpfulActorCard ? "actor-choice" : ""} ${targetChoice ? "target-choice" : ""} ${cardInteractive ? "clickable" : ""}`}
+              className={`food-card ${foodForCard(card).tone} ${cardIsSelected(index) ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${helpfulActorCard ? "actor-choice" : ""} ${targetChoice ? "target-choice" : ""} ${cardInteractive ? "clickable" : ""}`}
               onClick={() => { if (cardInteractive) onSelect(seat, index); }}
               disabled={!cardInteractive}
               aria-pressed={cardIsSelected(index)}
-              aria-label={`${NAMES[seat]}: ${FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
+              aria-label={`${NAMES[seat]}: ${foodForCard(card).name}, value ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
             >
               <FoodCardFace card={card} />
               {actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}

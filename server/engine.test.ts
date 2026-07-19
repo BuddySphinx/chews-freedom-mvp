@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { command, EVENT_DEFINITIONS, createGame, legalRescues, legalVegetableReplacements, strictTarget, validateState } from "./engine.js";
+import { FOOD_DECK, FOOD_SCORE_DISTRIBUTION } from "../src/food-deck.js";
 
 describe("Chews Freedom local prototype engine", () => {
+  it("uses all 48 unique named foods and workbook score bands", () => {
+    expect(FOOD_DECK).toHaveLength(48);
+    expect(new Set(FOOD_DECK.map((food) => food.id)).size).toBe(48);
+    expect(new Set(FOOD_DECK.map((food) => food.name)).size).toBe(48);
+    expect(FOOD_DECK.every((food) => food.score === Math.round((food.proteinPer100g * food.portionGrams) / 100))).toBe(true);
+    expect(FOOD_SCORE_DISTRIBUTION).toEqual({ 0: 3, 1: 2, 2: 6, 3: 8, 5: 5, 7: 9, 9: 5, 11: 8, 13: 2 });
+
+    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 20260720);
+    const mainCards = [...game.drawPile, ...game.discardPile, ...game.hands.flat().filter((card) => card.source === "MAIN_DECK")];
+    expect(new Set(mainCards.map((card) => card.foodId)).size).toBe(48);
+    expect(mainCards.map((card) => card.value).reduce((sum, score) => sum + score, 0)).toBe(285);
+  });
+
   it("keeps the 48-card main deck conserved after automated turns", () => {
     const game = createGame(["AI", "AI", "AI", "AI"], 20260717);
     expect(game.eventsEnabled).toBe(true);
@@ -85,7 +99,7 @@ describe("Chews Freedom local prototype engine", () => {
   });
 
   it("lets the assistant choose a different patient, then keeps garden recovery player-controlled", () => {
-    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 20260717);
+    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 1);
     expect(game.phase).toBe("ACTIVE_RESCUE");
 
     const active = game.currentRoles.active;
