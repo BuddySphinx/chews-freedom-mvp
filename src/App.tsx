@@ -11,7 +11,6 @@ const usesBrowserGameSave = !supportsSocketUpdates;
 const BROWSER_GAME_KEY = "chews-freedom-public-game-v1";
 const NAMES = ["Rain", "Rice", "Joy", "Sail"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
-const PORTRAITS = ["portrait-a", "portrait-b", "portrait-c", "portrait-d"];
 const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string; dish: string }> = {
   0: { name: "Herb tea", art: "cabbage", garnish: "cucumber", tone: "leaf", dish: "tea" },
   1: { name: "Rice porridge", art: "pear", garnish: "broccoli", tone: "sun", dish: "porridge" },
@@ -21,10 +20,6 @@ const FOOD: Record<number, { name: string; art: string; garnish: string; tone: s
   7: { name: "Chickpea curry", art: "corn", garnish: "cabbage", tone: "sun", dish: "curry" },
   9: { name: "Nutty pasta", art: "cucumber", garnish: "carrot", tone: "rose", dish: "pasta" }
 };
-
-function ArtSprite({ id, className }: { id: string; className: string }) {
-  return <svg className={className} aria-hidden="true" viewBox={id.startsWith("portrait") ? "0 0 90 130" : "0 0 64 64"}><use href={`${ART_SPRITE}#${id}`} /></svg>;
-}
 
 type FoodCardDetail = { name: string; art: string; garnish: string; tone: string; dish: string };
 
@@ -71,6 +66,34 @@ function FoodCardFace({ card }: { card: Card }) {
       <span className="food-name">{food.name}</span>
       <span className="food-card-caption" aria-hidden="true">freshly drawn</span>
     </>
+  );
+}
+
+function PlayerCharacter({ seat }: { seat: Seat }) {
+  const palette = [
+    { skin: "#9b684c", hair: "#3d2925", shirt: "#557e57", accent: "#d89a4e" },
+    { skin: "#d09a70", hair: "#2d2928", shirt: "#d39a37", accent: "#f4d66b" },
+    { skin: "#6d4639", hair: "#242326", shirt: "#4c8090", accent: "#a6d1bd" },
+    { skin: "#d69c7b", hair: "#342635", shirt: "#8863a2", accent: "#dc91b7" }
+  ][seat];
+  const hair = seat === 0 ? <><path d="M21 51C6 41 11 20 26 18c4-13 26-15 35-3 18 1 20 23 8 35-5-10-13-17-24-19-8 10-16 15-24 20z" /><circle cx="17" cy="35" r="10" /><circle cx="71" cy="36" r="10" /></>
+    : seat === 1 ? <path d="M18 49C8 31 19 12 34 15c8-10 26-5 31 7 12 3 14 21 4 31-4-12-12-20-23-23-9 10-18 15-28 19z" />
+      : seat === 2 ? <><path d="M15 50c-10-19 4-37 21-34 10-11 29-3 31 12 15 5 12 25 2 31-4-12-13-19-23-21-9 8-18 13-31 12z" /><circle cx="19" cy="24" r="7" /><circle cx="29" cy="15" r="7" /><circle cx="42" cy="13" r="8" /><circle cx="56" cy="19" r="8" /><circle cx="68" cy="29" r="7" /></>
+        : <><path d="M19 47C10 29 24 12 39 16c13-9 29 2 29 18 9 3 9 18 1 26-4-12-12-19-23-22-10 8-18 12-27 9z" /><path d="M64 30c15-9 22 6 14 18-4 6-10 8-15 7" /><path d="M69 27l5-8 5 7-3 4z" fill={palette.accent} /></>;
+  return (
+    <svg className={`portrait-token character-${seat}`} viewBox="0 0 92 126" aria-hidden="true">
+      <ellipse className="character-shadow" cx="46" cy="117" rx="33" ry="6" />
+      <path className="character-body" fill={palette.shirt} d="M14 117c2-26 13-39 32-39s30 13 32 39z" />
+      <path className="character-collar" fill={palette.accent} d="M34 78l12 14 12-14 7 10-19 17-19-17z" />
+      <path className="character-neck" fill={palette.skin} d="M38 69h16v17c-5 6-11 6-16 0z" />
+      <g className="character-hair" fill={palette.hair} stroke="#382923" strokeWidth="2.4" strokeLinejoin="round">{hair}</g>
+      <ellipse className="character-face" fill={palette.skin} cx="46" cy="49" rx="23" ry="28" />
+      <path className="character-fringe" fill={palette.hair} stroke="#382923" strokeWidth="2.1" strokeLinecap="round" d={seat === 0 ? "M25 38c7-12 28-16 42-2-9-1-17-5-23-10-5 7-11 10-19 12z" : seat === 1 ? "M25 39c8-14 29-16 42-3-11-1-18-6-23-11-4 8-10 11-19 14z" : seat === 2 ? "M24 38c6-12 30-17 43-1-8-1-16-5-22-10-6 7-12 10-21 11z" : "M24 38c8-13 29-16 43-2-10 0-18-5-24-10-4 8-11 11-19 12z"} />
+      <g className="character-face-lines"><ellipse cx="37" cy="51" rx="3.3" ry="4.1" /><ellipse cx="55" cy="51" rx="3.3" ry="4.1" /><circle cx="38" cy="50" r="1" fill="#fff8e9" stroke="none" /><circle cx="56" cy="50" r="1" fill="#fff8e9" stroke="none" /><path d="M41 63c3 3 7 3 10 0" /></g>
+      <ellipse className="character-cheek" cx="30" cy="59" rx="4" ry="2" /><ellipse className="character-cheek" cx="62" cy="59" rx="4" ry="2" />
+      {seat === 2 && <g className="character-glasses"><circle cx="37" cy="51" r="7" /><circle cx="55" cy="51" r="7" /><path d="M44 51h4M30 49l-5-2M62 49l5-2" /></g>}
+      {seat === 3 && <path className="character-bow" fill={palette.accent} d="M25 31c-9-6-10 6-3 9-7 7 5 10 9 2l5-6-5-5c-2-3-4-2-6 0z" />}
+    </svg>
   );
 }
 
@@ -260,7 +283,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
     <article className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div className="seat-identity">
-          <ArtSprite className="portrait-token" id={PORTRAITS[seat]} />
+          <PlayerCharacter seat={seat} />
           <div>
             <p className="seat-number">Seat {seat + 1}</p>
             <h3>{NAMES[seat]}</h3>
