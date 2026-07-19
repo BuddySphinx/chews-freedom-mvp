@@ -251,7 +251,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
           <div>
             <p className="seat-number">Seat {seat + 1}</p>
             <h3>{NAMES[seat]}</h3>
-            <span className="role-label">{roleFor(game, seat)}</span>
+            <span className="role-label">Role · {roleFor(game, seat)}</span>
             {cue && <span className={`turn-cue ${cue.current ? "current" : ""}`}>{cue.label}</span>}
           </div>
         </div>
@@ -269,7 +269,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
             : game.phase === "VEGETABLE_RESOLUTION"
               ? vegetableChoice
               : helpfulActorCard || targetChoice;
-          const actionLabel = vegetableChoice ? "Harvest" : helpfulActorCard ? "Choose" : targetChoice ? "Swap" : patientSwapChoice ? "Choose" : null;
+          const actionLabel = vegetableChoice ? "Pick" : helpfulActorCard ? "Pick" : targetChoice ? "Swap" : patientSwapChoice ? "Pick" : null;
           return (
             <button
               key={card.id}
