@@ -100,9 +100,8 @@ function strictTarget(game: GameState): Seat | null {
 
 function total(hand: Card[]): number { return hand.reduce((sum, card) => sum + card.value, 0); }
 
-// This mirrors the server's existing legal-rescue check.  It is deliberately
-// kept in the presentation layer only so the board can show people which card
-// pairs are valid before they click; the server remains the source of truth.
+// Presentation-only mirror of the server's legal-rescue check. It keeps the
+// cards grouped with their player while revealing only actions that can work.
 function hasHelpfulRescueForCard(game: GameState, actor: Seat | null, actorIndex: number): boolean {
   if (actor === null || (game.phase !== "ACTIVE_RESCUE" && game.phase !== "ASSISTANT_RESCUE")) return false;
   const actorCard = game.hands[actor][actorIndex];
@@ -234,7 +233,8 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
         : "board-patient-two";
   const isTarget = target === seat;
   const cue = turnCue(game, seat);
-  const rescueActorIsHuman = seat === actor && game.controllers[seat] === "HUMAN";
+  const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
+  const rescueActorIsHuman = rescuePhase && seat === actor && game.controllers[seat] === "HUMAN";
   const patientSwapChoice = game.phase === "PATIENT_SWAP" && isPatient && game.controllers[seat] === "HUMAN";
   const patientPosition = seat === game.currentRoles.patient1 ? 0 : 1;
   const chosenPatientCard = selectedPatientCards[patientPosition];
@@ -260,25 +260,28 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
       <div className="hand" aria-label={`${NAMES[seat]}'s public food cards`}>
         {game.hands[seat].map((card, index) => {
           const vegetableChoice = game.phase === "VEGETABLE_RESOLUTION" && isTarget && card.value > 0 && card.value === highestTargetValue && game.gardenTokens > 0;
+          const helpfulActorCard = rescueActorIsHuman && hasHelpfulRescueForCard(game, actor, index);
           const activeRescueChoice = game.phase === "ACTIVE_RESCUE" && isPatient && !withinLimit && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
           const assistantRescueChoice = game.phase === "ASSISTANT_RESCUE" && isPatient && !withinLimit && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
+          const targetChoice = activeRescueChoice || assistantRescueChoice;
           const cardInteractive = game.phase === "PATIENT_SWAP"
             ? patientSwapChoice
             : game.phase === "VEGETABLE_RESOLUTION"
               ? vegetableChoice
-              : rescueActorIsHuman || activeRescueChoice || assistantRescueChoice;
+              : helpfulActorCard || targetChoice;
+          const actionLabel = vegetableChoice ? "Harvest" : helpfulActorCard ? "Choose" : targetChoice ? "Swap" : patientSwapChoice ? "Choose" : null;
           return (
             <button
               key={card.id}
               type="button"
-              className={`food-card ${FOOD[card.value]?.tone ?? "leaf"} ${cardIsSelected(index) ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${cardInteractive ? "clickable" : ""}`}
+              className={`food-card ${FOOD[card.value]?.tone ?? "leaf"} ${cardIsSelected(index) ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${helpfulActorCard ? "actor-choice" : ""} ${targetChoice ? "target-choice" : ""} ${cardInteractive ? "clickable" : ""}`}
               onClick={() => { if (cardInteractive) onSelect(seat, index); }}
               disabled={!cardInteractive}
               aria-pressed={cardIsSelected(index)}
-              aria-label={`${FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
+              aria-label={`${NAMES[seat]}: ${FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
             >
               <FoodCardFace card={card} />
-              {vegetableChoice && <span className="garden-replace-mark" aria-hidden="true">🥬 replace</span>}
+              {actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}
             </button>
           );
         })}
@@ -286,178 +289,6 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
       {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Patient total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within limit" : "Over the limit"}</small></div>}
       <div className="seat-score"><span>Points earned</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Patient aid {game.scores[seat].patientMutualAidPoints}</small></div>
     </article>
-  );
-}
-
-const GARDEN_ART = ["carrot", "broccoli", "corn", "cabbage", "apple", "cucumber", "eggplant", "pear", "orange", "corn"];
-const GARDEN_COUNTS = [3, 2, 1, 2, 3, 2, 1, 2, 2, 1];
-
-function roleColour(game: GameState, seat: Seat): string {
-  if (seat === game.currentRoles.active) return "moss";
-  if (seat === game.currentRoles.assistant) return "gold";
-  return seat === game.currentRoles.patient1 ? "blue" : "plum";
-}
-
-function GardenResourceBar({ game }: { game: GameState }) {
-  return (
-    <section className="garden-resource-bar" aria-label="Our garden resources">
-      <div className="garden-wood-title"><span>Our garden</span></div>
-      <div className="garden-resource-frame">
-        {GARDEN_ART.map((art, index) => {
-          const remaining = Math.max(0, game.gardenTokens - index);
-          return <div className={`resource-crop ${remaining === 0 ? "spent" : ""}`} key={`${art}-${index}`}>
-            <ArtSprite id={art} className="resource-art" />
-            <strong>{remaining === 0 ? 0 : GARDEN_COUNTS[index]}</strong>
-          </div>;
-        })}
-      </div>
-      <p className="garden-instruction">Use vegetables to activate Food Cards and reach your protein goals!</p>
-    </section>
-  );
-}
-
-function StorySidebar() {
-  return (
-    <aside className="storybook-sidebar" aria-label="Chews Freedom guide">
-      <div className="storybook-logo"><span>Chews</span><strong>Freedom</strong><i>❦</i></div>
-      <div className="motto-ribbon">Eat safely, choose boldly,<br />live fully.</div>
-      <section className="side-parchment introduction-panel">
-        <p>A board game of food, choices, and courage for children with true metabolic conditions and the people who support them.</p>
-        <div className="little-friends" aria-hidden="true"><ArtSprite id="portrait-a" className="little-friend" /><ArtSprite id="portrait-b" className="little-friend" /></div>
-        <strong>You’re never alone on<br />this journey.</strong>
-      </section>
-      <section className="side-parchment how-to-panel">
-        <h2>How to play</h2>
-        <ul>
-          <li><b>✦</b> Goal</li><li><b>✦</b> Your Turn</li><li><b>✦</b> Roles</li><li><b>✦</b> Food Cards</li><li><b>✦</b> Events</li><li><b>✦</b> End of Round</li>
-        </ul>
-      </section>
-      <section className="help-panel"><span>♡</span><div><strong>Need more help?</strong><small>Read the full guide →</small></div></section>
-    </aside>
-  );
-}
-
-function CottageScene({ game, prompt, aiTurn }: { game: GameState; prompt: string; aiTurn: boolean }) {
-  return (
-    <div className="cottage-scene" aria-live="polite">
-      <svg className="cottage-art" viewBox="0 0 330 250" aria-hidden="true">
-        <defs>
-          <linearGradient id="cottage-sky" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#83b9c7" /><stop offset="1" stopColor="#e7d69e" /></linearGradient>
-          <linearGradient id="cottage-roof" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#b15a34" /><stop offset="1" stopColor="#643a2a" /></linearGradient>
-        </defs>
-        <ellipse cx="165" cy="129" rx="148" ry="105" fill="url(#cottage-sky)" opacity=".82" />
-        <path d="M17 177c40-33 75-36 108-18 37-28 79-31 111-7 30-21 60-20 78 8v51H17z" fill="#728b58" opacity=".95" />
-        <path d="M51 183c20-35 45-47 74-36 13-24 47-37 74-11 26-17 59-4 68 23" fill="none" stroke="#476b42" strokeWidth="13" strokeLinecap="round" opacity=".8" />
-        <path d="M111 138l54-48 57 48v72h-111z" fill="#bd8b56" stroke="#4e3725" strokeWidth="5" strokeLinejoin="round" />
-        <path d="M95 141l69-67 73 67-16 7-57-49-52 47z" fill="url(#cottage-roof)" stroke="#4e3725" strokeWidth="5" strokeLinejoin="round" />
-        <path d="M140 210v-42c0-13 11-22 24-22s24 9 24 22v42z" fill="#4f654e" stroke="#3b2c20" strokeWidth="4" />
-        <path d="M121 156h18v23h-18zM191 156h18v23h-18z" fill="#d9c77d" stroke="#4e3725" strokeWidth="3" />
-        <path d="M152 104h25v22h-25z" fill="#e6d58d" stroke="#4e3725" strokeWidth="3" />
-        <path d="M231 93v50M222 94h18" stroke="#65432a" strokeWidth="5" strokeLinecap="round" />
-        <path d="M232 69c-9 13-6 18 5 26" fill="none" stroke="#efe1af" strokeWidth="5" strokeLinecap="round" />
-        <g fill="#e2aa56" stroke="#5c4130" strokeWidth="1.4"><circle cx="83" cy="197" r="7" /><circle cx="101" cy="208" r="6" /><circle cx="224" cy="198" r="7" /><circle cx="244" cy="210" r="5" /><circle cx="58" cy="214" r="5" /><circle cx="270" cy="185" r="5" /></g>
-        <g fill="#d77d75"><circle cx="96" cy="190" r="4" /><circle cx="235" cy="190" r="4" /><circle cx="262" cy="199" r="4" /></g>
-      </svg>
-      <div className="cottage-message"><strong>{aiTurn ? "Thinking together" : "Work together."}</strong><span>{prompt}</span></div>
-    </div>
-  );
-}
-
-function BoardPiece({ game, seat, placement }: { game: GameState; seat: Seat; placement: "northwest" | "northeast" | "southwest" | "southeast" }) {
-  const role = roleFor(game, seat);
-  const roleClass = roleColour(game, seat);
-  const cue = turnCue(game, seat);
-  return (
-    <section className={`board-piece board-piece-${placement} ${cue?.current ? "piece-current" : ""}`} aria-label={`${NAMES[seat]}, ${role}`}>
-      <div className={`role-scroll role-scroll-${roleClass}`}>{role}</div>
-      <div className={`piece-pedestal pedestal-${roleClass}`}><ArtSprite id={PORTRAITS[seat]} className="board-character" /></div>
-      <strong>{NAMES[seat]}</strong>
-      {cue && <small>{cue.label}</small>}
-    </section>
-  );
-}
-
-function StorybookBoard({ game, prompt, aiTurn, showRoundTransition }: { game: GameState; prompt: string; aiTurn: boolean; showRoundTransition: boolean }) {
-  return (
-    <section className="storybook-board" aria-label="Circular Chews Freedom game board">
-      <div className="stone-track" aria-hidden="true"><span className="track-glyph glyph-heart">♥</span><span className="track-glyph glyph-leaf">❦</span><span className="track-glyph glyph-cart">✧</span><span className="track-glyph glyph-snow">✦</span><span className="track-glyph glyph-question">?</span><span className="track-glyph glyph-run">✧</span></div>
-      <CottageScene game={game} prompt={prompt} aiTurn={aiTurn} />
-      <BoardPiece game={game} seat={game.currentRoles.active} placement="northwest" />
-      <BoardPiece game={game} seat={game.currentRoles.assistant} placement="northeast" />
-      <BoardPiece game={game} seat={game.currentRoles.patient1} placement="southwest" />
-      <BoardPiece game={game} seat={game.currentRoles.patient2} placement="southeast" />
-      {showRoundTransition && <RoundTransition game={game} />}
-    </section>
-  );
-}
-
-interface FoodShelfProps {
-  game: GameState;
-  selectedActorCard: number | null;
-  selectedPatientCards: [number | null, number | null];
-  onSelect: (seat: Seat, index: number) => void;
-}
-
-function FoodShelf({ game, selectedActorCard, selectedPatientCards, onSelect }: FoodShelfProps) {
-  const actor = currentActor(game);
-  const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
-  const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
-  return (
-    <section className="food-shelf" aria-label="Public food cards">
-      <div className="food-deck-back" aria-hidden="true"><span>Food</span><strong>Deck</strong><i>❦</i></div>
-      <div className="food-card-row">
-        {game.hands.flatMap((hand, seatIndex) => hand.map((card, index) => {
-          const seat = seatIndex as Seat;
-          const isPatient = seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2;
-          const isTarget = seat === target;
-          const handTotal = total(game.hands[seat]);
-          const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((candidate) => candidate.value)) : -1;
-          const vegetableChoice = game.phase === "VEGETABLE_RESOLUTION" && isTarget && card.value > 0 && card.value === highestTargetValue && game.gardenTokens > 0;
-          const rescueActorCard = rescuePhase && seat === actor && game.controllers[seat] === "HUMAN";
-          const helpfulActorCard = rescueActorCard && hasHelpfulRescueForCard(game, actor, index);
-          const activeRescueChoice = game.phase === "ACTIVE_RESCUE" && isPatient && handTotal > game.threshold && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
-          const assistantRescueChoice = game.phase === "ASSISTANT_RESCUE" && isPatient && handTotal > game.threshold && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
-          const patientSwapChoice = game.phase === "PATIENT_SWAP" && isPatient && game.controllers[seat] === "HUMAN";
-          const targetChoice = activeRescueChoice || assistantRescueChoice;
-          const interactive = game.phase === "PATIENT_SWAP" ? patientSwapChoice : game.phase === "VEGETABLE_RESOLUTION" ? vegetableChoice : helpfulActorCard || targetChoice;
-          const patientPosition = seat === game.currentRoles.patient1 ? 0 : 1;
-          const selected = (seat === actor && selectedActorCard === index) || (game.phase === "PATIENT_SWAP" && isPatient && selectedPatientCards[patientPosition] === index);
-          const actionLabel = vegetableChoice ? "Harvest" : helpfulActorCard ? "Choose" : targetChoice ? "Swap" : patientSwapChoice ? "Choose" : null;
-          return <button key={card.id} type="button" className={`food-card shelf-card owner-${seat} ${FOOD[card.value]?.tone ?? "leaf"} ${selected ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${helpfulActorCard ? "actor-choice" : ""} ${targetChoice ? "target-choice" : ""} ${interactive ? "clickable" : ""}`} onClick={() => { if (interactive) onSelect(seat, index); }} disabled={!interactive} aria-pressed={selected} aria-label={`${NAMES[seat]}: ${card.source === "VEGETABLE_SUPPLY" ? "Garden greens" : FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${interactive ? `. ${actionLabel}` : ""}`}>
-            <span className="card-owner">{NAMES[seat]}</span><FoodCardFace card={card} />{actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}
-          </button>;
-        }))}
-      </div>
-      <p className="protein-label">Protein Value</p>
-    </section>
-  );
-}
-
-function CakeDayCard() {
-  return <section className="cake-day-card" aria-label="Cake Day celebration card"><span>Cake day!</span><ArtSprite id="cake" className="cake-art" /><strong>Celebrate!</strong><small>Each player takes a slice.</small></section>;
-}
-
-function EventIllustration({ index }: { index: number }) {
-  if (index === 0) return <svg className="event-illustration" viewBox="0 0 64 64" aria-hidden="true"><g className="event-ink"><path d="M32 7v50M10 19l44 26M10 45l44-26M17 9l30 46M47 9L17 55" /><circle cx="32" cy="32" r="7" /></g></svg>;
-  if (index === 1) return <svg className="event-illustration" viewBox="0 0 64 64" aria-hidden="true"><path className="event-cloud" d="M13 33c-4-11 10-18 18-12 6-11 23-5 22 8 10 2 8 17-2 18H17c-8 0-10-9-4-14z" /><path className="event-rain" d="M20 49l-3 8M32 49l-3 8M44 49l-3 8" /></svg>;
-  if (index === 2) return <svg className="event-illustration" viewBox="0 0 64 64" aria-hidden="true"><path className="event-cloud dark" d="M11 33c-3-11 10-18 18-12 7-10 24-4 22 8 10 2 8 18-3 18H17c-8 0-10-9-6-14z" /><path className="event-bolt" d="M35 36H25l8-13-1 10h9L29 53z" /></svg>;
-  if (index === 3) return <svg className="event-illustration" viewBox="0 0 64 64" aria-hidden="true"><path className="event-market-roof" d="M8 24h48l-5-12H13z" /><path className="event-market" d="M13 25h38v28H13z" /><path className="event-ink" d="M22 25v28M41 25v28M14 36h36" /><circle cx="25" cy="43" r="4" className="event-produce" /><circle cx="38" cy="43" r="4" className="event-produce" /></svg>;
-  return <svg className="event-illustration" viewBox="0 0 64 64" aria-hidden="true"><path className="event-case" d="M11 20h42v33H11z" /><path className="event-case" d="M24 14h16v7H24z" /><path className="event-ink" d="M12 33h40M23 20v33M41 20v33" /><circle cx="22" cy="55" r="4" className="event-wheel" /><circle cx="43" cy="55" r="4" className="event-wheel" /></svg>;
-}
-
-function EventShelf({ game }: { game: GameState }) {
-  const events = [game.currentEvent, ...game.eventPool].filter((event): event is NonNullable<typeof event> => Boolean(event)).slice(0, 5);
-  return <section className="event-shelf" aria-label="Event cards"><div className="event-shelf-title">Events <small>Draw at end of round</small></div><div className="event-card-row">{events.map((event, index) => <article className={`event-mini-card event-colour-${index % 5}`} key={event.id}><EventIllustration index={index} /><strong>{event.shortName}</strong><span>{event.summary}</span></article>)}</div></section>;
-}
-
-function ScoreSidebar({ game }: { game: GameState }) {
-  const roleSeats = [game.currentRoles.active, game.currentRoles.assistant, game.currentRoles.patient1, game.currentRoles.patient2];
-  return (
-    <aside className="score-sidebar" aria-label="Round and scoreboard">
-      <div className="round-and-quote"><div className="round-medallion"><span>Round</span><strong>{game.round}</strong><small>of 12</small></div><blockquote>Courage grows<br />with every choice.<b>♥</b></blockquote></div>
-      <section className="scoreboard-panel"><h2>Scoreboard</h2><div className="scoreboard-head"><span>Player</span><span>Role</span><span>Protein</span><span>Points</span></div>{game.scores.map((score, seat) => <div className="scoreboard-entry" key={NAMES[seat]}><span className="score-avatar"><ArtSprite id={PORTRAITS[seat]} className="score-avatar-art" />{NAMES[seat]}</span><em className={`score-role score-${roleColour(game, seat as Seat)}`}>{roleFor(game, seat)}</em><b>{total(game.hands[seat])}</b><strong>{score.totalPoints}</strong></div>)}</section>
-      <section className="current-roles-panel"><h2>Current roles this round</h2>{roleSeats.map((seat) => <div className="role-row" key={`${seat}-${roleFor(game, seat)}`}><i className={`role-dot role-${roleColour(game, seat)}`} /><span>{roleFor(game, seat)}</span><b>{NAMES[seat]}</b></div>)}<p>The Nutritionist is making choices this round with help from the Assistant.</p></section>
-    </aside>
   );
 }
 
@@ -637,32 +468,65 @@ export function App() {
   const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
   const noHelpfulRescue = rescuePhase && actor !== null && game.controllers[actor] === "HUMAN" && !hasHelpfulRescue(game, actor);
   const actionHeading = loading
-    ? "Checking action…"
+    ? "Checking action..."
     : aiTurn
-      ? "A friend is choosing a move"
+      ? "AI turn — choosing a move"
       : noHelpfulRescue
-        ? "No helpful rescue is available"
+        ? `${NAMES[actor!]} has no helpful rescue`
         : game.phase === "VEGETABLE_RESOLUTION"
-          ? "Choose a garden replacement"
+          ? "Garden turn — choose a highlighted replacement"
           : game.phase === "PATIENT_SWAP"
-            ? "Patients choose together"
+            ? "Patient turn — choose one card from each patient"
             : actor === null
-              ? "Your turn"
+              ? "Your turn board"
               : `${NAMES[actor]}'s rescue turn`;
 
   return (
-    <main className="storybook-game-shell">
-      <div className="storybook-game-stage">
-        <StorySidebar />
-        <GardenResourceBar game={game} />
-        <ScoreSidebar game={game} />
-        <section className="main-board-area">
-          <StorybookBoard game={game} prompt={prompt} aiTurn={aiTurn} showRoundTransition={showRoundTransition} />
-          <div className="game-action-banner"><div><strong>{actionHeading}</strong><span>{prompt}</span><small>{message}</small></div><div className="game-action-buttons">{noHelpfulRescue && actor !== null && <button className="storybook-primary" type="button" onClick={() => void send({ type: "RESCUE_PASS", expectedRevision: game.revision, actor })} disabled={loading}>Continue</button>}{game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="storybook-secondary" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="storybook-primary" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}{game.phase === "GAME_OVER" && <button className="storybook-primary" type="button" onClick={() => void start()} disabled={loading}>Play again</button>}</div></div>
+    <main className="app-shell">
+      <header className="app-header">
+        <a className="wordmark" href="/" aria-label="Chews Freedom home"><span className="wordmark-leaf">✦</span><span>Chews Freedom</span></a>
+        <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY); setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
+      </header>
+      <section className="game-layout">
+        <aside className="left-rail">
+          <div className="event-card-panel">
+            <div className="panel-heading"><span>Event card</span><strong>{game.currentEvent ? game.currentEvent.shortName : "Clear round"}</strong></div>
+            <h2>{game.currentEvent?.name ?? "No event this round"}</h2>
+            <p>{game.currentEvent?.summary ?? "The standard rules apply this round."}</p>
+            <small>{game.eventPool.length} event cards remain in this game</small>
+          </div>
+          {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
+          <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
+        </aside>
+        <section className="table-area" aria-label="Chews Freedom public game table">
+          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-value cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
+          <TurnFlow game={game} />
+          <div className="table-felt">
+            {showRoundTransition && <RoundTransition game={game} />}
+            <SeatPanel game={game} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+            <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+            <section className="centre-status" aria-live="polite">
+              <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
+              <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} limit`}</strong>
+              <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
+              {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
+            </section>
+            <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+            <SeatPanel game={game} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+          </div>
+          <div className="action-tray">
+            <div><strong>{actionHeading}</strong><p>{prompt}</p><small>{message}</small></div>
+            <div className="action-buttons">
+              {noHelpfulRescue && actor !== null && <button className="primary-button" type="button" onClick={() => void send({ type: "RESCUE_PASS", expectedRevision: game.revision, actor })} disabled={loading}>Continue</button>}
+              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}
+            </div>
+          </div>
         </section>
-        <section className="bottom-card-area" aria-label="Food deck and events"><FoodShelf game={game} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} /><CakeDayCard /><EventShelf game={game} /></section>
-        <footer className="storybook-footer"><span>♥&nbsp; We’re here for every step of the journey.</span><strong>Chews Freedom celebrates safe eating, strong choices, and the amazing kids who inspire us every day.</strong><nav><a href="#about">About</a><a href="#resources">Resources</a><a href="#community">Community</a><button type="button" onClick={() => { if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY); setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></nav></footer>
-      </div>
+        <aside className="right-rail">
+          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={NAMES[seat]}><span>{NAMES[seat]}</span><div><small>Nutritionist {score.nutritionistPoints} · Mutual aid {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
+          <section className="timeline-panel"><h2>What happened</h2><ol>{game.log.slice(0, 8).map((entry) => <li key={entry.id}><span>{entry.type.replaceAll("_", " ")}</span><p>{entry.message}</p></li>)}</ol></section>
+        </aside>
+      </section>
     </main>
   );
 }
