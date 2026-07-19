@@ -100,6 +100,23 @@ function strictTarget(game: GameState): Seat | null {
 
 function total(hand: Card[]): number { return hand.reduce((sum, card) => sum + card.value, 0); }
 
+// This mirrors the server's existing legal-rescue check.  It is deliberately
+// kept in the presentation layer only so the board can show people which card
+// pairs are valid before they click; the server remains the source of truth.
+function hasHelpfulRescueForCard(game: GameState, actor: Seat | null, actorIndex: number): boolean {
+  if (actor === null || (game.phase !== "ACTIVE_RESCUE" && game.phase !== "ASSISTANT_RESCUE")) return false;
+  const actorCard = game.hands[actor][actorIndex];
+  if (!actorCard) return false;
+  return [game.currentRoles.patient1, game.currentRoles.patient2].some((patient) =>
+    total(game.hands[patient]) > game.threshold
+    && game.hands[patient].some((patientCard) => actorCard.value < patientCard.value)
+  );
+}
+
+function hasHelpfulRescue(game: GameState, actor: Seat | null): boolean {
+  return actor !== null && game.hands[actor].some((_, index) => hasHelpfulRescueForCard(game, actor, index));
+}
+
 function aiDecisionIsDue(game: GameState): boolean {
   const actor = currentActor(game);
   if (actor !== null) return game.controllers[actor] === "AI";
@@ -384,6 +401,7 @@ interface FoodShelfProps {
 function FoodShelf({ game, selectedActorCard, selectedPatientCards, onSelect }: FoodShelfProps) {
   const actor = currentActor(game);
   const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
+  const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
   return (
     <section className="food-shelf" aria-label="Public food cards">
       <div className="food-deck-back" aria-hidden="true"><span>Food</span><strong>Deck</strong><i>❦</i></div>
@@ -395,15 +413,18 @@ function FoodShelf({ game, selectedActorCard, selectedPatientCards, onSelect }: 
           const handTotal = total(game.hands[seat]);
           const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((candidate) => candidate.value)) : -1;
           const vegetableChoice = game.phase === "VEGETABLE_RESOLUTION" && isTarget && card.value > 0 && card.value === highestTargetValue && game.gardenTokens > 0;
-          const rescueActorIsHuman = seat === actor && game.controllers[seat] === "HUMAN";
+          const rescueActorCard = rescuePhase && seat === actor && game.controllers[seat] === "HUMAN";
+          const helpfulActorCard = rescueActorCard && hasHelpfulRescueForCard(game, actor, index);
           const activeRescueChoice = game.phase === "ACTIVE_RESCUE" && isPatient && handTotal > game.threshold && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
           const assistantRescueChoice = game.phase === "ASSISTANT_RESCUE" && isPatient && handTotal > game.threshold && selectedActorCard !== null && actor !== null && game.hands[actor][selectedActorCard].value < card.value;
           const patientSwapChoice = game.phase === "PATIENT_SWAP" && isPatient && game.controllers[seat] === "HUMAN";
-          const interactive = game.phase === "PATIENT_SWAP" ? patientSwapChoice : game.phase === "VEGETABLE_RESOLUTION" ? vegetableChoice : rescueActorIsHuman || activeRescueChoice || assistantRescueChoice;
+          const targetChoice = activeRescueChoice || assistantRescueChoice;
+          const interactive = game.phase === "PATIENT_SWAP" ? patientSwapChoice : game.phase === "VEGETABLE_RESOLUTION" ? vegetableChoice : helpfulActorCard || targetChoice;
           const patientPosition = seat === game.currentRoles.patient1 ? 0 : 1;
           const selected = (seat === actor && selectedActorCard === index) || (game.phase === "PATIENT_SWAP" && isPatient && selectedPatientCards[patientPosition] === index);
-          return <button key={card.id} type="button" className={`food-card shelf-card owner-${seat} ${FOOD[card.value]?.tone ?? "leaf"} ${selected ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${interactive ? "clickable" : ""}`} onClick={() => { if (interactive) onSelect(seat, index); }} disabled={!interactive} aria-pressed={selected} aria-label={`${NAMES[seat]}: ${card.source === "VEGETABLE_SUPPLY" ? "Garden greens" : FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}`}>
-            <span className="card-owner">{NAMES[seat]}</span><FoodCardFace card={card} />
+          const actionLabel = vegetableChoice ? "Harvest" : helpfulActorCard ? "Choose" : targetChoice ? "Swap" : patientSwapChoice ? "Choose" : null;
+          return <button key={card.id} type="button" className={`food-card shelf-card owner-${seat} ${FOOD[card.value]?.tone ?? "leaf"} ${selected ? "selected" : ""} ${vegetableChoice ? "garden-choice" : ""} ${helpfulActorCard ? "actor-choice" : ""} ${targetChoice ? "target-choice" : ""} ${interactive ? "clickable" : ""}`} onClick={() => { if (interactive) onSelect(seat, index); }} disabled={!interactive} aria-pressed={selected} aria-label={`${NAMES[seat]}: ${card.source === "VEGETABLE_SUPPLY" ? "Garden greens" : FOOD[card.value]?.name ?? "Vegetable"}, value ${card.value}${interactive ? `. ${actionLabel}` : ""}`}>
+            <span className="card-owner">{NAMES[seat]}</span><FoodCardFace card={card} />{actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}
           </button>;
         }))}
       </div>
@@ -613,6 +634,21 @@ export function App() {
   const patient2Ai = game.controllers[game.currentRoles.patient2] === "AI";
   const canSubmitPatientSwap = (patient1Ai || selectedPatientCards[0] !== null) && (patient2Ai || selectedPatientCards[1] !== null);
   const aiTurn = aiDecisionIsDue(game);
+  const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
+  const noHelpfulRescue = rescuePhase && actor !== null && game.controllers[actor] === "HUMAN" && !hasHelpfulRescue(game, actor);
+  const actionHeading = loading
+    ? "Checking action…"
+    : aiTurn
+      ? "A friend is choosing a move"
+      : noHelpfulRescue
+        ? "No helpful rescue is available"
+        : game.phase === "VEGETABLE_RESOLUTION"
+          ? "Choose a garden replacement"
+          : game.phase === "PATIENT_SWAP"
+            ? "Patients choose together"
+            : actor === null
+              ? "Your turn"
+              : `${NAMES[actor]}'s rescue turn`;
 
   return (
     <main className="storybook-game-shell">
@@ -622,7 +658,7 @@ export function App() {
         <ScoreSidebar game={game} />
         <section className="main-board-area">
           <StorybookBoard game={game} prompt={prompt} aiTurn={aiTurn} showRoundTransition={showRoundTransition} />
-          <div className="game-action-banner"><div><strong>{loading ? "Checking action…" : aiTurn ? "A friend is choosing a move" : game.phase === "VEGETABLE_RESOLUTION" ? "Choose a garden replacement" : "Your turn"}</strong><span>{message}</span></div><div className="game-action-buttons">{game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="storybook-secondary" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="storybook-primary" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}{game.phase === "GAME_OVER" && <button className="storybook-primary" type="button" onClick={() => void start()} disabled={loading}>Play again</button>}</div></div>
+          <div className="game-action-banner"><div><strong>{actionHeading}</strong><span>{prompt}</span><small>{message}</small></div><div className="game-action-buttons">{noHelpfulRescue && actor !== null && <button className="storybook-primary" type="button" onClick={() => void send({ type: "RESCUE_PASS", expectedRevision: game.revision, actor })} disabled={loading}>Continue</button>}{game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="storybook-secondary" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="storybook-primary" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}{game.phase === "GAME_OVER" && <button className="storybook-primary" type="button" onClick={() => void start()} disabled={loading}>Play again</button>}</div></div>
         </section>
         <section className="bottom-card-area" aria-label="Food deck and events"><FoodShelf game={game} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} /><CakeDayCard /><EventShelf game={game} /></section>
         <footer className="storybook-footer"><span>♥&nbsp; We’re here for every step of the journey.</span><strong>Chews Freedom celebrates safe eating, strong choices, and the amazing kids who inspire us every day.</strong><nav><a href="#about">About</a><a href="#resources">Resources</a><a href="#community">Community</a><button type="button" onClick={() => { if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY); setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></nav></footer>
