@@ -177,10 +177,23 @@ function RoundTransition({ game }: { game: GameState }) {
   );
 }
 
+function CabbagePlant() {
+  return (
+    <svg className="garden-cabbage" viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse className="cabbage-soil" cx="32" cy="53" rx="26" ry="7" />
+      <path className="cabbage-leaf cabbage-leaf-back" d="M13 43c-6-16 5-29 19-22 6-13 24-8 23 9 12 3 10 20-3 22-10 2-32 3-39-9z" />
+      <path className="cabbage-leaf cabbage-leaf-left" d="M14 46c-5-12 3-24 15-19 5 5 5 17-2 24-5 3-10 1-13-5z" />
+      <path className="cabbage-leaf cabbage-leaf-right" d="M50 47c6-12-2-25-15-20-6 5-6 17 1 24 5 3 10 1 14-4z" />
+      <circle className="cabbage-head" cx="32" cy="39" r="16" />
+      <path className="cabbage-vein" d="M32 24v29M20 34c6 1 10 5 12 10M44 34c-6 1-10 5-12 10M23 45c4-3 8-3 12 0M41 45c-4-3-8-3-12 0" />
+    </svg>
+  );
+}
+
 function GardenField({ tokens }: { tokens: number }) {
   return (
     <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The vegetable field is empty" : `${tokens} cabbage plots are available for zero-value vegetable replacements`}>
-      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}><ArtSprite className="garden-crop-art" id="cabbage" /></span>)}
+      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}><CabbagePlant /></span>)}
     </div>
   );
 }
