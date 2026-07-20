@@ -2,6 +2,10 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 import { FOOD_DECK_BY_ID } from "./food-deck";
+import samPortrait from "./assets/characters-v2/sam.png";
+import mayaPortrait from "./assets/characters-v2/maya.png";
+import leoPortrait from "./assets/characters-v2/leo.png";
+import zoePortrait from "./assets/characters-v2/zoe-clean.png";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
 // Vercel deployment, the serverless API shares the page's origin instead.
@@ -12,6 +16,7 @@ const usesBrowserGameSave = !supportsSocketUpdates;
 const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
 const NAMES = ["Sam", "Maya", "Leo", "Zoe"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
+const PLAYER_PORTRAITS = [samPortrait, mayaPortrait, leoPortrait, zoePortrait];
 const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string; dish: string }> = {
   0: { name: "Herb tea", art: "cabbage", garnish: "cucumber", tone: "leaf", dish: "tea" },
   1: { name: "Rice porridge", art: "pear", garnish: "broccoli", tone: "sun", dish: "porridge" },
@@ -92,7 +97,7 @@ function FoodCardFace({ card }: { card: Card }) {
   );
 }
 
-function PlayerCharacter({ seat }: { seat: Seat }) {
+function LegacyPlayerCharacter({ seat }: { seat: Seat }) {
   const faces = <g className="character-face-details">
     <path className="character-brow" d="M34.5 36.7c2.5-2 5.2-2.2 7.6-.4M53.6 36.3c2.4-1.9 5.2-1.7 7.6.4" />
     <ellipse className="character-eye-sclera" cx="39" cy="45" rx="6.1" ry="7.55" />
@@ -159,6 +164,14 @@ function PlayerCharacter({ seat }: { seat: Seat }) {
       <g className="character-token"><ellipse className="character-token-base" cx="48" cy="113" rx="34" ry="12" /><ellipse className="character-token-rim" cx="48" cy="110" rx="30" ry="9" /><path className="character-token-glow character-detail" d="M28 109c11-5 27-6 39-1" /></g>
       {figures}
     </svg>
+  );
+}
+
+function PlayerCharacter({ seat }: { seat: Seat }) {
+  return (
+    <span className={`portrait-token illustrated-character character-${seat}`} aria-hidden="true">
+      <img src={PLAYER_PORTRAITS[seat]} alt="" />
+    </span>
   );
 }
 
