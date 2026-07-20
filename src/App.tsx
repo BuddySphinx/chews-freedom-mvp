@@ -8,6 +8,7 @@ import mayaPortrait from "./assets/characters-v2/maya.png";
 import leoPortrait from "./assets/characters-v2/leo.png";
 import zoePortrait from "./assets/characters-v2/zoe-clean.png";
 import gardenCabbageArt from "./assets/garden/cabbage-detailed.png";
+import setupTableScene from "./assets/setup/chews-freedom-table-scene.png";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
 // Vercel deployment, the serverless API shares the page's origin instead.
@@ -538,7 +539,7 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
         <p className="intro">A local four-seat cooperative game. Event cards are enabled as configurable prototype mechanics, not medical advice.</p>
         <div className="setup-actions"><button className="primary-button" type="button" onClick={start} disabled={loading}>{loading ? "Starting game..." : "Start local game"}</button></div>
       </section>
-      <section className="setup-art" aria-label="Whimsical family sketch visual reference"><img src="/Chews_Freedom_Artful_Sample.svg" alt="A hand-drawn Chews Freedom game table with four players and food" /></section>
+      <section className="setup-art" aria-label="Hand-painted Chews Freedom game table"><img src={setupTableScene} alt="Four children play Chews Freedom around a hand-painted wooden table covered in detailed food cards and fresh ingredients" /></section>
       <section className="setup-seats" aria-labelledby="seat-setup-title">
         <div><h2 id="seat-setup-title">Choose who controls each seat</h2><p>Human seats are played on this computer. AI seats use the cooperative rule policy.</p></div>
         <div className="controller-grid">
