@@ -151,22 +151,22 @@ button:disabled { cursor: not-allowed; }
 }
 .illustrated-character {
   display: block;
-  width: 70px;
-  height: 110px;
-  margin: -28px -5px -7px -10px;
+  width: 82px;
+  height: 128px;
+  margin: -46px -8px -7px -15px;
   container-type: normal;
 }
 .illustrated-character::before {
   position: absolute;
   z-index: 0;
-  top: 12px;
+  top: 10px;
   left: 50%;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border: 1px dotted rgb(255 249 220 / 84%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(255 252 224 / 82%) 0 34%, rgb(255 245 194 / 16%) 35% 65%, transparent 66%);
-  box-shadow: 0 0 0 3px rgb(255 255 255 / 18%);
+  background: radial-gradient(circle at 34% 30%, rgb(255 255 255 / 92%) 0 2px, transparent 2.5px), radial-gradient(circle at 70% 45%, rgb(255 248 202 / 88%) 0 1.7px, transparent 2.2px), radial-gradient(circle, rgb(255 252 224 / 84%) 0 34%, rgb(255 245 194 / 18%) 35% 65%, transparent 66%);
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 18%);
   content: "";
   transform: translateX(-50%);
 }
@@ -175,8 +175,8 @@ button:disabled { cursor: not-allowed; }
   z-index: 0;
   bottom: 4px;
   left: 50%;
-  width: 61px;
-  height: 16px;
+  width: 70px;
+  height: 17px;
   border: 2px solid var(--char-outline);
   border-radius: 50%;
   background: radial-gradient(ellipse at 50% 28%, rgb(255 250 215 / 62%), transparent 31%), var(--char-token);
@@ -192,10 +192,13 @@ button:disabled { cursor: not-allowed; }
   height: 100%;
   object-fit: contain;
   object-position: 50% 100%;
+  filter: saturate(1.08) brightness(1.03);
+  transform: translateY(-1px) scale(1.015);
+  transform-origin: 50% 100%;
 }
-.wheel-player-marker .illustrated-character { width: 53px; height: 69px; margin: -18px -1px -13px; }
-.wheel-player-marker .illustrated-character::before { top: 7px; width: 39px; height: 39px; }
-.wheel-player-marker .illustrated-character::after { bottom: 2px; width: 52px; height: 12px; border-width: 1px; }
+.wheel-player-marker .illustrated-character { width: 61px; height: 80px; margin: -25px -3px -17px; }
+.wheel-player-marker .illustrated-character::before { top: 5px; width: 45px; height: 45px; }
+.wheel-player-marker .illustrated-character::after { bottom: 2px; width: 58px; height: 13px; border-width: 1px; }
 .hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
 .food-card {
   position: relative;
