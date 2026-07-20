@@ -632,6 +632,10 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
                 <h3>Points</h3>
                 <p>A nutritionist earns 1 point when their own swap brings the chosen Tyrosinemia Kid within the limit. After a Tyrosinemia Kid swap, both Tyrosinemia Kids earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
               </section>
+              <section className="rulebook-end-note">
+                <h3>How the game ends</h3>
+                <p>The game ends if the cabbage field runs out, or if a Tyrosinemia Kid is still over the protein limit after every nutritionist rescue, assistant rescue, Tyrosinemia Kid swap, and cabbage replacement has been tried.</p>
+              </section>
               <p className="rulebook-page-number">Page 1</p>
             </section>
             <section className="rulebook-page rulebook-events-page">
