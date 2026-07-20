@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObjec
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 import { FOOD_DECK, FOOD_DECK_BY_ID } from "./food-deck";
+import { EVENT_DEFINITIONS, EVENT_OCCURRENCE_PERCENT } from "./event-deck";
 import samPortrait from "./assets/characters-v2/sam.png";
 import mayaPortrait from "./assets/characters-v2/maya.png";
 import leoPortrait from "./assets/characters-v2/leo.png";
@@ -561,53 +562,96 @@ function RulebookButton({ onOpen, triggerRef }: { onOpen: () => void; triggerRef
         </span>
         <span className="rulebook-button-copy">
           <strong id="rulebook-launcher-title">Open the rulebook</strong>
-          <small>Rules and all 48 food cards</small>
+          <small>Rules, events, and all 48 food cards</small>
         </span>
       </button>
     </section>
   );
 }
 
+function RulebookFoodPage({ foods, pageNumber }: { foods: typeof FOOD_DECK; pageNumber: number }) {
+  const start = (pageNumber - 3) * 24 + 1;
+  const end = start + foods.length - 1;
+  return (
+    <section className={`rulebook-page rulebook-deck-page ${pageNumber === 3 ? "rulebook-deck-left-page" : "rulebook-deck-right-page"}`}>
+      <header className="deck-page-heading"><div><span>Food deck</span><h3>Cards {start}–{end}</h3></div><p>Each badge is that card’s nutrition value for its listed child portion.</p></header>
+      <ol className="food-index" aria-label={`Food cards ${start} through ${end} and their nutrition values`}>
+        {foods.map((food) => {
+          const art = FOOD_ART[`./assets/food-cards/${food.id}.png`];
+          return (
+            <li className="food-index-card" key={food.id}>
+              <span className="food-index-art" aria-hidden="true">{art ? <img src={art} alt="" /> : null}</span>
+              <span className="food-index-copy"><strong>{food.name}</strong><small>{food.category} - {food.portion}</small></span>
+              <span className="food-index-value" aria-label={`${food.score} nutrition value`}><b>{food.score}</b><small>nutrition</small></span>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="rulebook-page-number">Page {pageNumber}</p>
+    </section>
+  );
+}
+
 function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObject<HTMLButtonElement | null> }) {
+  const [spread, setSpread] = useState<0 | 1>(0);
+  const [turnDirection, setTurnDirection] = useState<"forward" | "back" | null>(null);
+  const firstPage = spread * 2 + 1;
+  const turnPage = (direction: "forward" | "back") => {
+    setTurnDirection(direction);
+    setSpread(direction === "forward" ? 1 : 0);
+  };
   return (
     <div className="rulebook-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section id="chews-rulebook" className="rulebook-dialog" role="dialog" aria-modal="true" aria-labelledby="rulebook-title" aria-describedby="rulebook-description">
-        <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
+      <section id="chews-rulebook" className="rulebook-dialog" role="dialog" aria-modal="true" aria-labelledby="rulebook-title" aria-describedby={spread === 0 ? "rulebook-description" : undefined}>
         <header className="rulebook-titlebar">
           <div><span>The Chews Freedom guide</span><h2 id="rulebook-title">The little book of swaps</h2></div>
-          <button ref={closeRef} className="rulebook-close" type="button" onClick={onClose}>Close book</button>
+          <div className="rulebook-title-actions">
+            <nav className="rulebook-page-navigation" aria-label="Rule Book pages">
+              <button className="rulebook-page-turn" type="button" onClick={() => turnPage("back")} disabled={spread === 0} aria-label="Turn to the previous pages">Previous</button>
+              <span aria-live="polite">Pages {firstPage}–{firstPage + 1} of 4</span>
+              <button className="rulebook-page-turn" type="button" onClick={() => turnPage("forward")} disabled={spread === 1} aria-label="Turn to the next pages">Next</button>
+            </nav>
+            <button ref={closeRef} className="rulebook-close" type="button" onClick={onClose}>Close book</button>
+          </div>
         </header>
-        <div className="rulebook-spread">
-          <section className="rulebook-page rulebook-rules-page">
-            <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round's nutrition limit. Food-card numbers are game values, used for swaps and patient totals.</p>
-            <h3>How a round works</h3>
-            <ol className="rulebook-steps">
-              <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round's limit or the cabbage field.</p></li>
-              <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the limit and swap in a lower-numbered card for one of that patient's higher-numbered cards.</p></li>
-              <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
-              <li><span>4</span><p><strong>Patient aid.</strong> If needed, the two patients may each choose one card for one shared swap, or they can pass.</p></li>
-              <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-numbered card with a zero-value cabbage. Continue until everyone is safe or the field is empty.</p></li>
-            </ol>
-            <section className="rulebook-score-note">
-              <h3>Points</h3>
-              <p>A nutritionist earns 1 point when their own swap brings the chosen patient within the limit. After patient aid, both patients earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
+        <div key={spread} className={`rulebook-spread ${turnDirection ? `is-turning-${turnDirection}` : ""}`}>
+          <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
+          {spread === 0 ? <>
+            <section className="rulebook-page rulebook-rules-page">
+              <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round’s nutrition limit. Food-card numbers are game values, used for swaps and patient totals.</p>
+              <h3>How a round works</h3>
+              <ol className="rulebook-steps">
+                <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the cabbage field.</p></li>
+                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the limit and swap in a lower-numbered card for one of that patient’s higher-numbered cards.</p></li>
+                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
+                <li><span>4</span><p><strong>Patient aid.</strong> If needed, the two patients may each choose one card for one shared swap, or they can pass.</p></li>
+                <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-numbered card with a zero-value cabbage. Continue until everyone is safe or the field is empty.</p></li>
+              </ol>
+              <section className="rulebook-score-note">
+                <h3>Points</h3>
+                <p>A nutritionist earns 1 point when their own swap brings the chosen patient within the limit. After patient aid, both patients earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
+              </section>
+              <p className="rulebook-page-number">Page 1</p>
             </section>
-          </section>
-          <section className="rulebook-page rulebook-deck-page">
-            <header className="deck-page-heading"><div><span>Food deck</span><h3>All 48 food cards</h3></div><p>Each badge is that card's nutrition value for its listed child portion.</p></header>
-            <ol className="food-index" aria-label="48 food cards and their nutrition values">
-              {FOOD_DECK.map((food) => {
-                const art = FOOD_ART[`./assets/food-cards/${food.id}.png`];
-                return (
-                  <li className="food-index-card" key={food.id}>
-                    <span className="food-index-art" aria-hidden="true">{art ? <img src={art} alt="" /> : null}</span>
-                    <span className="food-index-copy"><strong>{food.name}</strong><small>{food.category} - {food.portion}</small></span>
-                    <span className="food-index-value" aria-label={`${food.score} nutrition value`}><b>{food.score}</b><small>nutrition</small></span>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
+            <section className="rulebook-page rulebook-events-page">
+              <p className="rulebook-intro">At the start of a round there is a {EVENT_OCCURRENCE_PERCENT}% chance to draw one event. Drawn events are removed from the event deck; a clear day keeps the usual limit of 10.</p>
+              <h3>The event deck</h3>
+              <ol className="event-index" aria-label="All event cards and their effects">
+                {EVENT_DEFINITIONS.map((event) => {
+                  const effect = event.kind === "THRESHOLD" ? `${event.amount > 0 ? "+" : ""}${event.amount} limit` : `${event.amount > 0 ? "+" : ""}${event.amount} cabbage`;
+                  return <li className={`event-index-card ${event.kind.toLowerCase()}`} key={event.id}>
+                    <span className="event-index-mark" aria-hidden="true"><i /></span>
+                    <span className="event-index-copy"><strong>{event.name}</strong><small>{event.summary}</small></span>
+                    <span className="event-index-effect">{effect}</span>
+                  </li>;
+                })}
+              </ol>
+              <p className="rulebook-page-number">Page 2</p>
+            </section>
+          </> : <>
+            <RulebookFoodPage foods={FOOD_DECK.slice(0, 24)} pageNumber={3} />
+            <RulebookFoodPage foods={FOOD_DECK.slice(24)} pageNumber={4} />
+          </>}
         </div>
       </section>
     </div>

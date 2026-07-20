@@ -1,4 +1,7 @@
 import { FOOD_DECK } from "../src/food-deck.js";
+import { EVENT_DEFINITIONS as SHARED_EVENT_DEFINITIONS, EVENT_OCCURRENCE_PERCENT } from "../src/event-deck.js";
+
+export { SHARED_EVENT_DEFINITIONS as EVENT_DEFINITIONS };
 
 export type Seat = 0 | 1 | 2 | 3;
 export type Controller = "HUMAN" | "AI";
@@ -70,22 +73,7 @@ export interface GameState {
 }
 
 const BASE_THRESHOLD = 10;
-const EVENT_OCCURRENCE_PERCENT = 72;
 export const LOCAL_RULES_VERSION = "3.0-local-mvp-draft.5-player-chosen-rescue-target-events-enabled";
-
-// Prototype-only game modifiers. These are deliberately non-medical and live in one place for later review.
-export const EVENT_DEFINITIONS: EventCard[] = [
-  { id: "COLD", name: "Cold Day", shortName: "Cold", summary: "For this round, the game threshold is 1 lower.", kind: "THRESHOLD", amount: -1 },
-  { id: "FOLLOW_UP_VISIT", name: "Follow-up Visit", shortName: "Visit", summary: "For this round, the game threshold is 1 lower.", kind: "THRESHOLD", amount: -1 },
-  { id: "PARTY_CAKE", name: "Party Cake", shortName: "Party", summary: "For this round, the game threshold is 2 lower.", kind: "THRESHOLD", amount: -2 },
-  { id: "SNACK_SHARING", name: "Snack Sharing", shortName: "Snack", summary: "For this round, the game threshold is 1 lower.", kind: "THRESHOLD", amount: -1 },
-  { id: "SUPERMARKET_RESTOCK", name: "Supermarket Restock", shortName: "Restock", summary: "Add 1 vegetable token to the shared garden.", kind: "GARDEN", amount: 1 },
-  { id: "MENU_UPDATE", name: "Menu Update", shortName: "Menu", summary: "For this round, the game threshold is 1 higher.", kind: "THRESHOLD", amount: 1 },
-  { id: "STORM", name: "Storm", shortName: "Storm", summary: "Remove 1 vegetable token from the shared garden.", kind: "GARDEN", amount: -1 },
-  { id: "RAIN", name: "Rain", shortName: "Rain", summary: "Add 1 vegetable token to the shared garden.", kind: "GARDEN", amount: 1 },
-  { id: "NUTRITIONIST_TRAINING", name: "Nutritionist Training", shortName: "Training", summary: "For this round, the game threshold is 1 higher.", kind: "THRESHOLD", amount: 1 },
-  { id: "TRAVEL_MODE", name: "Travel Mode", shortName: "Travel", summary: "For this round, the game threshold is 2 lower.", kind: "THRESHOLD", amount: -2 }
-];
 
 function nextRandom(state: GameState): number {
   let value = state.rngState += 0x6D2B79F5;
@@ -520,7 +508,7 @@ export function createGame(controllers: Controller[] = ["HUMAN", "AI", "AI", "AI
     drawPile: [],
     discardPile: [],
     scores: Array.from({ length: 4 }, () => ({ nutritionistPoints: 0, patientMutualAidPoints: 0, totalPoints: 0 })),
-    eventPool: structuredClone(EVENT_DEFINITIONS),
+    eventPool: structuredClone(SHARED_EVENT_DEFINITIONS),
     currentEvent: null,
     currentRoles: rolesFor(0),
     rescueTarget: null,
