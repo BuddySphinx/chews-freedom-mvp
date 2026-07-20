@@ -330,7 +330,7 @@ function replaceWithVegetable(state: GameState, seat: Seat, index: number): void
   state.discardPile.push(displaced);
   state.hands[seat][index] = { id: `veg-r${state.round}-${seat}-${index}-${state.gardenTokens}`, value: 0, source: "VEGETABLE_SUPPLY" };
   state.gardenTokens -= 1;
-  message(state, "VEGETABLE_RESOLUTION", "VEGETABLE_REPLACEMENT", `A zero-value vegetable replaced ${displaced.value} for Seat ${seat + 1}.`);
+  message(state, "VEGETABLE_RESOLUTION", "VEGETABLE_REPLACEMENT", `A zero-protein cabbage replaced ${displaced.value} protein for Seat ${seat + 1}.`);
 }
 
 function beginVegetableResolution(state: GameState): void {
@@ -339,17 +339,17 @@ function beginVegetableResolution(state: GameState): void {
     return;
   }
   if (state.gardenTokens <= 0) {
-    message(state, "VEGETABLE_RESOLUTION", "GARDEN_EXHAUSTED", "No zero-value vegetables remain while a patient is still over the limit.");
+    message(state, "VEGETABLE_RESOLUTION", "GARDEN_EXHAUSTED", "No zero-protein cabbages remain while a patient is still over the protein limit.");
     settleRound(state);
     return;
   }
   state.phase = "VEGETABLE_RESOLUTION";
-  message(state, "VEGETABLE_RESOLUTION", "GARDEN_PHASE", "Garden phase: choose the highest-value food card on the highlighted patient to replace with a zero-value vegetable.");
+  message(state, "VEGETABLE_RESOLUTION", "GARDEN_PHASE", "Garden phase: choose the highest-protein food card on the highlighted patient to replace with a zero-protein cabbage.");
 }
 
 function executeVegetableReplacement(state: GameState, patient: Seat, cardIndex: number, automated: boolean): void {
   const action = legalVegetableReplacements(state).find((candidate) => candidate.patient === patient && candidate.cardIndex === cardIndex);
-  if (!action) throw new Error("Choose a highest-value food card on the highlighted patient for the garden replacement.");
+  if (!action) throw new Error("Choose a highest-protein food card on the highlighted patient for the cabbage replacement.");
   replaceWithVegetable(state, action.patient, action.cardIndex);
   if (!failingPatients(state).length) {
     message(state, "VEGETABLE_RESOLUTION", automated ? "AI_GARDEN_COMPLETE" : "GARDEN_COMPLETE", "Every patient is now within the limit.");
@@ -357,11 +357,11 @@ function executeVegetableReplacement(state: GameState, patient: Seat, cardIndex:
     return;
   }
   if (state.gardenTokens === 0) {
-    message(state, "VEGETABLE_RESOLUTION", "GARDEN_EXHAUSTED", "The field used every available zero-value vegetable, but a patient is still over the limit.");
+    message(state, "VEGETABLE_RESOLUTION", "GARDEN_EXHAUSTED", "The field used every available zero-protein cabbage, but a patient is still over the protein limit.");
     settleRound(state);
     return;
   }
-  message(state, "VEGETABLE_RESOLUTION", automated ? "AI_GARDEN_REPLACEMENT" : "GARDEN_REPLACEMENT", "A vegetable was taken. Choose the next highlighted highest-value card while the patient remains over the limit.");
+  message(state, "VEGETABLE_RESOLUTION", automated ? "AI_GARDEN_REPLACEMENT" : "GARDEN_REPLACEMENT", "A cabbage was taken. Choose the next highlighted highest-protein card while the patient remains over the protein limit.");
 }
 
 function settleRound(state: GameState): void {
@@ -369,7 +369,7 @@ function settleRound(state: GameState): void {
   const outcome: RoundOutcome = unresolvedPatients
     ? { round: state.round, kind: "UNRESOLVED", title: "The garden ran out.", detail: "At least one patient remained over the limit." }
     : state.phase === "VEGETABLE_RESOLUTION"
-      ? { round: state.round, kind: "GARDEN", title: "The vegetable patch came through.", detail: "A zero-value vegetable completed the rescue." }
+      ? { round: state.round, kind: "GARDEN", title: "The vegetable patch came through.", detail: "A zero-protein cabbage completed the rescue." }
       : state.phase === "PATIENT_SWAP"
         ? { round: state.round, kind: "PATIENT", title: "We succeeded together.", detail: "Patient mutual aid completed the rescue." }
         : { round: state.round, kind: "NUTRITIONIST", title: "The nutritionists were amazing.", detail: "The rescue was completed before patient aid was needed." };

@@ -165,7 +165,7 @@ function FoodCardFace({ card }: { card: Card }) {
   const food = foodForCard(card);
   return (
     <>
-      <span className="food-card-header" aria-hidden="true"><span>{food.category ?? "Food card"}</span><span className="food-value">{card.value}</span></span>
+      <span className="food-card-header" aria-hidden="true"><span>{food.category ?? "Food card"}</span><span className="food-value" title={`Protein level ${card.value}`}>{card.value}</span></span>
       <span className="food-illustration" aria-hidden="true">
         <FoodDish food={food} />
       </span>
@@ -417,7 +417,7 @@ function CabbagePlant() {
 
 function GardenField({ tokens }: { tokens: number }) {
   return (
-    <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The vegetable field is empty" : `${tokens} cabbage plots are available for zero-value vegetable replacements`}>
+    <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The cabbage field is empty" : `${tokens} cabbage plots are available for zero-protein cabbage replacements`}>
       {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}><CabbagePlant /></span>)}
     </div>
   );
@@ -516,7 +516,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
               onClick={() => { if (cardInteractive) onSelect(seat, index); }}
               disabled={!cardInteractive}
               aria-pressed={cardIsSelected(index)}
-              aria-label={`${NAMES[seat]}: ${foodForCard(card).name}, value ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-value vegetable" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", vegetable replacement" : ""}`}
+              aria-label={`${NAMES[seat]}: ${foodForCard(card).name}, protein level ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-protein cabbage" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", cabbage replacement" : ""}`}
             >
               <FoodCardFace card={card} />
               {actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}
@@ -524,8 +524,8 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
           );
         })}
       </div>
-      {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Patient total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within limit" : "Over the limit"}</small></div>}
-      <div className="seat-score"><span>Points earned</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Patient aid {game.scores[seat].patientMutualAidPoints}</small></div>
+      {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Protein total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within protein limit" : "Over protein limit"}</small></div>}
+      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Patient aid {game.scores[seat].patientMutualAidPoints}</small></div>
     </article>
   );
 }
@@ -575,15 +575,15 @@ function RulebookFoodPage({ foods, pageNumber }: { foods: typeof FOOD_DECK; page
   const end = start + foods.length - 1;
   return (
     <section className={`rulebook-page rulebook-deck-page ${pageNumber === 3 ? "rulebook-deck-left-page" : "rulebook-deck-right-page"}`}>
-      <header className="deck-page-heading"><div><span>Food deck</span><h3>Cards {start}–{end}</h3></div><p>Each badge is that card’s nutrition value for its listed child portion.</p></header>
-      <ol className="food-index" aria-label={`Food cards ${start} through ${end} and their nutrition values`}>
+      <header className="deck-page-heading"><div><span>Food deck</span><h3>Cards {start}–{end}</h3></div><p>Each badge is that card’s protein level for its listed child portion.</p></header>
+      <ol className="food-index" aria-label={`Food cards ${start} through ${end} and their protein levels`}>
         {foods.map((food) => {
           const art = FOOD_ART[`./assets/food-cards/${food.id}.png`];
           return (
             <li className="food-index-card" key={food.id}>
               <span className="food-index-art" aria-hidden="true">{art ? <img src={art} alt="" /> : null}</span>
               <span className="food-index-copy"><strong>{food.name}</strong><small>{food.category} - {food.portion}</small></span>
-              <span className="food-index-value" aria-label={`${food.score} nutrition value`}><b>{food.score}</b><small>nutrition</small></span>
+              <span className="food-index-value" aria-label={`${food.score} protein level`}><b>{food.score}</b><small>protein</small></span>
             </li>
           );
         })}
@@ -619,14 +619,14 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
           <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
           {spread === 0 ? <>
             <section className="rulebook-page rulebook-rules-page">
-              <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round’s nutrition limit. Food-card numbers are game values, used for swaps and patient totals.</p>
+              <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and patient totals.</p>
               <h3>How a round works</h3>
               <ol className="rulebook-steps">
                 <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the cabbage field.</p></li>
-                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the limit and swap in a lower-numbered card for one of that patient’s higher-numbered cards.</p></li>
-                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
+                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the protein limit and swap in a lower-protein card for one of that patient’s higher-protein cards.</p></li>
+                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
                 <li><span>4</span><p><strong>Patient aid.</strong> If needed, the two patients may each choose one card for one shared swap, or they can pass.</p></li>
-                <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-numbered card with a zero-value cabbage. Continue until everyone is safe or the field is empty.</p></li>
+                <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-protein card with a zero-protein cabbage. Continue until everyone is safe or the field is empty.</p></li>
               </ol>
               <section className="rulebook-score-note">
                 <h3>Points</h3>
@@ -635,11 +635,11 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
               <p className="rulebook-page-number">Page 1</p>
             </section>
             <section className="rulebook-page rulebook-events-page">
-              <p className="rulebook-intro">At the start of a round there is a {EVENT_OCCURRENCE_PERCENT}% chance to draw one event. Drawn events are removed from the event deck; a clear day keeps the usual limit of 10.</p>
+              <p className="rulebook-intro">At the start of a round there is a {EVENT_OCCURRENCE_PERCENT}% chance to draw one event. Drawn events are removed from the event deck; a clear day keeps the usual protein limit of 10.</p>
               <h3>The event deck</h3>
               <ol className="event-index" aria-label="All event cards and their effects">
                 {EVENT_DEFINITIONS.map((event) => {
-                  const effect = event.kind === "THRESHOLD" ? `${event.amount > 0 ? "+" : ""}${event.amount} limit` : `${event.amount > 0 ? "+" : ""}${event.amount} cabbage`;
+                  const effect = event.kind === "THRESHOLD" ? `${event.amount > 0 ? "+" : ""}${event.amount} protein limit` : `${event.amount > 0 ? "+" : ""}${event.amount} cabbage`;
                   return <li className={`event-index-card ${event.kind.toLowerCase()}`} key={event.id}>
                     <span className="event-index-mark" aria-hidden="true"><i /></span>
                     <span className="event-index-copy"><strong>{event.name}</strong><small>{event.summary}</small></span>
@@ -811,19 +811,19 @@ export function App() {
       const humanPatients = [patient1, patient2].filter((seat) => game.controllers[seat] === "HUMAN");
       if (!humanPatients.length) return "Both patients are AI-controlled. They are choosing whether to swap.";
       if (humanPatients.length === 1) return `${NAMES[humanPatients[0]]}, choose one card. The AI patient will choose its own best card when you swap.`;
-      return "Each patient chooses one card to swap, or the patients may pass. If either patient is still over the limit afterward, the players move to the garden step.";
+      return "Each patient chooses one card to swap, or the patients may pass. If either patient is still over the protein limit afterward, the players move to the garden step.";
     }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       const target = strictTarget(game);
-      return target === null ? "All patients are within the limit." : `Garden turn: click a highlighted highest-value card on ${NAMES[target]}. It will be replaced by one zero-value vegetable. Keep taking vegetables until every patient is within the limit or the field is empty.`;
+      return target === null ? "All patients are within the protein limit." : `Garden turn: click a highlighted highest-protein card on ${NAMES[target]}. It will be replaced by one zero-protein cabbage. Keep taking cabbages until every patient is within the protein limit or the field is empty.`;
     }
     const actor = currentActor(game)!;
     if (game.phase === "ACTIVE_RESCUE") {
       const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-      return hasFailingPatient ? `${NAMES[actor]} may choose either patient who is over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : `${roleFor(game, actor)} has no patient to rescue. The server will continue the round.`;
+      return hasFailingPatient ? `${NAMES[actor]} may choose either patient who is over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the patient you choose.` : `${roleFor(game, actor)} has no patient to rescue. The server will continue the round.`;
     }
     const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-    return hasFailingPatient ? `The active nutritionist did not bring every patient within the limit. ${NAMES[actor]} gets one support rescue and may independently choose either patient who is still over the limit. Select one of ${NAMES[actor]}'s cards, then a lower-value swap on the patient you choose.` : "Both patients are within the limit. The server will continue the round.";
+    return hasFailingPatient ? `The active nutritionist did not bring every patient within the protein limit. ${NAMES[actor]} gets one support rescue and may independently choose either patient who is still over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the patient you choose.` : "Both patients are within the protein limit. The server will continue the round.";
   }, [game]);
 
   if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
@@ -867,7 +867,7 @@ export function App() {
           <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
         </aside>
         <section className="table-area" aria-label="Chews Freedom game board">
-          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-value cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
+          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-protein cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
           <TurnFlow game={game} />
           <div className={`board-flip-stage ${showRoundWheel ? "show-wheel" : "show-table"}`}>
             <div className="board-flip-inner">
@@ -878,8 +878,8 @@ export function App() {
                   <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
                   <section className="centre-status" aria-live="polite">
                     <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
-                    <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} limit`}</strong>
-                    <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
+                    <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} protein limit`}</strong>
+                    <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-protein cabbages ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
                     {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
                   </section>
                   <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
