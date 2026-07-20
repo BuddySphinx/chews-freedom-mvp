@@ -200,7 +200,7 @@ button:disabled { cursor: not-allowed; }
 .food-card.target-choice { border-color: var(--moss); }
 .food-card.garden-choice { border-color: var(--moss); box-shadow: 0 0 0 3px rgb(80 102 59 / 22%), 2px 3px 0 rgb(67 48 28 / 31%); animation: garden-choice-pulse 1.8s ease-in-out infinite; }
 .food-card.selected { border: 3px solid var(--moss); padding: 4px 3px 3px; background: linear-gradient(145deg, #edf3d9, #d6e2ba); }
-.food-card:disabled { cursor: default; opacity: .68; filter: saturate(.72) brightness(.94); }
+.food-card:disabled { cursor: default; opacity: 1; filter: none; }
 .food-card.rose { background: radial-gradient(circle at 10% 14%, rgb(255 255 255 / 46%) 0 1px, transparent 1.5px) 0 0 / 9px 9px, linear-gradient(145deg, #f5dfd3, #e8bfae); }
 .food-card.sun { background: radial-gradient(circle at 10% 14%, rgb(255 255 255 / 46%) 0 1px, transparent 1.5px) 0 0 / 9px 9px, linear-gradient(145deg, #fbefc9, #e9d38d); }
 .food-card.earth { background: radial-gradient(circle at 10% 14%, rgb(255 255 255 / 46%) 0 1px, transparent 1.5px) 0 0 / 9px 9px, linear-gradient(145deg, #f0e1ca, #d9bd98); }
