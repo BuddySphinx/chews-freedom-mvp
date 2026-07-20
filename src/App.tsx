@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 import { FOOD_DECK_BY_ID } from "./food-deck";
@@ -250,16 +250,71 @@ function TurnFlow({ game }: { game: GameState }) {
   );
 }
 
-function RoundTransition({ game }: { game: GameState }) {
+function RoundWheel({ game }: { game: GameState }) {
   const outcome = game.lastRoundOutcome?.round === game.round - 1 ? game.lastRoundOutcome : null;
+  const day = ((game.round - 1) % 12) + 1;
+  const players = [game.currentRoles.active, game.currentRoles.assistant, game.currentRoles.patient1, game.currentRoles.patient2];
+
   return (
-    <section className="round-transition" aria-live="polite" aria-label={`Day ${game.round} begins`}>
-      <div className="round-transition-card">
-        {outcome && <p className={`outcome-kicker ${outcome.kind.toLowerCase()}`}>Yesterday · {outcome.title}</p>}
-        <p className="day-number">Day {game.round}</p>
-        <h2>Good morning.</h2>
-        <p>{outcome ? outcome.detail : "A new round is ready. Follow the turn order around the table."}</p>
-        <small>First move · {NAMES[game.currentRoles.active]}, active nutritionist</small>
+    <section className="round-wheel-face" aria-live="polite" aria-label={`Day ${game.round} event and date wheel`}>
+      <div className="wheel-wood-banner"><span>Garden calendar</span></div>
+      <div className="wheel-layout">
+        <div className="round-wheel" style={{ "--active-day": day } as CSSProperties}>
+          <div className="wheel-rim" aria-hidden="true" />
+          {Array.from({ length: 12 }, (_, index) => {
+            const tileDay = index + 1;
+            const angle = index * 30;
+            return (
+              <span
+                className={`wheel-day-tile ${tileDay === day ? "is-today" : ""}`}
+                key={tileDay}
+                style={{ "--wheel-angle": `${angle}deg`, "--wheel-counter-angle": `${-angle}deg` } as CSSProperties}
+              >
+                <span>{tileDay}</span>
+                <i aria-hidden="true" />
+              </span>
+            );
+          })}
+          <div className="wheel-garden-scene" aria-hidden="true">
+            <span className="wheel-cloud wheel-cloud-one" />
+            <span className="wheel-cloud wheel-cloud-two" />
+            <span className="wheel-hill wheel-hill-back" />
+            <span className="wheel-hill wheel-hill-front" />
+            <span className="wheel-cottage"><i /><b /><em /></span>
+            <span className="wheel-flower wheel-flower-one" />
+            <span className="wheel-flower wheel-flower-two" />
+            <span className="wheel-flower wheel-flower-three" />
+          </div>
+          <div className="wheel-day-plaque"><span>Day</span><strong>{day}</strong><small>of 12</small></div>
+          {players.map((seat, index) => {
+            const markerDay = ((day - 1 + index * 3) % 12) + 1;
+            const angle = (markerDay - 1) * 30 - 90;
+            return (
+              <div
+                className="wheel-player-marker"
+                key={seat}
+                style={{ "--wheel-angle": `${angle}deg`, "--wheel-counter-angle": `${-angle}deg`, "--marker-delay": `${index * 85}ms` } as CSSProperties}
+              >
+                <PlayerCharacter seat={seat} />
+                <span>{NAMES[seat]}</span>
+              </div>
+            );
+          })}
+        </div>
+        <aside className="wheel-event-card" aria-label="Current event">
+          <span className="wheel-event-label">Event drawn</span>
+          <div className="wheel-event-crest" aria-hidden="true"><i /><i /><i /></div>
+          <strong>{game.currentEvent?.shortName ?? "Clear"}</strong>
+          <h2>{game.currentEvent?.name ?? "Clear day"}</h2>
+          <p>{game.currentEvent?.summary ?? "The standard rules apply this round."}</p>
+          <small>{game.threshold} protein limit · {game.eventPool.length} event cards remain</small>
+        </aside>
+      </div>
+      <div className="wheel-story-strip">
+        {outcome && <span className={`wheel-outcome ${outcome.kind.toLowerCase()}`}>Yesterday · {outcome.title}</span>}
+        <h2>Good morning, Day {game.round}.</h2>
+        <p>{outcome ? outcome.detail : `${NAMES[game.currentRoles.active]} leads the first rescue after the board turns.`}</p>
+        <small>Players move around the calendar, then the board turns to the food table.</small>
       </div>
     </section>
   );
@@ -422,8 +477,9 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [selectedActorCard, setSelectedActorCard] = useState<number | null>(null);
   const [selectedPatientCards, setSelectedPatientCards] = useState<[number | null, number | null]>([null, null]);
-  const [showRoundTransition, setShowRoundTransition] = useState(false);
+  const [showRoundWheel, setShowRoundWheel] = useState(false);
   const seenRound = useRef<number | null>(null);
+  const seenOutcomeRound = useRef<number | null>(null);
   const autoAdvancedRevision = useRef<number | null>(null);
 
   useEffect(() => {
@@ -495,15 +551,20 @@ export function App() {
   useEffect(() => {
     if (!game || showSetup) {
       seenRound.current = null;
-      setShowRoundTransition(false);
+      seenOutcomeRound.current = null;
+      setShowRoundWheel(false);
       return;
     }
-    if (seenRound.current === game.round) return;
+    const outcomeRound = game.lastRoundOutcome?.round ?? null;
+    const isNewRound = seenRound.current !== game.round;
+    const isNewOutcome = outcomeRound !== null && seenOutcomeRound.current !== outcomeRound;
+    if (!isNewRound && !isNewOutcome) return;
     seenRound.current = game.round;
-    setShowRoundTransition(true);
-    const timer = window.setTimeout(() => setShowRoundTransition(false), 2_650);
+    seenOutcomeRound.current = outcomeRound;
+    setShowRoundWheel(true);
+    const timer = window.setTimeout(() => setShowRoundWheel(false), 2_800);
     return () => window.clearTimeout(timer);
-  }, [game?.round, showSetup]);
+  }, [game?.round, game?.lastRoundOutcome?.round, showSetup]);
 
   useEffect(() => {
     if (!game || showSetup || loading || !aiDecisionIsDue(game)) {
@@ -599,21 +660,27 @@ export function App() {
           {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
           <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
         </aside>
-        <section className="table-area" aria-label="Chews Freedom public game table">
+        <section className="table-area" aria-label="Chews Freedom game board">
           <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-value cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
           <TurnFlow game={game} />
-          <div className="table-felt">
-            {showRoundTransition && <RoundTransition game={game} />}
-            <SeatPanel game={game} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
-            <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
-            <section className="centre-status" aria-live="polite">
-              <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
-              <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} limit`}</strong>
-              <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
-              {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
-            </section>
-            <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
-            <SeatPanel game={game} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+          <div className={`board-flip-stage ${showRoundWheel ? "show-wheel" : "show-table"}`}>
+            <div className="board-flip-inner">
+              <div className="board-face board-face-wheel"><RoundWheel game={game} /></div>
+              <div className="board-face board-face-table">
+                <div className="table-felt">
+                  <SeatPanel game={game} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <section className="centre-status" aria-live="polite">
+                    <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
+                    <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} limit`}</strong>
+                    <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-value vegetables ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
+                    {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
+                  </section>
+                  <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                </div>
+              </div>
+            </div>
           </div>
           <div className="action-tray">
             <div><strong>{actionHeading}</strong><p>{prompt}</p><small>{message}</small></div>
