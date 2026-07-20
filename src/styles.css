@@ -151,10 +151,24 @@ button:disabled { cursor: not-allowed; }
 }
 .illustrated-character {
   display: block;
-  width: 64px;
-  height: 100px;
-  margin: -18px -3px -6px -8px;
+  width: 70px;
+  height: 110px;
+  margin: -28px -5px -7px -10px;
   container-type: normal;
+}
+.illustrated-character::before {
+  position: absolute;
+  z-index: 0;
+  top: 12px;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  border: 1px dotted rgb(255 249 220 / 84%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 252 224 / 82%) 0 34%, rgb(255 245 194 / 16%) 35% 65%, transparent 66%);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 18%);
+  content: "";
+  transform: translateX(-50%);
 }
 .illustrated-character::after {
   position: absolute;
@@ -179,8 +193,9 @@ button:disabled { cursor: not-allowed; }
   object-fit: contain;
   object-position: 50% 100%;
 }
-.wheel-player-marker .illustrated-character { margin: -13px 0 -10px; }
-.wheel-player-marker .illustrated-character::after { bottom: 2px; width: 46px; height: 11px; border-width: 1px; }
+.wheel-player-marker .illustrated-character { width: 53px; height: 69px; margin: -18px -1px -13px; }
+.wheel-player-marker .illustrated-character::before { top: 7px; width: 39px; height: 39px; }
+.wheel-player-marker .illustrated-character::after { bottom: 2px; width: 52px; height: 12px; border-width: 1px; }
 .hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
 .food-card {
   position: relative;
