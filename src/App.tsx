@@ -256,8 +256,8 @@ function PlayerCharacter({ seat }: { seat: Seat }) {
 function roleFor(game: GameState, seat: number): string {
   if (game.currentRoles.active === seat) return "Active nutritionist";
   if (game.currentRoles.assistant === seat) return "Assistant";
-  if (game.currentRoles.patient1 === seat) return "Patient 1";
-  return "Patient 2";
+  if (game.currentRoles.patient1 === seat) return "Tyrosinemia Kid 1";
+  return "Tyrosinemia Kid 2";
 }
 
 function currentActor(game: GameState): Seat | null {
@@ -328,7 +328,7 @@ function TurnFlow({ game }: { game: GameState }) {
   const items = [
     { label: `${NAMES[game.currentRoles.active]} · nutritionist`, note: "rescue" },
     { label: `${NAMES[game.currentRoles.assistant]} · assistant`, note: "only if needed" },
-    { label: `${NAMES[game.currentRoles.patient1]} + ${NAMES[game.currentRoles.patient2]}`, note: "patient aid" },
+    { label: `${NAMES[game.currentRoles.patient1]} + ${NAMES[game.currentRoles.patient2]}`, note: "Tyrosinemia Kid swap" },
     { label: "Vegetable patch", note: "only if needed" }
   ];
   return (
@@ -525,7 +525,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
         })}
       </div>
       {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Protein total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within protein limit" : "Over protein limit"}</small></div>}
-      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Patient aid {game.scores[seat].patientMutualAidPoints}</small></div>
+      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Tyrosinemia Kid aid {game.scores[seat].patientMutualAidPoints}</small></div>
     </article>
   );
 }
@@ -536,7 +536,7 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
       <section className="setup-copy">
         <p className="kicker">Chews Freedom</p>
         <h1>Help each other make the best food swap.</h1>
-        <p className="intro">A local four-seat cooperative game. Event cards are enabled as configurable prototype mechanics, not medical advice.</p>
+        <p className="intro">A local four-seat cooperative game. Event cards are enabled as configurable game-play mechanics.</p>
         <div className="setup-actions"><button className="primary-button" type="button" onClick={start} disabled={loading}>{loading ? "Starting game..." : "Start local game"}</button></div>
       </section>
       <section className="setup-art" aria-label="Hand-painted Chews Freedom game table"><img src={setupTableScene} alt="Four children play Chews Freedom around a hand-painted wooden table covered in detailed food cards and fresh ingredients" /></section>
@@ -545,7 +545,7 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
         <div className="controller-grid">
           {controllers.map((controller, index) => <label className="controller-choice" key={NAMES[index]}><span><strong>{NAMES[index]}</strong><small>Seat {index + 1}</small></span><select value={controller} onChange={(event) => { const next = [...controllers]; next[index] = event.target.value as Controller; setControllers(next); }}><option value="HUMAN">Human</option><option value="AI">AI</option></select></label>)}
         </div>
-        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; in a mixed patient pair, the AI chooses its own card after the human patient chooses theirs.</p>
+        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; in a mixed Tyrosinemia Kid pair, the AI chooses its own card after the human Tyrosinemia Kid chooses theirs.</p>
       </section>
     </main>
   );
@@ -619,18 +619,18 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
           <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
           {spread === 0 ? <>
             <section className="rulebook-page rulebook-rules-page">
-              <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and patient totals.</p>
+              <p id="rulebook-description" className="rulebook-intro">Keep every Tyrosinemia Kid at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and Tyrosinemia Kid totals.</p>
               <h3>How a round works</h3>
               <ol className="rulebook-steps">
                 <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the cabbage field.</p></li>
-                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the protein limit and swap in a lower-protein card for one of that patient’s higher-protein cards.</p></li>
-                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
-                <li><span>4</span><p><strong>Patient aid.</strong> If needed, the two patients may each choose one card for one shared swap, or they can pass.</p></li>
-                <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-protein card with a zero-protein cabbage. Continue until everyone is safe or the field is empty.</p></li>
+                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either Tyrosinemia Kid over the protein limit and swap in a lower-protein card for one of that Tyrosinemia Kid’s higher-protein cards.</p></li>
+                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the assistant gets one rescue attempt and may choose the same Tyrosinemia Kid or the other Tyrosinemia Kid.</p></li>
+                <li><span>4</span><p><strong>Tyrosinemia Kid swap.</strong> If needed, the two Tyrosinemia Kids may each choose one card for one shared swap, or they can pass.</p></li>
+                <li><span>5</span><p><strong>Vegetable field.</strong> If a Tyrosinemia Kid is still over, replace the highlighted highest-protein card with a zero-protein cabbage. Continue until everyone is within the limit or the field is empty.</p></li>
               </ol>
               <section className="rulebook-score-note">
                 <h3>Points</h3>
-                <p>A nutritionist earns 1 point when their own swap brings the chosen patient within the limit. After patient aid, both patients earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
+                <p>A nutritionist earns 1 point when their own swap brings the chosen Tyrosinemia Kid within the limit. After a Tyrosinemia Kid swap, both Tyrosinemia Kids earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
               </section>
               <p className="rulebook-page-number">Page 1</p>
             </section>
@@ -809,21 +809,21 @@ export function App() {
     if (game.phase === "PATIENT_SWAP") {
       const { patient1, patient2 } = game.currentRoles;
       const humanPatients = [patient1, patient2].filter((seat) => game.controllers[seat] === "HUMAN");
-      if (!humanPatients.length) return "Both patients are AI-controlled. They are choosing whether to swap.";
-      if (humanPatients.length === 1) return `${NAMES[humanPatients[0]]}, choose one card. The AI patient will choose its own best card when you swap.`;
-      return "Each patient chooses one card to swap, or the patients may pass. If either patient is still over the protein limit afterward, the players move to the garden step.";
+      if (!humanPatients.length) return "Both Tyrosinemia Kids are AI-controlled. They are choosing whether to swap.";
+      if (humanPatients.length === 1) return `${NAMES[humanPatients[0]]}, choose one card. The AI Tyrosinemia Kid will choose its own best card when you swap.`;
+      return "Each Tyrosinemia Kid chooses one card to swap, or the Tyrosinemia Kids may pass. If either Tyrosinemia Kid is still over the protein limit afterward, the players move to the garden step.";
     }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       const target = strictTarget(game);
-      return target === null ? "All patients are within the protein limit." : `Garden turn: click a highlighted highest-protein card on ${NAMES[target]}. It will be replaced by one zero-protein cabbage. Keep taking cabbages until every patient is within the protein limit or the field is empty.`;
+      return target === null ? "All Tyrosinemia Kids are within the protein limit." : `Garden turn: click a highlighted highest-protein card on ${NAMES[target]}. It will be replaced by one zero-protein cabbage. Keep taking cabbages until every Tyrosinemia Kid is within the protein limit or the field is empty.`;
     }
     const actor = currentActor(game)!;
     if (game.phase === "ACTIVE_RESCUE") {
       const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-      return hasFailingPatient ? `${NAMES[actor]} may choose either patient who is over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the patient you choose.` : `${roleFor(game, actor)} has no patient to rescue. The server will continue the round.`;
+      return hasFailingPatient ? `${NAMES[actor]} may choose either Tyrosinemia Kid who is over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the Tyrosinemia Kid you choose.` : `${roleFor(game, actor)} has no Tyrosinemia Kid to rescue. The server will continue the round.`;
     }
     const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-    return hasFailingPatient ? `The active nutritionist did not bring every patient within the protein limit. ${NAMES[actor]} gets one support rescue and may independently choose either patient who is still over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the patient you choose.` : "Both patients are within the protein limit. The server will continue the round.";
+    return hasFailingPatient ? `The active nutritionist did not bring every Tyrosinemia Kid within the protein limit. ${NAMES[actor]} gets one support rescue and may independently choose either Tyrosinemia Kid who is still over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the Tyrosinemia Kid you choose.` : "Both Tyrosinemia Kids are within the protein limit. The server will continue the round.";
   }, [game]);
 
   if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
@@ -844,7 +844,7 @@ export function App() {
         : game.phase === "VEGETABLE_RESOLUTION"
           ? "Garden turn — choose a highlighted replacement"
           : game.phase === "PATIENT_SWAP"
-            ? "Patient turn — choose one card from each patient"
+            ? "Tyrosinemia Kid turn — choose one card from each Tyrosinemia Kid"
             : actor === null
               ? "Your turn board"
               : `${NAMES[actor]}'s rescue turn`;
@@ -897,7 +897,7 @@ export function App() {
           </div>
         </section>
         <aside className="right-rail">
-          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={NAMES[seat]}><span>{NAMES[seat]}</span><div><small>Nutritionist {score.nutritionistPoints} · Mutual aid {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
+          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={NAMES[seat]}><span>{NAMES[seat]}</span><div><small>Nutritionist {score.nutritionistPoints} · Tyrosinemia Kid aid {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
           <RulebookButton onOpen={() => setRulebookOpen(true)} triggerRef={rulebookTriggerRef} />
         </aside>
       </section>

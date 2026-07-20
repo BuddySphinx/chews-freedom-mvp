@@ -2,7 +2,7 @@ import type { EventCard } from "./game-types";
 
 export const EVENT_OCCURRENCE_PERCENT = 72;
 
-// Prototype-only game modifiers. These are deliberately non-medical and live
+// Prototype game modifiers. These live
 // in one shared deck so the engine and the Rule Book always describe the same cards.
 export const EVENT_DEFINITIONS: EventCard[] = [
   { id: "COLD", name: "Cold Day", shortName: "Cold", summary: "For this round, the protein limit is 1 lower.", kind: "THRESHOLD", amount: -1 },
