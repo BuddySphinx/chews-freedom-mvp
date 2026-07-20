@@ -17,13 +17,14 @@ const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
 const NAMES = ["Sam", "Maya", "Leo", "Zoe"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PLAYER_PORTRAITS = [samPortrait, mayaPortrait, leoPortrait, zoePortrait];
+const FOOD_ART = import.meta.glob("./assets/food-cards/*.png", { eager: true, import: "default", query: "?url" }) as Record<string, string>;
 type FoodVisual =
   | "apple" | "cucumber" | "watermelon" | "banana" | "orange" | "broccoli" | "potato" | "corn" | "peas" | "avocado" | "mushroom"
   | "rice" | "bread" | "pasta" | "oats" | "cornflakes" | "beans" | "milk" | "green-beans" | "egg" | "peanut" | "yogurt"
   | "hummus" | "cheese" | "tofu" | "black-beans" | "fish" | "salmon" | "poultry" | "meat" | "almonds" | "fish-fingers"
   | "prawns" | "sardines" | "mussels" | "steak" | "lentils" | "sausage" | "mackerel" | "ham";
 
-type FoodCardDetail = { name: string; tone: string; dish: string; visual: FoodVisual; category?: string; portion?: string };
+type FoodCardDetail = { name: string; tone: string; dish: string; visual: FoodVisual; artId?: string; category?: string; portion?: string };
 
 const FOOD: Record<number, FoodCardDetail> = {
   0: { name: "Herb tea", visual: "green-beans", tone: "leaf", dish: "tea" },
@@ -70,12 +71,13 @@ const CATEGORY_FALLBACK_VISUALS: Record<string, FoodVisual> = {
 };
 
 function foodForCard(card: Card): FoodCardDetail {
-  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", visual: "broccoli", tone: "leaf", dish: "greens", category: "Vegetable" };
+  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", visual: "broccoli", artId: "food-06-broccoli", tone: "leaf", dish: "greens", category: "Vegetable" };
   const workbookFood = card.foodId ? FOOD_DECK_BY_ID[card.foodId] : undefined;
   if (workbookFood) return {
     name: workbookFood.name,
     category: workbookFood.category,
     portion: workbookFood.portion,
+    artId: workbookFood.id,
     visual: FOOD_VISUALS[workbookFood.id] ?? CATEGORY_FALLBACK_VISUALS[workbookFood.category],
     ...CATEGORY_CARD_DETAILS[workbookFood.category]
   };
@@ -130,6 +132,8 @@ function FoodIngredientArt({ visual }: { visual: FoodVisual }) {
 
 function FoodDish({ food }: { food: FoodCardDetail }) {
   const isTea = food.dish === "tea";
+  const generatedArt = food.artId ? FOOD_ART[`./assets/food-cards/${food.artId}.png`] : undefined;
+  if (generatedArt) return <img className="food-dish-image" src={generatedArt} alt="" aria-hidden="true" />;
   return (
     <svg className={`food-dish food-dish-${food.dish}`} aria-hidden="true" viewBox="0 0 88 72">
       <ellipse className="dish-shadow" cx="44" cy="61" rx="32" ry="5" />
