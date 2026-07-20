@@ -401,7 +401,7 @@ body {
   background: linear-gradient(180deg, #c8d69a 0 34%, #8a5d33 35% 100%);
   box-shadow: inset 0 2px 5px rgb(64 38 19 / 34%);
 }
-.garden-crop { border-color: rgb(93 60 31 / 75%); border-radius: 7px 7px 5px 5px; background: linear-gradient(180deg, #deedb9 0 35%, #a77742 36% 100%); }
+.garden-crop { min-height: 48px; border-color: rgb(93 60 31 / 75%); border-radius: 7px 7px 5px 5px; background: linear-gradient(180deg, #deedb9 0 35%, #a77742 36% 100%); }
 
 .turn-flow { margin-inline: 10px; gap: 7px; }
 .flow-step { min-height: 48px; border-color: #d2b475; border-radius: 11px 9px 12px 8px; background: linear-gradient(145deg, #fffdf0, #f1e3bd); color: #6b7656; box-shadow: 0 2px 0 rgb(139 100 44 / 15%); }
@@ -517,7 +517,7 @@ body {
 .rulebook-launcher {
   position: relative;
   display: grid;
-  min-height: 214px;
+  min-height: 236px;
   align-content: center;
   gap: 10px;
   padding: 15px 13px;
@@ -563,7 +563,7 @@ body {
   z-index: 1;
   display: grid;
   width: 100%;
-  grid-template-columns: 82px minmax(0, 1fr);
+  grid-template-columns: 100px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 6px 5px 6px 0;
@@ -580,8 +580,8 @@ body {
 .ancient-book-icon {
   position: relative;
   display: block;
-  width: 77px;
-  height: 101px;
+  width: 94px;
+  height: 120px;
   filter: drop-shadow(3px 5px 0 rgb(54 31 17 / 35%));
   transform: rotate(-3deg);
   transform-origin: 50% 92%;
@@ -605,7 +605,7 @@ body {
   inset: 3px 10px 0 2px;
   display: grid;
   place-content: center;
-  gap: 6px;
+  gap: 3px;
   border: 3px solid #3f281c;
   border-radius: 7px 5px 5px 7px;
   background:
@@ -620,16 +620,17 @@ body {
   border-radius: 3px;
   content: "";
 }
-.ancient-book-cover span {
+.ancient-book-cover span, .ancient-book-cover strong {
   position: relative;
   z-index: 1;
   color: #f2ca72;
   font-family: Georgia, "Palatino Linotype", serif;
-  font-size: 1.05rem;
   font-weight: 900;
   letter-spacing: -.08em;
+  line-height: .83;
   text-shadow: 0 1px 0 #4a2618;
 }
+.ancient-book-cover span { font-size: .8rem; }.ancient-book-cover strong { font-size: 1rem; }
 .ancient-book-cover i, .ancient-book-cover b { position: relative; z-index: 1; display: block; height: 2px; margin: 0 auto; background: #e9bb62; box-shadow: 0 1px 0 rgb(52 27 18 / 52%); }
 .ancient-book-cover i { width: 29px; }.ancient-book-cover b { width: 20px; }
 .ancient-book-bookmark { position: absolute; z-index: 3; top: 0; right: 16px; width: 11px; height: 42px; border: 1px solid #5e2e24; border-bottom: 0; background: linear-gradient(90deg, #b64e43, #e17a5a 48%, #8e342f); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); }
@@ -733,7 +734,7 @@ body {
 .food-index-value { display: grid; width: 38px; height: 40px; place-content: center; border: 2px solid #5d482a; border-radius: 50%; background: radial-gradient(circle at 36% 28%, #e4efb9 0 6%, #779455 8% 61%, #405c32 63%); box-shadow: inset 0 1px 0 rgb(255 255 221 / 54%), 1px 1px 0 rgb(84 53 28 / 25%); color: #fff9de; text-align: center; }.food-index-value b { font-family: Georgia, "Palatino Linotype", serif; font-size: .96rem; line-height: .82; }.food-index-value small { margin-top: 2px; color: #eff7ca; font-size: .35rem; font-weight: 900; letter-spacing: -.02em; line-height: 1; }
 
 @media (max-width: 900px) {
-  .rulebook-launcher { min-height: 170px; }
+  .rulebook-launcher { min-height: 190px; }
   .rulebook-button { max-width: 310px; justify-self: center; }
   .rulebook-binding { left: 46.4%; }
   .rulebook-page { padding-inline: 22px; }
@@ -753,3 +754,14 @@ body {
   .food-index { grid-template-columns: 1fr; gap: 5px; }.food-index-card { grid-template-columns: 39px minmax(0, 1fr) 37px; min-height: 47px; }.food-index-art { width: 36px; height: 36px; }.food-index-art img { width: 44px; height: 44px; }.food-index-value { width: 34px; height: 35px; }.food-index-value b { font-size: .84rem; }
 }
 @media (prefers-reduced-motion: reduce) { .ancient-book-icon, .rulebook-close { transition: none; } }
+
+/* Extra leaf layers keep the garden cabbage readable as a real vegetable even
+   at board scale, while the field remains a zero-value game resource. */
+.garden-cabbage { width: 44px; height: 44px; }
+.cabbage-soil { fill: #6e4427; }.cabbage-soil-shadow { fill: rgb(55 35 21 / 34%); }
+.cabbage-leaf { stroke: #3c6139; stroke-width: 1.45; stroke-linejoin: round; }
+.cabbage-leaf-back { fill: #6f9956; }.cabbage-leaf-left { fill: #87aa65; }.cabbage-leaf-right { fill: #759d5b; }.cabbage-leaf-front { fill: #a4c878; }
+.cabbage-core { fill: #b9d98a; stroke: #527344; stroke-width: 1.4; }.cabbage-inner-leaf { fill: #d1e8a2; stroke: #6e9555; stroke-width: 1.15; }
+.cabbage-vein { fill: none; stroke: #537d4c; stroke-width: 1.2; stroke-linecap: round; }.cabbage-vein-fine { fill: none; stroke: rgb(241 255 210 / 72%); stroke-width: .75; stroke-linecap: round; }
+.cabbage-dew { fill: #e4f5dc; stroke: #7caea1; stroke-width: .5; opacity: .9; }.cabbage-soil-speck { fill: #9e6d3d; }
+@media (max-width: 680px) { .garden-crop { min-height: 40px; }.garden-cabbage { width: 38px; height: 38px; } }

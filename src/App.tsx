@@ -412,11 +412,19 @@ function CabbagePlant() {
   return (
     <svg className="garden-cabbage" viewBox="0 0 64 64" aria-hidden="true">
       <ellipse className="cabbage-soil" cx="32" cy="53" rx="26" ry="7" />
-      <path className="cabbage-leaf cabbage-leaf-back" d="M13 43c-6-16 5-29 19-22 6-13 24-8 23 9 12 3 10 20-3 22-10 2-32 3-39-9z" />
-      <path className="cabbage-leaf cabbage-leaf-left" d="M14 46c-5-12 3-24 15-19 5 5 5 17-2 24-5 3-10 1-13-5z" />
-      <path className="cabbage-leaf cabbage-leaf-right" d="M50 47c6-12-2-25-15-20-6 5-6 17 1 24 5 3 10 1 14-4z" />
-      <circle className="cabbage-head" cx="32" cy="39" r="16" />
-      <path className="cabbage-vein" d="M32 24v29M20 34c6 1 10 5 12 10M44 34c-6 1-10 5-12 10M23 45c4-3 8-3 12 0M41 45c-4-3-8-3-12 0" />
+      <ellipse className="cabbage-soil-shadow" cx="32" cy="52" rx="17" ry="4" />
+      <path className="cabbage-leaf cabbage-leaf-back" d="M11 43c-6-16 5-29 19-22 6-13 24-8 23 9 12 3 10 20-3 22-10 2-32 3-39-9z" />
+      <path className="cabbage-leaf cabbage-leaf-left" d="M13 47c-6-13 2-26 16-21 7 6 6 19-2 26-6 3-11 1-14-5z" />
+      <path className="cabbage-leaf cabbage-leaf-right" d="M51 48c7-13-1-27-16-22-7 6-7 19 1 26 6 3 11 1 15-4z" />
+      <path className="cabbage-leaf cabbage-leaf-front" d="M20 49c-2-15 8-27 18-23 11 4 13 18 6 26-7 7-20 6-24-3z" />
+      <path className="cabbage-core" d="M24 41c0-11 9-18 18-13 9 5 9 18 2 24-8 7-20 1-20-11z" />
+      <path className="cabbage-inner-leaf" d="M31 31c7-4 13 5 10 12-3 8-12 8-16 3-4-6 0-13 6-15z" />
+      <path className="cabbage-vein" d="M32 25v29M18 36c7 0 12 4 15 11M46 36c-7 0-12 4-15 11M21 47c6-4 11-3 15 1M43 47c-6-4-11-3-15 1" />
+      <path className="cabbage-vein-fine" d="M24 31l8 10M40 31l-8 10M25 52l7-8M39 52l-7-8M15 43l10 2M49 43l-10 2" />
+      <circle className="cabbage-dew cabbage-dew-one" cx="23" cy="31" r="1.6" />
+      <circle className="cabbage-dew cabbage-dew-two" cx="43" cy="29" r="1.1" />
+      <circle className="cabbage-soil-speck cabbage-soil-speck-one" cx="18" cy="53" r="1.2" />
+      <circle className="cabbage-soil-speck cabbage-soil-speck-two" cx="47" cy="55" r="1" />
     </svg>
   );
 }
@@ -564,7 +572,7 @@ function RulebookButton({ onOpen, triggerRef }: { onOpen: () => void; triggerRef
       <button ref={triggerRef} className="rulebook-button" type="button" onClick={onOpen} aria-haspopup="dialog" aria-controls="chews-rulebook">
         <span className="ancient-book-icon" aria-hidden="true">
           <span className="ancient-book-pages" />
-          <span className="ancient-book-cover"><span>CF</span><i /><b /></span>
+          <span className="ancient-book-cover"><span>RULE</span><strong>BOOK</strong><i /><b /></span>
           <span className="ancient-book-bookmark" />
         </span>
         <span className="rulebook-button-copy">
