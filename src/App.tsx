@@ -17,40 +17,115 @@ const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
 const NAMES = ["Sam", "Maya", "Leo", "Zoe"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PLAYER_PORTRAITS = [samPortrait, mayaPortrait, leoPortrait, zoePortrait];
-const FOOD: Record<number, { name: string; art: string; garnish: string; tone: string; dish: string }> = {
-  0: { name: "Herb tea", art: "cabbage", garnish: "cucumber", tone: "leaf", dish: "tea" },
-  1: { name: "Rice porridge", art: "pear", garnish: "broccoli", tone: "sun", dish: "porridge" },
-  2: { name: "Scrambled tofu", art: "corn", garnish: "carrot", tone: "sun", dish: "tofu" },
-  3: { name: "Lentil stew", art: "potato", garnish: "carrot", tone: "rose", dish: "stew" },
-  5: { name: "Bean & quinoa bowl", art: "broccoli", garnish: "apple", tone: "earth", dish: "quinoa" },
-  7: { name: "Chickpea curry", art: "corn", garnish: "cabbage", tone: "sun", dish: "curry" },
-  9: { name: "Nutty pasta", art: "cucumber", garnish: "carrot", tone: "rose", dish: "pasta" }
+type FoodVisual =
+  | "apple" | "cucumber" | "watermelon" | "banana" | "orange" | "broccoli" | "potato" | "corn" | "peas" | "avocado" | "mushroom"
+  | "rice" | "bread" | "pasta" | "oats" | "cornflakes" | "beans" | "milk" | "green-beans" | "egg" | "peanut" | "yogurt"
+  | "hummus" | "cheese" | "tofu" | "black-beans" | "fish" | "salmon" | "poultry" | "meat" | "almonds" | "fish-fingers"
+  | "prawns" | "sardines" | "mussels" | "steak" | "lentils" | "sausage" | "mackerel" | "ham";
+
+type FoodCardDetail = { name: string; tone: string; dish: string; visual: FoodVisual; category?: string; portion?: string };
+
+const FOOD: Record<number, FoodCardDetail> = {
+  0: { name: "Herb tea", visual: "green-beans", tone: "leaf", dish: "tea" },
+  1: { name: "Rice porridge", visual: "rice", tone: "sun", dish: "porridge" },
+  2: { name: "Scrambled tofu", visual: "tofu", tone: "sun", dish: "tofu" },
+  3: { name: "Lentil stew", visual: "lentils", tone: "rose", dish: "stew" },
+  5: { name: "Bean & quinoa bowl", visual: "beans", tone: "earth", dish: "quinoa" },
+  7: { name: "Chickpea curry", visual: "hummus", tone: "sun", dish: "curry" },
+  9: { name: "Nutty pasta", visual: "pasta", tone: "rose", dish: "pasta" }
 };
 
-type FoodCardDetail = { name: string; art: string; garnish: string; tone: string; dish: string; category?: string; portion?: string };
+const CATEGORY_CARD_DETAILS: Record<string, Omit<FoodCardDetail, "name" | "category" | "portion" | "visual">> = {
+  Fruit: { tone: "rose", dish: "porridge" },
+  Vegetable: { tone: "leaf", dish: "greens" },
+  Grain: { tone: "sun", dish: "porridge" },
+  Legume: { tone: "earth", dish: "stew" },
+  Dairy: { tone: "sun", dish: "porridge" },
+  Protein: { tone: "sun", dish: "tofu" },
+  Spread: { tone: "earth", dish: "curry" },
+  Dip: { tone: "earth", dish: "curry" },
+  Soy: { tone: "sun", dish: "tofu" },
+  Fish: { tone: "rose", dish: "pasta" },
+  Poultry: { tone: "earth", dish: "stew" },
+  Meat: { tone: "rose", dish: "stew" },
+  Nuts: { tone: "earth", dish: "quinoa" },
+  Seafood: { tone: "rose", dish: "curry" }
+};
 
-const CATEGORY_CARD_DETAILS: Record<string, Omit<FoodCardDetail, "name" | "category" | "portion">> = {
-  Fruit: { art: "apple", garnish: "pear", tone: "rose", dish: "porridge" },
-  Vegetable: { art: "broccoli", garnish: "carrot", tone: "leaf", dish: "greens" },
-  Grain: { art: "corn", garnish: "broccoli", tone: "sun", dish: "porridge" },
-  Legume: { art: "broccoli", garnish: "cabbage", tone: "earth", dish: "stew" },
-  Dairy: { art: "pear", garnish: "cabbage", tone: "sun", dish: "porridge" },
-  Protein: { art: "corn", garnish: "carrot", tone: "sun", dish: "tofu" },
-  Spread: { art: "potato", garnish: "cucumber", tone: "earth", dish: "curry" },
-  Dip: { art: "cucumber", garnish: "carrot", tone: "earth", dish: "curry" },
-  Soy: { art: "corn", garnish: "broccoli", tone: "sun", dish: "tofu" },
-  Fish: { art: "cucumber", garnish: "corn", tone: "rose", dish: "pasta" },
-  Poultry: { art: "carrot", garnish: "broccoli", tone: "earth", dish: "stew" },
-  Meat: { art: "potato", garnish: "carrot", tone: "rose", dish: "stew" },
-  Nuts: { art: "pear", garnish: "broccoli", tone: "earth", dish: "quinoa" },
-  Seafood: { art: "cucumber", garnish: "carrot", tone: "rose", dish: "curry" }
+const FOOD_VISUALS: Record<string, FoodVisual> = {
+  "food-01-apple": "apple", "food-02-cucumber": "cucumber", "food-03-watermelon": "watermelon", "food-04-banana": "banana", "food-05-orange": "orange",
+  "food-06-broccoli": "broccoli", "food-07-boiled-potato": "potato", "food-08-sweetcorn": "corn", "food-09-green-peas": "peas", "food-10-avocado": "avocado",
+  "food-11-button-mushrooms": "mushroom", "food-12-cooked-white-rice": "rice", "food-13-wholemeal-bread": "bread", "food-14-cooked-spaghetti": "pasta", "food-15-rolled-oats": "oats",
+  "food-16-cornflakes": "cornflakes", "food-17-canned-baked-beans": "beans", "food-18-whole-milk": "milk", "food-19-cooked-green-beans": "green-beans", "food-20-boiled-egg": "egg",
+  "food-21-smooth-peanut-butter": "peanut", "food-22-greek-yogurt": "yogurt", "food-23-hummus": "hummus", "food-24-cooked-kidney-beans": "beans", "food-25-cheddar-cheese": "cheese",
+  "food-26-firm-tofu": "tofu", "food-27-cooked-black-beans": "black-beans", "food-28-canned-tuna-in-water": "fish", "food-29-cooked-salmon": "salmon", "food-30-cooked-turkey-breast": "poultry",
+  "food-31-cooked-lean-beef-mince": "meat", "food-32-almonds": "almonds", "food-33-fish-fingers": "fish-fingers", "food-34-cooked-cod": "fish", "food-35-cooked-prawns": "prawns",
+  "food-36-canned-sardines": "sardines", "food-37-cooked-pork-loin": "meat", "food-38-cooked-mussels": "mussels", "food-39-cooked-chicken-breast": "poultry", "food-40-cooked-haddock": "fish",
+  "food-41-cooked-trout": "fish", "food-42-cooked-lamb-leg": "meat", "food-43-cooked-beef-steak": "steak", "food-44-corned-beef": "meat", "food-45-cooked-lentils": "lentils",
+  "food-46-pork-sausage": "sausage", "food-47-cooked-mackerel": "mackerel", "food-48-cooked-ham": "ham"
+};
+
+const CATEGORY_FALLBACK_VISUALS: Record<string, FoodVisual> = {
+  Fruit: "apple", Vegetable: "broccoli", Grain: "rice", Legume: "lentils", Dairy: "yogurt", Protein: "egg", Spread: "peanut", Dip: "hummus", Soy: "tofu", Fish: "fish", Poultry: "poultry", Meat: "meat", Nuts: "almonds", Seafood: "prawns"
 };
 
 function foodForCard(card: Card): FoodCardDetail {
-  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", art: "cabbage", garnish: "carrot", tone: "leaf", dish: "greens", category: "Vegetable" };
+  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", visual: "broccoli", tone: "leaf", dish: "greens", category: "Vegetable" };
   const workbookFood = card.foodId ? FOOD_DECK_BY_ID[card.foodId] : undefined;
-  if (workbookFood) return { name: workbookFood.name, category: workbookFood.category, portion: workbookFood.portion, ...CATEGORY_CARD_DETAILS[workbookFood.category] };
+  if (workbookFood) return {
+    name: workbookFood.name,
+    category: workbookFood.category,
+    portion: workbookFood.portion,
+    visual: FOOD_VISUALS[workbookFood.id] ?? CATEGORY_FALLBACK_VISUALS[workbookFood.category],
+    ...CATEGORY_CARD_DETAILS[workbookFood.category]
+  };
   return FOOD[card.value] ?? FOOD[0];
+}
+
+function FoodIngredientArt({ visual }: { visual: FoodVisual }) {
+  const leaf = <path className="ingredient-leaf" d="M61 30c6-6 12-4 14 0-5 5-10 5-14 0z" />;
+  switch (visual) {
+    case "apple": return <g className="food-ingredient"><circle className="ingredient-red" cx="42" cy="37" r="15" /><circle className="ingredient-red-dark" cx="53" cy="39" r="12" /><path className="ingredient-stem" d="M47 23c0-6 2-9 6-11" />{leaf}<circle className="ingredient-shine" cx="36" cy="32" r="3" /><path className="ingredient-cut" d="M60 48c8-1 12 5 8 11-5 5-14 2-15-5z" /></g>;
+    case "cucumber": return <g className="food-ingredient"><rect className="ingredient-cucumber" x="27" y="29" width="37" height="15" rx="8" transform="rotate(-19 45 36)" /><circle className="ingredient-cucumber-slice" cx="62" cy="48" r="9" /><circle className="ingredient-cucumber-core" cx="62" cy="48" r="4" /><path className="ingredient-seeds" d="M60 45h4M60 49h4M61 52h2" /></g>;
+    case "watermelon": return <g className="food-ingredient"><path className="ingredient-rind" d="M23 54 56 21l12 35z" /><path className="ingredient-watermelon" d="M27 52 55 25l10 27z" /><path className="ingredient-seeds" d="M45 40l1 2M54 39l1 2M50 48l1 2M60 47l1 2" /></g>;
+    case "banana": return <g className="food-ingredient"><path className="ingredient-banana-shadow" d="M24 29c8 22 29 24 44 7-8 24-36 29-49 1z" /><path className="ingredient-banana" d="M21 25c10 20 30 22 46 5-6 19-32 30-46 4z" /><path className="ingredient-stem" d="M21 25l-3-7M67 30l4-4" /></g>;
+    case "orange": return <g className="food-ingredient"><circle className="ingredient-orange" cx="43" cy="40" r="17" /><circle className="ingredient-orange-light" cx="39" cy="35" r="5" /><path className="ingredient-orange-segments" d="M43 24v32M27 40h32M31 28l23 23M54 28 31 51" />{leaf}</g>;
+    case "broccoli": return <g className="food-ingredient"><path className="ingredient-broccoli-stem" d="M37 39h15l4 20H34z" /><circle className="ingredient-broccoli" cx="33" cy="34" r="10" /><circle className="ingredient-broccoli" cx="45" cy="27" r="12" /><circle className="ingredient-broccoli-dark" cx="56" cy="35" r="11" /><path className="ingredient-vein" d="M43 42l-2 13M49 41l3 14" /></g>;
+    case "potato": return <g className="food-ingredient"><ellipse className="ingredient-potato" cx="43" cy="42" rx="21" ry="14" transform="rotate(-15 43 42)" /><path className="ingredient-potato-cut" d="M57 28c11 4 13 15 7 23-6-4-10-11-7-23z" /><path className="ingredient-speckles" d="M31 39h1M37 49h1M47 35h1M52 47h1" /></g>;
+    case "corn": return <g className="food-ingredient"><path className="ingredient-corn-husk" d="M26 28c-7 13-3 28 16 33-5-12-6-21-16-33zM59 27c7 13 3 28-16 34 5-13 7-22 16-34z" /><rect className="ingredient-corn" x="34" y="19" width="20" height="41" rx="10" /><path className="ingredient-corn-lines" d="M39 24v31M44 21v37M49 22v35M36 30h16M35 38h18M36 47h16" /></g>;
+    case "peas": return <g className="food-ingredient"><path className="ingredient-pea-pod" d="M22 44c9-17 30-19 45-7-8 14-30 20-45 7z" /><circle className="ingredient-pea" cx="33" cy="42" r="4" /><circle className="ingredient-pea" cx="42" cy="40" r="4" /><circle className="ingredient-pea" cx="51" cy="40" r="4" /><circle className="ingredient-pea" cx="59" cy="38" r="3.4" /></g>;
+    case "avocado": return <g className="food-ingredient"><path className="ingredient-avocado" d="M36 20c15-4 28 12 23 27-4 13-17 19-27 12-13-10-9-34 4-39z" /><path className="ingredient-avocado-flesh" d="M39 25c10-3 19 9 16 20-3 10-13 14-20 8-10-8-6-25 4-28z" /><circle className="ingredient-pit" cx="46" cy="43" r="8" /><path className="ingredient-avocado-slice" d="M63 27c8 3 9 12 4 18-6-2-10-10-4-18z" /></g>;
+    case "mushroom": return <g className="food-ingredient"><path className="ingredient-mushroom-stem" d="M31 42h12l2 16H28z" /><path className="ingredient-mushroom-cap" d="M22 42c1-15 30-20 37-1-12 4-25 4-37 1z" /><path className="ingredient-mushroom-stem" d="M53 42h8l2 12h-12z" /><path className="ingredient-mushroom-cap-light" d="M48 41c2-10 19-12 23 0-7 3-16 3-23 0z" /></g>;
+    case "rice": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 43h40c-2 14-10 20-20 20S27 57 24 43z" /><ellipse className="ingredient-rice" cx="44" cy="43" rx="20" ry="8" /><path className="ingredient-rice-grains" d="M31 39l3 1M38 36l3 2M46 38l3 1M54 36l3 2M58 42l3 1M34 45l3 1M43 47l3 1M51 45l3 2" /></g>;
+    case "bread": return <g className="food-ingredient"><path className="ingredient-bread-crust" d="M22 32c1-12 10-18 22-15 12-4 22 5 22 16v23H22z" /><path className="ingredient-bread" d="M26 34c2-9 10-13 18-10 10-3 17 4 18 12v16H26z" /><path className="ingredient-bread-lines" d="M33 31c4 1 7 4 9 8M45 27c5 2 8 5 10 9M30 47h28" /></g>;
+    case "pasta": return <g className="food-ingredient"><path className="ingredient-pasta" d="M24 35c10-12 23 9 37-4M22 41c9-12 25 10 43-4M24 48c11-11 24 10 39-3M29 54c8-8 20 7 31-2" /><circle className="ingredient-tomato" cx="29" cy="28" r="4" />{leaf}</g>;
+    case "oats": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 43h40c-2 14-10 20-20 20S27 57 24 43z" /><ellipse className="ingredient-oats" cx="44" cy="42" rx="20" ry="8" /><path className="ingredient-oat-flakes" d="M31 40l3-2M37 38l3-2M43 40l3-2M50 38l3-2M56 42l3-2M35 45l3-2M48 46l3-2" /></g>;
+    case "cornflakes": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 44h40c-2 13-10 19-20 19S27 57 24 44z" /><path className="ingredient-flakes" d="M29 38l7-5 5 5-5 6zM42 32l8 3-1 8-8-2zM54 38l7-3 4 6-6 6zM35 47l7-3 4 6-7 4zM49 47l8-2 3 7-7 4z" /></g>;
+    case "beans": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 45h40c-2 12-10 18-20 18S27 57 24 45z" /><ellipse className="ingredient-sauce" cx="44" cy="44" rx="20" ry="8" /><path className="ingredient-beans" d="M30 40c4-5 9 0 6 4-3 5-9 2-6-4zM41 36c4-5 9 0 6 4-3 5-9 2-6-4zM53 39c4-5 9 0 6 4-3 5-9 2-6-4zM36 48c4-5 9 0 6 4-3 5-9 2-6-4zM49 48c4-5 9 0 6 4-3 5-9 2-6-4z" /></g>;
+    case "milk": return <g className="food-ingredient"><path className="ingredient-milk-glass" d="M29 22h29l-3 38H32z" /><path className="ingredient-milk" d="M31 34h25l-2 24H33z" /><path className="ingredient-milk-glass-line" d="M29 22h29M31 34h25" /><circle className="ingredient-shine" cx="37" cy="29" r="2" /></g>;
+    case "green-beans": return <g className="food-ingredient"><path className="ingredient-green-bean" d="M23 33c12 2 23 7 38 0M25 42c10 3 22 7 39 1M29 51c8 1 18 5 30-1" /><path className="ingredient-green-bean-dark" d="M24 36c12 1 24 6 38-1M27 47c10 2 22 5 35 0" />{leaf}</g>;
+    case "egg": return <g className="food-ingredient"><path className="ingredient-egg-white" d="M25 43c-3-9 6-16 13-14 4-7 14-5 16 1 8-2 14 7 9 14 2 9-6 14-14 11-7 6-17 3-18-4-8 0-10-4-6-8z" /><circle className="ingredient-yolk" cx="45" cy="42" r="8" /><circle className="ingredient-yolk-light" cx="42" cy="39" r="2.5" /></g>;
+    case "peanut": return <g className="food-ingredient"><path className="ingredient-jar" d="M28 26h31l-3 31H31z" /><path className="ingredient-jar-lid" d="M27 22h33v7H27z" /><path className="ingredient-peanut-spread" d="M32 35c7-7 19-5 22 3-3 8-17 9-22 2 3-3 10-3 15-1" /><path className="ingredient-peanut" d="M25 48c-8-4-3-13 3-12 4-6 13-1 12 6-1 7-9 10-15 6z" /></g>;
+    case "yogurt": return <g className="food-ingredient"><path className="ingredient-yogurt-cup" d="M28 29h30l-3 31H31z" /><ellipse className="ingredient-yogurt" cx="43" cy="30" rx="15" ry="5" /><path className="ingredient-yogurt-swirl" d="M34 31c3-6 14-4 17 0-4 4-10-1-14 2" /><circle className="ingredient-berry" cx="49" cy="23" r="4" /><circle className="ingredient-berry" cx="55" cy="27" r="3" /></g>;
+    case "hummus": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M23 45h42c-3 12-11 18-21 18S26 57 23 45z" /><ellipse className="ingredient-hummus" cx="44" cy="44" rx="21" ry="9" /><path className="ingredient-hummus-swirl" d="M31 44c4-9 18-9 24-2 3 4-1 8-6 7-4-1-4-6 1-7" /><circle className="ingredient-chickpea" cx="59" cy="39" r="4" />{leaf}</g>;
+    case "cheese": return <g className="food-ingredient"><path className="ingredient-cheese" d="M24 55 60 25l8 30z" /><circle className="ingredient-cheese-hole" cx="52" cy="42" r="4" /><circle className="ingredient-cheese-hole" cx="58" cy="49" r="2.5" /><circle className="ingredient-cheese-hole" cx="42" cy="51" r="3" /></g>;
+    case "tofu": return <g className="food-ingredient"><path className="ingredient-tofu" d="M26 35l16-8 14 8-15 10z" /><path className="ingredient-tofu-side" d="M26 35l15 10v14L26 49zM41 45l15-10v14L41 59z" /><path className="ingredient-tofu" d="M47 28l13 7-12 8-13-7z" /><path className="ingredient-tofu-specks" d="M34 40h2M49 35h2M34 50h2M49 48h2" />{leaf}</g>;
+    case "black-beans": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 45h40c-2 12-10 18-20 18S27 57 24 45z" /><ellipse className="ingredient-black-bean-bed" cx="44" cy="44" rx="20" ry="8" /><path className="ingredient-black-beans" d="M30 40h5v5h-5zM39 37h5v5h-5zM49 39h5v5h-5zM57 40h5v5h-5zM34 48h5v5h-5zM45 48h5v5h-5zM54 48h5v5h-5z" /></g>;
+    case "fish": return <g className="food-ingredient"><path className="ingredient-fish" d="M25 41c8-15 26-17 36-4l9-8v25l-10-8c-11 11-27 7-35-5z" /><circle className="ingredient-fish-eye" cx="34" cy="38" r="2" /><path className="ingredient-fish-lines" d="M41 35c5 3 9 7 12 12M45 31c7 4 11 9 13 15" /></g>;
+    case "salmon": return <g className="food-ingredient"><path className="ingredient-salmon" d="M24 51c5-20 26-30 43-20-3 19-23 30-43 20z" /><path className="ingredient-salmon-lines" d="M31 47c8-5 15-9 28-11M34 53c8-5 16-9 27-11M35 40c8-5 15-8 25-9" />{leaf}</g>;
+    case "poultry": return <g className="food-ingredient"><path className="ingredient-poultry" d="M24 48c3-17 18-25 33-18 11 5 8 20-2 25-12 6-25 2-31-7z" /><path className="ingredient-poultry-light" d="M31 43c5-8 14-11 22-8M33 50c6 2 14 1 21-4" /><path className="ingredient-herb" d="M58 27l7 8M61 29l4-3" /></g>;
+    case "meat": return <g className="food-ingredient"><path className="ingredient-meat" d="M24 45c4-14 18-23 32-16 13 6 10 23-2 28-13 6-27 1-30-12z" /><path className="ingredient-meat-marble" d="M31 43c6-7 13-8 20-4M33 51c7 4 14 2 20-4" /><circle className="ingredient-herb-dot" cx="59" cy="31" r="2" /><circle className="ingredient-herb-dot" cx="63" cy="35" r="2" /></g>;
+    case "almonds": return <g className="food-ingredient"><path className="ingredient-almond" d="M28 49c-7-11 2-20 8-25 8 8 7 18-1 26zM42 53c-7-11 2-20 8-25 8 8 7 18-1 26zM55 49c-6-9 1-17 6-21 7 7 6 16-1 23z" /><path className="ingredient-almond-line" d="M33 32l-2 13M47 36l-2 13M59 35l-1 11" /></g>;
+    case "fish-fingers": return <g className="food-ingredient"><rect className="ingredient-fish-finger" x="24" y="37" width="36" height="10" rx="5" transform="rotate(-12 42 42)" /><rect className="ingredient-fish-finger" x="31" y="47" width="34" height="10" rx="5" transform="rotate(10 48 52)" /><path className="ingredient-crumbs" d="M32 39h2M40 37h2M49 40h2M40 51h2M51 53h2" /></g>;
+    case "prawns": return <g className="food-ingredient"><path className="ingredient-prawn" d="M29 32c17-12 33 8 20 24-8 9-21 4-20-6 0-7 9-8 12-4" /><path className="ingredient-prawn" d="M45 27c16-8 27 10 14 22-8 7-18 0-15-8 2-6 8-7 11-3" /><path className="ingredient-prawn-lines" d="M33 35l12 10M47 30l11 10" /></g>;
+    case "sardines": return <g className="food-ingredient"><path className="ingredient-tin" d="M24 32h42v26H24z" /><ellipse className="ingredient-tin-rim" cx="45" cy="32" rx="21" ry="5" /><path className="ingredient-sardine" d="M29 42c6-7 14-7 20-2l7-4v12l-7-4c-7 5-15 4-20-2z" /><path className="ingredient-sardine" d="M39 50c5-6 12-5 18-1l6-3v10l-6-3c-6 4-13 3-18-3z" /></g>;
+    case "mussels": return <g className="food-ingredient"><path className="ingredient-mussel-shell" d="M24 48c4-17 21-22 29-7-4 13-18 17-29 7z" /><path className="ingredient-mussel-flesh" d="M30 45c5-7 13-7 18-2-5 7-12 8-18 2z" /><path className="ingredient-mussel-shell" d="M47 52c3-14 18-18 25-5-3 11-16 15-25 5z" /><path className="ingredient-mussel-flesh" d="M52 50c4-5 11-5 15-1-4 5-10 6-15 1z" /></g>;
+    case "steak": return <g className="food-ingredient"><path className="ingredient-steak" d="M26 46c0-17 17-27 31-19 16 9 10 28-4 32-12 4-27-1-27-13z" /><path className="ingredient-steak-grill" d="M34 36l17 13M31 44l16 12M45 32l12 10" /><circle className="ingredient-herb-dot" cx="61" cy="28" r="2" /><circle className="ingredient-herb-dot" cx="65" cy="32" r="2" /></g>;
+    case "lentils": return <g className="food-ingredient"><path className="ingredient-rice-bowl" d="M24 45h40c-2 12-10 18-20 18S27 57 24 45z" /><ellipse className="ingredient-lentil-bed" cx="44" cy="44" rx="20" ry="8" /><path className="ingredient-lentils" d="M30 40h4v4h-4zM38 38h4v4h-4zM46 40h4v4h-4zM54 39h4v4h-4zM34 48h4v4h-4zM42 48h4v4h-4zM50 48h4v4h-4z" />{leaf}</g>;
+    case "sausage": return <g className="food-ingredient"><path className="ingredient-sausage" d="M26 35c10-9 26 4 18 15-8 10-22 4-18-15z" /><path className="ingredient-sausage" d="M45 29c11-8 25 7 16 18-8 9-21 2-16-18z" /><path className="ingredient-sausage-shine" d="M31 37c4-3 8 1 8 4M50 32c4-2 8 2 8 5" /></g>;
+    case "mackerel": return <g className="food-ingredient"><path className="ingredient-mackerel" d="M23 44c7-18 27-23 39-8l9-7v25l-10-7c-11 10-30 8-38-3z" /><path className="ingredient-mackerel-stripe" d="M39 30l6 18M47 28l6 20M55 30l5 17" /><circle className="ingredient-fish-eye" cx="32" cy="39" r="2" /></g>;
+    case "ham": return <g className="food-ingredient"><path className="ingredient-ham" d="M27 33c11-10 26-3 28 9 2 13-11 22-24 15-12-6-13-16-4-24z" /><path className="ingredient-ham-fat" d="M32 37c8-6 16-1 17 6M34 48c6 5 14 2 17-4" /><path className="ingredient-ham" d="M54 31c8-4 15 4 11 11-4 7-13 5-13-2 0-3 1-6 2-9z" /></g>;
+  }
 }
 
 function FoodDish({ food }: { food: FoodCardDetail }) {
@@ -64,19 +139,15 @@ function FoodDish({ food }: { food: FoodCardDetail }) {
           <path className="tea-cup" d="M22 30h42v22c0 8-7 12-21 12s-21-4-21-12z" />
           <path className="tea-handle" d="M64 36c15-2 15 18 1 18" />
           <ellipse className="tea-surface" cx="43" cy="31" rx="21" ry="6" />
-          <use href={`${ART_SPRITE}#${food.art}`} x="31" y="21" width="23" height="23" />
+          <path className="tea-leaves" d="M35 30c-4-5-8-5-10-1 4 4 7 4 10 1M52 31c4-5 8-4 10 0-4 4-7 4-10 0" />
         </>
       ) : (
         <>
           <ellipse className="dish-plate-rim" cx="44" cy="54" rx="33" ry="12" />
           <path className="dish-bowl" d="M16 43c3 17 11 23 28 23s25-6 28-23c-14 5-42 5-56 0z" />
           <ellipse className="dish-food" cx="44" cy="43" rx="28" ry="10" />
-          <path className="dish-swirl" d="M25 43c7-7 13 5 20-1 7-6 12 5 19-1M28 48c6-5 11 4 17-1 7-5 11 4 17-1" />
-          <circle className="dish-speck dish-speck-one" cx="28" cy="40" r="2" />
-          <circle className="dish-speck dish-speck-two" cx="58" cy="44" r="2.5" />
-          <circle className="dish-speck dish-speck-three" cx="46" cy="37" r="1.7" />
-          <use className="dish-main-art" href={`${ART_SPRITE}#${food.art}`} x="28" y="19" width="32" height="32" />
-          <use className="dish-garnish-art" href={`${ART_SPRITE}#${food.garnish}`} x="54" y="30" width="20" height="20" />
+          <path className="dish-plate-detail" d="M18 54c16 7 37 7 52 0" />
+          <FoodIngredientArt visual={food.visual} />
         </>
       )}
     </svg>
