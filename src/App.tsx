@@ -6,6 +6,7 @@ import samPortrait from "./assets/characters-v2/sam.png";
 import mayaPortrait from "./assets/characters-v2/maya.png";
 import leoPortrait from "./assets/characters-v2/leo.png";
 import zoePortrait from "./assets/characters-v2/zoe-clean.png";
+import gardenCabbageArt from "./assets/garden/cabbage-detailed.png";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
 // Vercel deployment, the serverless API shares the page's origin instead.
@@ -409,24 +410,7 @@ function RoundWheel({ game }: { game: GameState }) {
 }
 
 function CabbagePlant() {
-  return (
-    <svg className="garden-cabbage" viewBox="0 0 64 64" aria-hidden="true">
-      <ellipse className="cabbage-soil" cx="32" cy="53" rx="26" ry="7" />
-      <ellipse className="cabbage-soil-shadow" cx="32" cy="52" rx="17" ry="4" />
-      <path className="cabbage-leaf cabbage-leaf-back" d="M11 43c-6-16 5-29 19-22 6-13 24-8 23 9 12 3 10 20-3 22-10 2-32 3-39-9z" />
-      <path className="cabbage-leaf cabbage-leaf-left" d="M13 47c-6-13 2-26 16-21 7 6 6 19-2 26-6 3-11 1-14-5z" />
-      <path className="cabbage-leaf cabbage-leaf-right" d="M51 48c7-13-1-27-16-22-7 6-7 19 1 26 6 3 11 1 15-4z" />
-      <path className="cabbage-leaf cabbage-leaf-front" d="M20 49c-2-15 8-27 18-23 11 4 13 18 6 26-7 7-20 6-24-3z" />
-      <path className="cabbage-core" d="M24 41c0-11 9-18 18-13 9 5 9 18 2 24-8 7-20 1-20-11z" />
-      <path className="cabbage-inner-leaf" d="M31 31c7-4 13 5 10 12-3 8-12 8-16 3-4-6 0-13 6-15z" />
-      <path className="cabbage-vein" d="M32 25v29M18 36c7 0 12 4 15 11M46 36c-7 0-12 4-15 11M21 47c6-4 11-3 15 1M43 47c-6-4-11-3-15 1" />
-      <path className="cabbage-vein-fine" d="M24 31l8 10M40 31l-8 10M25 52l7-8M39 52l-7-8M15 43l10 2M49 43l-10 2" />
-      <circle className="cabbage-dew cabbage-dew-one" cx="23" cy="31" r="1.6" />
-      <circle className="cabbage-dew cabbage-dew-two" cx="43" cy="29" r="1.1" />
-      <circle className="cabbage-soil-speck cabbage-soil-speck-one" cx="18" cy="53" r="1.2" />
-      <circle className="cabbage-soil-speck cabbage-soil-speck-two" cx="47" cy="55" r="1" />
-    </svg>
-  );
+  return <img className="garden-cabbage" src={gardenCabbageArt} alt="" aria-hidden="true" />;
 }
 
 function GardenField({ tokens }: { tokens: number }) {
