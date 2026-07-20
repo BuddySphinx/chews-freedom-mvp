@@ -227,6 +227,222 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 680px) { .board-flip-stage { height: auto; perspective: none; }.board-flip-inner { height: auto; transform: none !important; }.board-face { position: relative; transform: none !important; backface-visibility: visible; -webkit-backface-visibility: visible; }.board-flip-stage.show-wheel .board-face-table, .board-flip-stage.show-table .board-face-wheel { display: none; }.table-felt { height: auto; }.round-wheel-face { min-height: 665px; padding-inline: 10px; border-width: 5px; border-radius: 18px; }.wheel-layout { grid-template-columns: 1fr; align-content: center; gap: 0; }.round-wheel { --wheel-translate: -153px; --marker-translate: -133px; width: min(100%, 370px); }.wheel-rim { inset: 25px; border-width: 11px; }.wheel-garden-scene { inset: 72px; }.wheel-event-card { width: min(94%, 270px); margin-top: -3px; padding: 9px 12px; transform: rotate(.5deg); }.wheel-event-card p { display: none; }.wheel-story-strip { margin-inline: 5px; padding: 8px 11px; }.wheel-story-strip p { display: none; }.wheel-player-marker .portrait-token { width: 40px; height: 53px; }.wheel-player-marker > span { font-size: .44rem; }.wheel-day-tile { width: 38px; height: 38px; font-size: .72rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 @media (prefers-reduced-motion: reduce) { .portrait-token:hover { animation: none; } }
+
+/* --------------------------------------------------------------------------
+   Light storybook board treatment
+   The garden illustration below is an original generated project asset. The
+   interactive cards, numbers, and instructions remain live HTML above it.
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  font-family: "Alegreya Sans", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  --canvas: #f6efd9;
+  --paper: #fff8e7;
+  --paper-soft: #f4e8c9;
+  --ink: #40331f;
+  --muted: #78654a;
+  --line: #a48350;
+  --moss: #52763d;
+  --moss-soft: #deedc8;
+  --mustard: #cc9639;
+  --mustard-soft: #f9e2a8;
+  --teal: #278b8a;
+  --teal-soft: #d7efea;
+  --plum: #8e659e;
+  --plum-soft: #ebdff0;
+  --berry: #c9685e;
+  --berry-soft: #f8d9d0;
+  --shadow: 0 10px 24px rgb(104 75 33 / 18%);
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% 18%, rgb(255 255 255 / 76%) 0 2px, transparent 2.5px) 0 0 / 23px 23px,
+    radial-gradient(circle at 68% 62%, rgb(191 151 75 / 14%) 0 1px, transparent 1.5px) 0 0 / 13px 13px,
+    linear-gradient(130deg, #fff9e8 0%, #f6eccf 48%, #e8f1da 100%);
+}
+
+.app-shell { width: min(1660px, calc(100% - 28px)); padding-top: 14px; }
+.app-header {
+  min-height: 72px;
+  margin: 0 4px 16px;
+  padding: 7px 15px 9px;
+  border: 2px solid #b89154;
+  border-radius: 18px 18px 10px 10px;
+  background: linear-gradient(180deg, rgb(255 253 239 / 95%), rgb(244 231 194 / 92%));
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 58%), 0 5px 0 rgb(151 109 52 / 18%);
+}
+.wordmark {
+  color: #1c7774;
+  font-family: Georgia, "Palatino Linotype", serif;
+  font-size: clamp(1.7rem, 2.5vw, 2.4rem);
+  letter-spacing: -.075em;
+  text-shadow: 0 1px 0 #fffef3;
+}
+.wordmark-leaf { color: #d26e68; }
+.header-meta { color: #6b7951; font-size: .78rem; }
+
+.game-layout {
+  grid-template-columns: minmax(205px, .66fr) minmax(720px, 2.45fr) minmax(250px, .86fr);
+  gap: 15px;
+}
+.left-rail, .right-rail { gap: 13px; }
+.event-card-panel, .rule-panel, .round-recap, .scores-panel, .timeline-panel, .action-tray {
+  border: 2px solid #d2b475;
+  border-radius: 17px 14px 18px 13px;
+  background:
+    radial-gradient(circle at 17% 14%, rgb(255 255 255 / 72%) 0 1px, transparent 1.6px) 0 0 / 12px 12px,
+    linear-gradient(135deg, #fffdf0, #f4e9c9);
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 62%), 0 6px 0 rgb(155 118 64 / 14%), 0 12px 20px rgb(128 91 36 / 10%);
+}
+.event-card-panel { min-height: 188px; border-color: #d8bd82; }
+.event-card-panel::after { width: 122px; height: 122px; border-color: rgb(105 150 74 / 24%); }
+.event-card-panel h2, .rule-panel h2, .scores-panel h2, .timeline-panel h2 {
+  font-family: Georgia, "Palatino Linotype", serif;
+  letter-spacing: -.04em;
+}
+.panel-heading { color: #5b8a65; }
+.panel-heading strong { color: #cb7560; }
+.rule-panel { border-left: 5px solid #edbd58; }
+.timeline-panel { border-color: #397b78; background: linear-gradient(145deg, #eaf5dc, #dce9cb); color: #3d553b; }
+.timeline-panel h2 { color: #346e6b; }
+.timeline-panel li { border-left-color: #c98a43; }
+.timeline-panel li span { color: #447961; }
+.timeline-panel li p { color: #5d644a; }
+
+.garden-panel {
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #896238;
+  border-radius: 19px 19px 12px 12px;
+  background:
+    linear-gradient(90deg, transparent 0 4%, rgb(255 235 161 / 24%) 4.3% 4.8%, transparent 5.1% 94.9%, rgb(255 235 161 / 24%) 95.2% 95.7%, transparent 96%),
+    linear-gradient(180deg, #9f6d37, #6f4829);
+  box-shadow: inset 0 0 0 3px rgb(255 223 154 / 26%), 0 7px 0 rgb(98 65 34 / 24%);
+}
+.garden-panel::before {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgb(255 233 172 / 56%);
+  border-radius: 13px 13px 7px 7px;
+  content: "";
+  pointer-events: none;
+}
+.board-garden { min-height: 113px; margin: 0 12px 12px; padding: 13px 15px; }
+.garden-panel > div:first-child > span { color: #fff2c8; font-family: Georgia, "Palatino Linotype", serif; }
+.garden-panel p { color: #ffefc8; }
+.garden-field {
+  gap: 6px;
+  border-color: #704422;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #c8d69a 0 34%, #8a5d33 35% 100%);
+  box-shadow: inset 0 2px 5px rgb(64 38 19 / 34%);
+}
+.garden-crop { border-color: rgb(93 60 31 / 75%); border-radius: 7px 7px 5px 5px; background: linear-gradient(180deg, #deedb9 0 35%, #a77742 36% 100%); }
+
+.turn-flow { margin-inline: 10px; gap: 7px; }
+.flow-step { min-height: 48px; border-color: #d2b475; border-radius: 11px 9px 12px 8px; background: linear-gradient(145deg, #fffdf0, #f1e3bd); color: #6b7656; box-shadow: 0 2px 0 rgb(139 100 44 / 15%); }
+.flow-step.current { border-color: #d39a3d; background: linear-gradient(145deg, #fff3c4, #f2ce70); color: #73551d; box-shadow: 0 0 0 3px rgb(226 175 69 / 20%), 0 3px 0 rgb(126 85 33 / 20%); }
+
+.board-flip-stage { height: 710px; }
+.round-wheel-face {
+  border-color: #aa7d48;
+  border-radius: 26px 24px 22px 24px;
+  background:
+    radial-gradient(circle at 48% 47%, rgb(255 255 255 / 88%) 0 25%, transparent 56%),
+    linear-gradient(145deg, #fffdf0, #f4e2b5);
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 74%), inset 0 0 40px rgb(121 87 39 / 16%), 0 14px 26px rgb(104 75 33 / 18%);
+}
+.wheel-wood-banner { border-color: #80562d; background: linear-gradient(180deg, #9c7440, #704626); }
+.wheel-rim { border-color: #a77a48; background: radial-gradient(circle, #fff8db 0 53%, #d2ae78 54% 61%, #7f5733 62% 65%, #efd69c 66% 100%); }
+.wheel-garden-scene {
+  border-color: #b18757;
+  background: url("./assets/chews-freedom-garden-board-v2.png") center / cover no-repeat;
+  box-shadow: inset 0 0 0 4px rgb(255 248 218 / 66%), inset 0 -12px 16px rgb(86 121 53 / 12%);
+}
+.wheel-garden-scene .wheel-cloud, .wheel-garden-scene .wheel-hill, .wheel-garden-scene .wheel-cottage, .wheel-garden-scene .wheel-flower { display: none; }
+.wheel-day-tile { border-color: #a47a4d; background: linear-gradient(145deg, #fff5ca, #eac37b); }
+.wheel-day-tile:nth-of-type(2n) { background: linear-gradient(145deg, #f8ddd0, #e7ad8c); }
+.wheel-day-tile:nth-of-type(3n) { background: linear-gradient(145deg, #e8f1cb, #b6cf87); }
+.wheel-day-tile.is-today { border-color: #bd7440; background: linear-gradient(145deg, #ffe8a7, #e6a54c); }
+.wheel-event-card { border-color: #d1b577; background: linear-gradient(145deg, #fffdf0, #f7e7b9); box-shadow: 4px 5px 0 rgb(130 91 38 / 22%); }
+.wheel-story-strip { border-color: #d0af70; border-radius: 12px 10px 13px 9px; background: linear-gradient(145deg, rgb(255 253 240 / 96%), rgb(246 227 184 / 94%)); }
+
+.table-felt {
+  border-color: #a97d4b;
+  border-radius: 26px 24px 23px 25px;
+  background:
+    radial-gradient(circle at 50% 51%, rgb(255 255 255 / 94%) 0 26%, transparent 47%),
+    radial-gradient(circle at 18% 14%, rgb(255 255 255 / 64%) 0 1px, transparent 1.6px) 0 0 / 15px 15px,
+    linear-gradient(145deg, #fff8df, #f3dfaa);
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 72%), inset 0 0 45px rgb(116 81 37 / 13%), 0 14px 27px rgb(97 68 30 / 18%);
+}
+.table-felt::before {
+  inset: 10% 18%;
+  border: 7px solid #c69b64;
+  border-radius: 50%;
+  background:
+    linear-gradient(rgb(255 251 229 / 6%), rgb(255 251 229 / 6%)),
+    url("./assets/chews-freedom-garden-board-v2.png") center / cover no-repeat;
+  box-shadow: inset 0 0 0 4px rgb(255 252 232 / 70%), 0 6px 0 rgb(127 89 41 / 18%);
+  opacity: 1;
+}
+.table-felt::after { display: none; }
+.seat-panel {
+  border-color: #d2b477;
+  border-radius: 17px 13px 16px 12px;
+  background:
+    radial-gradient(circle at 14% 10%, rgb(255 255 255 / 72%) 0 1px, transparent 1.5px) 0 0 / 11px 11px,
+    linear-gradient(145deg, rgb(255 254 241 / 98%), #f6e8c7);
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 70%), 3px 5px 0 rgb(126 88 40 / 25%);
+}
+.seat-panel.role-care-team { border-color: #d6a64a; }
+.seat-panel.role-patient { border-color: #79a7b4; }
+.seat-panel.is-actor, .seat-panel.is-turn { box-shadow: 0 0 0 4px rgb(238 191 77 / 34%), inset 0 0 0 3px rgb(255 255 255 / 70%), 4px 6px 0 rgb(126 88 40 / 28%); }
+.seat-heading { min-height: 75px; }
+.portrait-token { filter: drop-shadow(1px 3px 0 rgb(111 77 34 / 22%)); }
+.role-label { border-color: transparent; border-radius: 8px 6px 8px 5px; box-shadow: inset 0 0 0 1px rgb(95 76 40 / 18%); }
+.control-badge { border-color: rgb(125 92 43 / 25%); border-radius: 8px 6px 7px 5px; }
+
+.food-card {
+  min-height: 126px;
+  border-color: #bf9a62;
+  border-radius: 12px 9px 11px 8px;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 58%), 2px 3px 0 rgb(113 79 34 / 24%);
+}
+.food-card::before { border-color: rgb(156 112 56 / 37%); }
+.food-card::after { opacity: .55; }
+.food-value { width: 22px; height: 22px; border-color: #89612f; background: #52763d; color: #fff9dd; }
+.food-illustration { min-height: 67px; border-radius: 6px; background: radial-gradient(ellipse at 50% 64%, rgb(128 89 42 / 18%) 0 28%, transparent 29%), linear-gradient(180deg, rgb(255 254 238 / 66%), rgb(185 142 80 / 12%)); }
+.food-dish { width: 80px; height: 66px; filter: drop-shadow(1px 2px 0 rgb(80 52 24 / 22%)); }
+.food-name { font-size: .61rem; }
+.food-card-caption { font-size: .34rem; }
+.food-card.clickable { border-color: #d49636; box-shadow: 0 0 0 3px rgb(232 182 72 / 30%), inset 0 0 0 2px rgb(255 255 255 / 58%), 2px 3px 0 rgb(113 79 34 / 24%); }
+.food-card.selected { border-color: #5d8a47; background: linear-gradient(145deg, #eff5d9, #d8e6b9); }
+.centre-status {
+  border-color: #c7a16a;
+  border-radius: 14px 11px 15px 10px;
+  background: linear-gradient(145deg, rgb(255 253 238 / 96%), rgb(246 227 184 / 96%));
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 68%), 3px 5px 0 rgb(120 83 36 / 23%);
+}
+.centre-status > strong { color: #487542; }
+.action-tray { border-color: #d3b574; background: linear-gradient(145deg, #fffdf0, #f4e5bd); }
+.scores-panel { border-color: #75a998; background: linear-gradient(145deg, #fdfdec, #e2f0d7); }
+.score-row { border-bottom-color: rgb(84 126 91 / 24%); }
+
+@media (max-width: 1240px) {
+  .game-layout { grid-template-columns: minmax(185px, .58fr) minmax(620px, 2fr); }
+}
+@media (max-width: 900px) {
+  .game-layout { grid-template-columns: 1fr; }
+  .board-flip-stage { height: 720px; }
+}
+@media (max-width: 680px) {
+  .app-header { border-radius: 14px 14px 8px 8px; }
+  .board-flip-stage { height: auto; }
+  .table-felt::before { inset: 27% 14%; }
+  .food-card { min-height: 118px; }
+}
 @keyframes player-idle-bob { 50% { transform: rotate(var(--character-tilt)) translateY(-2px); } }
 @keyframes today-tile-pulse { 50% { outline-color: rgb(198 141 52 / 58%); box-shadow: inset 0 1px 0 rgb(255 248 212 / 78%), 0 0 0 5px rgb(216 155 65 / 10%), 2px 3px 0 rgb(74 50 27 / 28%); } }
 @keyframes wheel-marker-arrive { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--wheel-angle)) translateY(calc(var(--marker-translate) + 34px)) rotate(var(--wheel-counter-angle)) scale(.78); } 100% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--wheel-angle)) translateY(var(--marker-translate)) rotate(var(--wheel-counter-angle)) scale(1); } }
