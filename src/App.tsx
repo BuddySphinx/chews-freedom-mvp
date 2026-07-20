@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
-import { FOOD_DECK_BY_ID } from "./food-deck";
+import { FOOD_DECK, FOOD_DECK_BY_ID } from "./food-deck";
 import samPortrait from "./assets/characters-v2/sam.png";
 import mayaPortrait from "./assets/characters-v2/maya.png";
 import leoPortrait from "./assets/characters-v2/leo.png";
@@ -557,6 +557,71 @@ function Setup({ controllers, setControllers, start, loading }: { controllers: C
   );
 }
 
+function RulebookButton({ onOpen, triggerRef }: { onOpen: () => void; triggerRef: RefObject<HTMLButtonElement | null> }) {
+  return (
+    <section className="rulebook-launcher" aria-labelledby="rulebook-launcher-title">
+      <p>Need a reminder?</p>
+      <button ref={triggerRef} className="rulebook-button" type="button" onClick={onOpen} aria-haspopup="dialog" aria-controls="chews-rulebook">
+        <span className="ancient-book-icon" aria-hidden="true">
+          <span className="ancient-book-pages" />
+          <span className="ancient-book-cover"><span>CF</span><i /><b /></span>
+          <span className="ancient-book-bookmark" />
+        </span>
+        <span className="rulebook-button-copy">
+          <strong id="rulebook-launcher-title">Open the rulebook</strong>
+          <small>Rules and all 48 food cards</small>
+        </span>
+      </button>
+    </section>
+  );
+}
+
+function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObject<HTMLButtonElement | null> }) {
+  return (
+    <div className="rulebook-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section id="chews-rulebook" className="rulebook-dialog" role="dialog" aria-modal="true" aria-labelledby="rulebook-title" aria-describedby="rulebook-description">
+        <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
+        <header className="rulebook-titlebar">
+          <div><span>The Chews Freedom guide</span><h2 id="rulebook-title">The little book of swaps</h2></div>
+          <button ref={closeRef} className="rulebook-close" type="button" onClick={onClose}>Close book</button>
+        </header>
+        <div className="rulebook-spread">
+          <section className="rulebook-page rulebook-rules-page">
+            <p id="rulebook-description" className="rulebook-intro">Keep every patient at or below this round's nutrition limit. Food-card numbers are game values, used for swaps and patient totals.</p>
+            <h3>How a round works</h3>
+            <ol className="rulebook-steps">
+              <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round's limit or the cabbage field.</p></li>
+              <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either patient over the limit and swap in a lower-numbered card for one of that patient's higher-numbered cards.</p></li>
+              <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the limit, the assistant gets one rescue attempt and may choose the same patient or the other patient.</p></li>
+              <li><span>4</span><p><strong>Patient aid.</strong> If needed, the two patients may each choose one card for one shared swap, or they can pass.</p></li>
+              <li><span>5</span><p><strong>Vegetable field.</strong> If a patient is still over, replace the highlighted highest-numbered card with a zero-value cabbage. Continue until everyone is safe or the field is empty.</p></li>
+            </ol>
+            <section className="rulebook-score-note">
+              <h3>Points</h3>
+              <p>A nutritionist earns 1 point when their own swap brings the chosen patient within the limit. After patient aid, both patients earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
+            </section>
+          </section>
+          <section className="rulebook-page rulebook-deck-page">
+            <header className="deck-page-heading"><div><span>Food deck</span><h3>All 48 food cards</h3></div><p>Each badge is that card's nutrition value for its listed child portion.</p></header>
+            <ol className="food-index" aria-label="48 food cards and their nutrition values">
+              {FOOD_DECK.map((food) => {
+                const art = FOOD_ART[`./assets/food-cards/${food.id}.png`];
+                return (
+                  <li className="food-index-card" key={food.id}>
+                    <span className="food-index-art" aria-hidden="true">{art ? <img src={art} alt="" /> : null}</span>
+                    <span className="food-index-copy"><strong>{food.name}</strong><small>{food.category} - {food.portion}</small></span>
+                    <span className="food-index-value" aria-label={`${food.score} nutrition value`}><b>{food.score}</b><small>nutrition</small></span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function App() {
   const [game, setGame] = useState<GameState | null>(null);
   const [showSetup, setShowSetup] = useState(false);
@@ -566,9 +631,12 @@ export function App() {
   const [selectedActorCard, setSelectedActorCard] = useState<number | null>(null);
   const [selectedPatientCards, setSelectedPatientCards] = useState<[number | null, number | null]>([null, null]);
   const [showRoundWheel, setShowRoundWheel] = useState(false);
+  const [rulebookOpen, setRulebookOpen] = useState(false);
   const seenRound = useRef<number | null>(null);
   const seenOutcomeRound = useRef<number | null>(null);
   const autoAdvancedRevision = useRef<number | null>(null);
+  const rulebookTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const rulebookCloseRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -611,6 +679,19 @@ export function App() {
   }, []);
 
   useEffect(() => { setSelectedActorCard(null); setSelectedPatientCards([null, null]); }, [game?.revision, game?.phase]);
+
+  const closeRulebook = () => {
+    setRulebookOpen(false);
+    window.requestAnimationFrame(() => rulebookTriggerRef.current?.focus());
+  };
+
+  useEffect(() => {
+    if (!rulebookOpen) return;
+    rulebookCloseRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") closeRulebook(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [rulebookOpen]);
 
   const send = async (input: Command) => {
     setLoading(true);
@@ -780,9 +861,10 @@ export function App() {
         </section>
         <aside className="right-rail">
           <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={NAMES[seat]}><span>{NAMES[seat]}</span><div><small>Nutritionist {score.nutritionistPoints} · Mutual aid {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
-          <section className="timeline-panel"><h2>What happened</h2><ol>{game.log.slice(0, 8).map((entry) => <li key={entry.id}><span>{entry.type.replaceAll("_", " ")}</span><p>{entry.message}</p></li>)}</ol></section>
+          <RulebookButton onOpen={() => setRulebookOpen(true)} triggerRef={rulebookTriggerRef} />
         </aside>
       </section>
+      {rulebookOpen && <Rulebook onClose={closeRulebook} closeRef={rulebookCloseRef} />}
     </main>
   );
 }
