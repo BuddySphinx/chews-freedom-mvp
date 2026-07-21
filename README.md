@@ -1,12 +1,12 @@
 # Chews Freedom
 
-[Play the public prototype](https://chews-freedom-mvp.vercel.app)
+[Play the public game](https://chews-freedom-mvp.vercel.app)
 
 Chews Freedom is an English-language, four-seat cooperative food-card game. Players take turns as **Today's Nutritionist**, **Assistant**, and two **Tyro Friends**, using thoughtful food-card swaps and the Orchard to help everyone reach their protein target.
 
-This is an educational game prototype. It does not provide medical, nutritional, or individual dietary advice.
+Chews Freedom is an educational game. It does not provide medical, nutritional, or individual dietary advice.
 
-## Included in this prototype
+## Included in this release
 
 - A 48-card food deck with protein values
 - Enabled event cards and Orchard fruit cards with zero protein
@@ -38,21 +38,21 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173).
 ```sh
 pnpm test
 pnpm build
-python3 reference_simulator.py --self-test
 ```
 
 ## Deployment
 
 The live game is deployed on Vercel at [chews-freedom-mvp.vercel.app](https://chews-freedom-mvp.vercel.app). The deployed app uses the same rules engine through `/api/*`.
 
-Each browser keeps its own game state. Selecting **New Game** or clearing browser data starts a new local game. This prototype is not real-time multiplayer; invite rooms and cross-device shared games would need persistent storage.
+Each browser keeps its own game state. Selecting **New Game** or clearing browser data starts a new local game. The current release is not real-time multiplayer; invite rooms and cross-device shared games would need persistent storage.
 
-## Project references
+## Project structure
 
-- [English project guide](./CHEWS_FREEDOM_ENGLISH_PROJECT_GUIDE.md)
-- [Launch instructions](./START_HERE.md)
-- [Prototype configuration](./config/local-mvp-prototype.json)
+- `src/` - React interface, game types, card data, styling, and final illustrated assets
+- `server/` - local Fastify server and rules-engine tests
+- `api/` - Vercel serverless API routes for the public deployment
+- `vercel.json` - Vercel build and API routing configuration
 
-## Repository hygiene
+## Hackathon handoff
 
-Only source code, configuration, and intentionally selected game assets should be committed. Local exports, working reference images, temporary output, and private source material are deliberately kept out of version control unless they are explicitly needed by the project.
+This repository contains only the files required to install, test, build, run, and deploy the game. Local exports, design references, raw media, temporary image-generation output, saved game data, and IDE settings are excluded from version control.

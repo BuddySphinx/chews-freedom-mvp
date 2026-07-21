@@ -6,3 +6,12 @@ data/
 .obsidian/
 __pycache__/
 *.log
+
+# Local and intermediate creation material. Final game assets live in src/assets/.
+output/
+tmp/
+video/
+*.mp4
+reference*.png
+player-character-preview.png
+Food_Cards_*.xlsx

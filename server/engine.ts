@@ -73,7 +73,7 @@ export interface GameState {
 }
 
 const BASE_THRESHOLD = 10;
-export const LOCAL_RULES_VERSION = "3.0-local-mvp-draft.5-player-chosen-rescue-target-events-enabled";
+export const LOCAL_RULES_VERSION = "1.0.0-final";
 
 function nextRandom(state: GameState): number {
   let value = state.rngState += 0x6D2B79F5;

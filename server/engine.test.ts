@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { command, EVENT_DEFINITIONS, createGame, legalRescues, legalVegetableReplacements, strictTarget, validateState } from "./engine.js";
 import { FOOD_DECK, FOOD_SCORE_DISTRIBUTION } from "../src/food-deck.js";
 
-describe("Chews Freedom local prototype engine", () => {
+describe("Chews Freedom game engine", () => {
   it("uses all 48 unique named foods and workbook score bands", () => {
     expect(FOOD_DECK).toHaveLength(48);
     expect(new Set(FOOD_DECK.map((food) => food.id)).size).toBe(48);
