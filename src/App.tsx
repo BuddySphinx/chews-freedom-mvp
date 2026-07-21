@@ -637,15 +637,12 @@ function TutorialSpotlight({ target }: { target: string }) {
   useLayoutEffect(() => {
     const element = document.querySelector<HTMLElement>(`[data-tutorial-target="${target}"]`);
     if (!element) { setBox(null); return; }
-    const update = () => {
-      const rect = element.getBoundingClientRect();
-      setBox({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    window.addEventListener("resize", update);
-    return () => { observer.disconnect(); window.removeEventListener("resize", update); };
+
+    // A tutorial spotlight is an instruction for the current stop, not a
+    // live cursor. Freeze its position until the tutorial changes steps so
+    // swapping a card never makes the highlight appear to travel with it.
+    const rect = element.getBoundingClientRect();
+    setBox({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
   }, [target]);
 
   const style = box ? {
