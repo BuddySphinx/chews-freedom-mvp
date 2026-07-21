@@ -268,8 +268,8 @@ function PlayerCharacter({ seat, isTodaysNutritionist = false }: { seat: Seat; i
 function roleFor(game: GameState, seat: number): string {
   if (game.currentRoles.active === seat) return "Today's Nutritionist";
   if (game.currentRoles.assistant === seat) return "Assistant";
-  if (game.currentRoles.patient1 === seat) return "Garden Friend 1";
-  return "Garden Friend 2";
+  if (game.currentRoles.patient1 === seat) return "Tyro Friend 1";
+  return "Tyro Friend 2";
 }
 
 function nameFor(names: string[], seat: number): string {
@@ -344,7 +344,7 @@ function TurnFlow({ game, names, compact = false }: { game: GameState; names: st
   const items = [
     { label: `Today's Nutritionist · ${nameFor(names, game.currentRoles.active)}`, note: "rescue" },
     { label: `Assistant · ${nameFor(names, game.currentRoles.assistant)}`, note: "only if needed" },
-    { label: `Garden Friends · ${nameFor(names, game.currentRoles.patient1)} + ${nameFor(names, game.currentRoles.patient2)}`, note: "one shared swap" },
+    { label: `Tyro Friends · ${nameFor(names, game.currentRoles.patient1)} + ${nameFor(names, game.currentRoles.patient2)}`, note: "one shared swap" },
     { label: "Orchard", note: "only if needed" }
   ];
   return (
@@ -562,7 +562,7 @@ function SeatPanel({ game, names, seat, selectedActorCard, selectedPatientCards,
         })}
       </div>
       {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Protein total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within protein limit" : "Over protein limit"}</small></div>}
-      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Today's Nutritionist {game.scores[seat].nutritionistPoints} · Garden Friend swap {game.scores[seat].patientMutualAidPoints}</small></div>
+      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Today's Nutritionist {game.scores[seat].nutritionistPoints} · Tyro Friend swap {game.scores[seat].patientMutualAidPoints}</small></div>
     </article>
   );
 }
@@ -582,7 +582,7 @@ function Setup({ controllers, setControllers, names, openNameDialog, openTutoria
         <div className="controller-grid">
           {controllers.map((controller, index) => <label className="controller-choice" key={`${nameFor(names, index)}-${index}`}><span><strong>{nameFor(names, index)}</strong><small>Seat {index + 1}</small></span><select value={controller} onChange={(event) => { const next = [...controllers]; next[index] = event.target.value as Controller; setControllers(next); }}><option value="HUMAN">Human</option><option value="AI">AI</option></select></label>)}
         </div>
-        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; during a mixed Garden Friend swap, the AI chooses its own card after the human Garden Friend chooses theirs.</p>
+        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; during a mixed Tyro Friend swap, the AI chooses its own card after the human Tyro Friend chooses theirs.</p>
       </section>
     </main>
   );
@@ -610,7 +610,7 @@ function TutorialStartDialog({ onClose, onStart, loading }: { onClose: () => voi
       <p className="dialog-kicker">Tutorial level</p>
       <h2 id="tutorial-title">Play one guided round</h2>
       <p>This prepared round pauses at every part of the board. The rest of the table dims while the next card, panel, or button is highlighted.</p>
-      <div className="tutorial-steps"><h3>You will try every option</h3><p>See an event, make both support swaps, choose one Garden Friend card from each hand, then use zero-protein Orchard fruit when the Orchard is triggered.</p></div>
+      <div className="tutorial-steps"><h3>You will try every option</h3><p>See an event, make both support swaps, choose one Tyro Friend card from each hand, then use zero-protein Orchard fruit when the Orchard is triggered.</p></div>
       <div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Back</button><button className="primary-button" type="button" onClick={onStart} disabled={loading}>{loading ? "Preparing round..." : "Start guided round"}</button></div>
     </section>
   </div>;
@@ -668,13 +668,13 @@ function TutorialCoach({ step, game, names, onAdvance, onContinue, onExit }: { s
     "nutritionist-card": { title: `${nutritionist} leads as Today’s Nutritionist`, body: `Start by choosing Kidney Beans, worth 5 protein, from ${nutritionist}’s hand. Only the glowing card can move first.` },
     "nutritionist-target": { title: `Give help to ${firstFriend}`, body: `Now choose ${firstFriend}’s Almonds, worth 7 protein. This trade lowers ${firstFriend}’s total and shows how a rescue swap works.` },
     "assistant-card": { title: `${assistant} gets one independent rescue`, body: `${firstFriend} is safe, but ${secondFriend} still needs help. Choose Mussels, worth 9 protein, from ${assistant}’s hand.` },
-    "assistant-target": { title: `Help ${secondFriend} next`, body: `Choose ${secondFriend}’s Lamb Leg, worth 11 protein. The Assistant may choose either Garden Friend who needs help, not just the first one.` },
-    "friends-first": { title: "Garden Friends now have one shared swap", body: `${firstFriend}, choose your Kidney Beans card. Each Garden Friend selects one card to trade away before either card moves.` },
+    "assistant-target": { title: `Help ${secondFriend} next`, body: `Choose ${secondFriend}’s Lamb Leg, worth 11 protein. The Assistant may choose either Tyro Friend who needs help, not just the first one.` },
+    "friends-first": { title: "Tyro Friends now have one shared swap", body: `${firstFriend}, choose your Kidney Beans card. Each Tyro Friend selects one card to trade away before either card moves.` },
     "friends-second": { title: `${secondFriend}, choose your card`, body: `Choose Mussels from ${secondFriend}’s hand. The two selections stay visible so everyone can confirm what will be traded.` },
-    "friends-confirm": { title: "Confirm the Garden Friend swap", body: "Both cards are selected. Use the highlighted confirmation button to make the one shared swap. This panel appears only when the support swaps have not solved the round." },
-    "orchard-intro": { title: "The Orchard is now triggered", body: "The Orchard opens only when a Garden Friend still needs help after the available swaps. Its fruit is always worth zero protein, and it can be used again whenever this phase is triggered.", action: "Show the card to replace" },
+    "friends-confirm": { title: "Confirm the Tyro Friend swap", body: "Both cards are selected. Use the highlighted confirmation button to make the one shared swap. This panel appears only when the support swaps have not solved the round." },
+    "orchard-intro": { title: "The Orchard is now triggered", body: "The Orchard opens only when a Tyro Friend still needs help after the available swaps. Its fruit is always worth zero protein, and it can be used again whenever this phase is triggered.", action: "Show the card to replace" },
     "orchard-pick": { title: "Pick fruit for the highlighted card", body: `Choose the highlighted highest-protein card on ${nameFor(names, strictTarget(game) ?? game.currentRoles.patient2)}. Each pick replaces one food card with zero-protein Orchard fruit. Continue while the Orchard is active.` },
-    complete: { title: "This guided round is complete", body: "You have seen the full recovery path: event, Nutritionist, Assistant, Garden Friend mutual aid, and Orchard fruit. In a normal round, later steps are skipped whenever everyone is already within the protein limit." }
+    complete: { title: "This guided round is complete", body: "You have seen the full recovery path: event, Nutritionist, Assistant, Tyro Friend mutual aid, and Orchard fruit. In a normal round, later steps are skipped whenever everyone is already within the protein limit." }
   };
   const current = copy[step];
   const waitingForAction = !current.action && step !== "complete";
@@ -696,7 +696,7 @@ function MutualAidDialog({ game, names, onReady }: { game: GameState; names: str
   const second = nameFor(names, game.currentRoles.patient2);
   return <div className="game-dialog-overlay mutual-aid-overlay" role="presentation">
     <section className="game-dialog mutual-aid-dialog" role="dialog" aria-modal="true" aria-labelledby="mutual-aid-title">
-      <p className="dialog-kicker">Garden Friend swap</p>
+      <p className="dialog-kicker">Tyro Friend swap</p>
       <h2 id="mutual-aid-title">One shared chance to help</h2>
       <p>{first} and {second}, please try swapping food once to lower protein intake. Please select the cards you each want to trade away.</p>
       <button className="primary-button" type="button" onClick={onReady}>Ready to choose cards</button>
@@ -772,22 +772,22 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
           <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
           {spread === 0 ? <>
             <section className="rulebook-page rulebook-rules-page">
-              <p id="rulebook-description" className="rulebook-intro">Keep every Garden Friend at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and Garden Friend totals.</p>
+              <p id="rulebook-description" className="rulebook-intro">Keep every Tyro Friend at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and Tyro Friend totals.</p>
               <h3>How a round works</h3>
               <ol className="rulebook-steps">
                 <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the Orchard.</p></li>
-                <li><span>2</span><p><strong>Today’s Nutritionist rescue.</strong> Today’s Nutritionist may choose either Garden Friend over the protein limit and swap in a lower-protein card for one of that Garden Friend’s higher-protein cards.</p></li>
-                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the Assistant gets one rescue attempt and may choose the same Garden Friend or the other Garden Friend.</p></li>
-                <li><span>4</span><p><strong>Garden Friend swap.</strong> If needed, the two Garden Friends may each choose one card for one shared swap, or they can pass.</p></li>
-                <li><span>5</span><p><strong>Orchard.</strong> If a Garden Friend is still over, replace the highlighted highest-protein card with a zero-protein Orchard fruit. Continue until everyone is within the limit or the Orchard is empty.</p></li>
+                <li><span>2</span><p><strong>Today’s Nutritionist rescue.</strong> Today’s Nutritionist may choose either Tyro Friend over the protein limit and swap in a lower-protein card for one of that Tyro Friend’s higher-protein cards.</p></li>
+                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the Assistant gets one rescue attempt and may choose the same Tyro Friend or the other Tyro Friend.</p></li>
+                <li><span>4</span><p><strong>Tyro Friend swap.</strong> If needed, the two Tyro Friends may each choose one card for one shared swap, or they can pass.</p></li>
+                <li><span>5</span><p><strong>Orchard.</strong> If a Tyro Friend is still over, replace the highlighted highest-protein card with a zero-protein Orchard fruit. Continue until everyone is within the limit or the Orchard is empty.</p></li>
               </ol>
               <section className="rulebook-score-note">
                 <h3>Points</h3>
-                <p>Today’s Nutritionist earns 1 point when their own swap brings the chosen Garden Friend within the limit. After a Garden Friend swap, both Garden Friends earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Orchard fruit gives no points.</p>
+                <p>Today’s Nutritionist earns 1 point when their own swap brings the chosen Tyro Friend within the limit. After a Tyro Friend swap, both Tyro Friends earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Orchard fruit gives no points.</p>
               </section>
               <section className="rulebook-end-note">
                 <h3>How the game ends</h3>
-                <p>The game ends if the Orchard runs out, or if a Garden Friend is still over the protein limit after every Today’s Nutritionist rescue, Assistant rescue, Garden Friend swap, and Orchard fruit replacement has been tried.</p>
+                <p>The game ends if the Orchard runs out, or if a Tyro Friend is still over the protein limit after every Today’s Nutritionist rescue, Assistant rescue, Tyro Friend swap, and Orchard fruit replacement has been tried.</p>
               </section>
               <p className="rulebook-page-number">Page 1</p>
             </section>
@@ -834,7 +834,7 @@ function summarizeAction(before: GameState, after: GameState, input: Command, na
   if (input.type === "PATIENT_SWAP") {
     const first = after.currentRoles.patient1;
     const second = after.currentRoles.patient2;
-    return { title: "Garden Friend swap completed.", details: [`${nameFor(names, first)} now has ${total(after.hands[first])} protein; ${nameFor(names, second)} now has ${total(after.hands[second])} protein.`, "The Orchard step begins only if more help is needed."] };
+    return { title: "Tyro Friend swap completed.", details: [`${nameFor(names, first)} now has ${total(after.hands[first])} protein; ${nameFor(names, second)} now has ${total(after.hands[second])} protein.`, "The Orchard step begins only if more help is needed."] };
   }
   if (input.type === "TAKE_VEGETABLE") {
     const target = input.patient as Seat;
@@ -1071,16 +1071,16 @@ export function App() {
       const humanPatients = [patient1, patient2].filter((seat) => game.controllers[seat] === "HUMAN");
       const firstCard = selectedPatientCards[0] === null ? null : game.hands[patient1][selectedPatientCards[0]];
       const secondCard = selectedPatientCards[1] === null ? null : game.hands[patient2][selectedPatientCards[1]];
-      if (!humanPatients.length) return "Both Garden Friends are AI-controlled. They are choosing whether to swap.";
+      if (!humanPatients.length) return "Both Tyro Friends are AI-controlled. They are choosing whether to swap.";
       if (firstCard && secondCard) return `Ready: ${nameFor(playerNames, patient1)} gives ${foodForCard(firstCard).name}; ${nameFor(playerNames, patient2)} gives ${foodForCard(secondCard).name}. Please confirm the swap.`;
-      if (humanPatients.length === 1) return `${nameFor(playerNames, humanPatients[0])}, choose one card. The AI Garden Friend will choose its own best card when you confirm.`;
+      if (humanPatients.length === 1) return `${nameFor(playerNames, humanPatients[0])}, choose one card. The AI Tyro Friend will choose its own best card when you confirm.`;
       if (firstCard) return `${nameFor(playerNames, patient2)}, choose one card to trade away with ${nameFor(playerNames, patient1)}.`;
       if (secondCard) return `${nameFor(playerNames, patient1)}, choose one card to trade away with ${nameFor(playerNames, patient2)}.`;
       return `${nameFor(playerNames, patient1)} and ${nameFor(playerNames, patient2)}, please try swapping food once to lower protein intake. Please select the cards you each want to trade away.`;
     }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       const target = strictTarget(game);
-      return target === null ? "All Garden Friends are within the protein limit." : `Orchard turn: click a highlighted highest-protein card on ${nameFor(playerNames, target)}. It will be replaced by one zero-protein Orchard fruit. Keep choosing fruit until every Garden Friend is within the protein limit or the Orchard is empty.`;
+      return target === null ? "All Tyro Friends are within the protein limit." : `Orchard turn: click a highlighted highest-protein card on ${nameFor(playerNames, target)}. It will be replaced by one zero-protein Orchard fruit. Keep choosing fruit until every Tyro Friend is within the protein limit or the Orchard is empty.`;
     }
     const actor = currentActor(game)!;
     const friends = [game.currentRoles.patient1, game.currentRoles.patient2].filter((seat) => total(game.hands[seat]) > game.threshold);
@@ -1089,11 +1089,11 @@ export function App() {
     const roleName = game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant";
     if (actorCard) return `Giving: ${foodForCard(actorCard).name}, ${actorCard.value} protein. Choose a higher-protein card from ${friendNames.join(" or ")} to receive.`;
     if (game.phase === "ACTIVE_RESCUE") {
-      if (!friends.length) return `${roleName} has no Garden Friend to rescue. The round will continue.`;
-      if (friends.length === 1) return `${nameFor(playerNames, actor)}’s turn. ${nameFor(playerNames, friends[0])} needs help; the other Garden Friend is already on target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
+      if (!friends.length) return `${roleName} has no Tyro Friend to rescue. The round will continue.`;
+      if (friends.length === 1) return `${nameFor(playerNames, actor)}’s turn. ${nameFor(playerNames, friends[0])} needs help; the other Tyro Friend is already on target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
       return `${nameFor(playerNames, actor)}’s turn. Help ${friendNames.join(" or ")} reach their protein target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
     }
-    if (!friends.length) return "Both Garden Friends are within the protein limit. The round will continue.";
+    if (!friends.length) return "Both Tyro Friends are within the protein limit. The round will continue.";
     if (friends.length === 1) return `${nameFor(playerNames, friends[0])} still needs help. ${nameFor(playerNames, actor)} may try one Assistant rescue: choose a card to give away.`;
     return `${nameFor(playerNames, actor)}’s Assistant rescue. Help ${friendNames.join(" or ")} by choosing a card to give away.`;
   }, [game, playerNames, selectedActorCard, selectedPatientCards]);
@@ -1139,7 +1139,7 @@ export function App() {
         : game.phase === "VEGETABLE_RESOLUTION"
           ? "Orchard turn: choose a highlighted replacement"
           : game.phase === "PATIENT_SWAP"
-            ? "Garden Friend turn: choose one card from each Garden Friend"
+            ? "Tyro Friend turn: choose one card from each Tyro Friend"
             : actor === null
               ? "Your turn board"
               : `${nameFor(playerNames, actor)}’s turn · ${game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant"}`;
@@ -1192,7 +1192,7 @@ export function App() {
           </div>
         </section>
         <aside className="right-rail">
-          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={nameFor(playerNames, seat)}><span>{nameFor(playerNames, seat)}</span><div><small>Today’s Nutritionist {score.nutritionistPoints} · Garden Friend swap {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
+          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={nameFor(playerNames, seat)}><span>{nameFor(playerNames, seat)}</span><div><small>Today’s Nutritionist {score.nutritionistPoints} · Tyro Friend swap {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
           <RulebookButton onOpen={() => setRulebookOpen(true)} triggerRef={rulebookTriggerRef} />
         </aside>
       </section>
