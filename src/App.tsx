@@ -602,7 +602,7 @@ function PlayerNameDialog({ names, setNames, onStart, onClose, loading }: { name
   </div>;
 }
 
-type TutorialStep = "round" | "event" | "nutritionist-card" | "nutritionist-target" | "assistant-card" | "assistant-target" | "friends-first" | "friends-second" | "friends-confirm" | "orchard-intro" | "orchard-pick" | "complete";
+type TutorialStep = "round" | "event" | "table-turn" | "nutritionist-card" | "nutritionist-target" | "assistant-card" | "assistant-target" | "friends-first" | "friends-second" | "friends-confirm" | "orchard-intro" | "orchard-pick" | "complete";
 
 function TutorialStartDialog({ onClose, onStart, loading }: { onClose: () => void; onStart: () => void; loading: boolean }) {
   return <div className="game-dialog-overlay" role="presentation">
@@ -619,6 +619,7 @@ function TutorialStartDialog({ onClose, onStart, loading }: { onClose: () => voi
 function tutorialTargetFor(step: TutorialStep, game: GameState): string {
   if (step === "round") return "round-wheel";
   if (step === "event") return "event-card";
+  if (step === "table-turn") return "round-wheel";
   if (step === "nutritionist-card" || step === "nutritionist-target") return step === "nutritionist-card" ? "nutritionist-seat" : "friend-one-seat";
   if (step === "assistant-card" || step === "assistant-target") return step === "assistant-card" ? "assistant-seat" : "friend-two-seat";
   if (step === "friends-first") return "friend-one-seat";
@@ -659,9 +660,10 @@ function TutorialCoach({ step, game, names, onAdvance, onContinue, onExit }: { s
   const assistant = nameFor(names, game.currentRoles.assistant);
   const firstFriend = nameFor(names, game.currentRoles.patient1);
   const secondFriend = nameFor(names, game.currentRoles.patient2);
-  const copy: Record<TutorialStep, { title: string; body: string; action?: string }> = {
+  const copy: Record<TutorialStep, { title: string; body: string; action?: string; autoAdvance?: boolean }> = {
     round: { title: "A round begins on the calendar", body: `This tutorial uses one prepared round so every stage appears. Day ${game.round} shows who leads first and when the food table will turn over.`, action: "See today’s event" },
     event: { title: `${game.currentEvent?.name ?? "Clear day"} is this round’s event`, body: game.currentEvent ? `${game.currentEvent.summary} Events can change the protein limit or the Orchard. Read this card before deciding how many swaps may be needed.` : "A clear day keeps the usual protein limit and Orchard supply.", action: "Begin the first rescue" },
+    "table-turn": { title: "Turning to the food table", body: "The calendar is flipping over. Your next instruction will appear once all four players’ food cards are ready.", autoAdvance: true },
     "nutritionist-card": { title: `${nutritionist} leads as Today’s Nutritionist`, body: `Start by choosing Kidney Beans, worth 5 protein, from ${nutritionist}’s hand. Only the glowing card can move first.` },
     "nutritionist-target": { title: `Give help to ${firstFriend}`, body: `Now choose ${firstFriend}’s Almonds, worth 7 protein. This trade lowers ${firstFriend}’s total and shows how a rescue swap works.` },
     "assistant-card": { title: `${assistant} gets one independent rescue`, body: `${firstFriend} is safe, but ${secondFriend} still needs help. Choose Mussels, worth 9 protein, from ${assistant}’s hand.` },
@@ -674,7 +676,7 @@ function TutorialCoach({ step, game, names, onAdvance, onContinue, onExit }: { s
     complete: { title: "This guided round is complete", body: "You have seen the full recovery path: event, Nutritionist, Assistant, Tyro Friend mutual aid, and Orchard fruit. In a normal round, later steps are skipped whenever everyone is already within the protein limit." }
   };
   const current = copy[step];
-  const waitingForAction = !current.action && step !== "complete";
+  const waitingForAction = !current.action && step !== "complete" && !current.autoAdvance;
   return <section className="tutorial-coach" role="status" aria-live="polite" data-tutorial-allowed>
     <p className="tutorial-coach-kicker">Guided round</p>
     <h2>{current.title}</h2>
@@ -999,6 +1001,12 @@ export function App() {
   }, [game?.round, game?.lastRoundOutcome?.round, showSetup, tutorialStep]);
 
   useEffect(() => {
+    if (tutorialStep !== "table-turn") return;
+    const timer = window.setTimeout(() => setTutorialStep("nutritionist-card"), 900);
+    return () => window.clearTimeout(timer);
+  }, [tutorialStep]);
+
+  useEffect(() => {
     if (!game || showSetup || loading || !aiDecisionIsDue(game)) {
       if (!game || !aiDecisionIsDue(game)) autoAdvancedRevision.current = null;
       return;
@@ -1097,7 +1105,7 @@ export function App() {
 
   const advanceTutorial = () => {
     if (tutorialStep === "round") { setShowRoundWheel(false); setTutorialStep("event"); }
-    if (tutorialStep === "event") setTutorialStep("nutritionist-card");
+    if (tutorialStep === "event") setTutorialStep("table-turn");
     if (tutorialStep === "orchard-intro") setTutorialStep("orchard-pick");
   };
   const continueTutorialGame = () => {
