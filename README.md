@@ -15,6 +15,15 @@ Chews Freedom is an educational game. It does not provide medical, nutritional, 
 - A one-round interactive tutorial and an in-game rulebook
 - Round summaries, score tracking, rotating roles, and a public Vercel deployment
 
+## AI-assisted development workflow
+
+Chews Freedom was created through a **vibe-coding** collaboration: the game creator described the intended player experience, rules, and visual direction in plain language, then reviewed playable iterations and supplied feedback.
+
+- **GPT-5.6** was used to turn the initial concept, Chinese planning materials, and game-rule discussions into an English engineering and game-design plan. It also helped polish the visual direction and illustration brief during later iterations, and organized and edited the introduction video alongside clips generated with Seedance 2.0.
+- **Codex** was used to implement the decisions in this repository: the frontend, rules engine, backend/API routes, automated checks, deployment configuration, and iterative fixes based on playtesting feedback.
+
+The game’s rules and creative choices remained human-directed throughout; the AI tools helped structure the plan, build the code, and refine the release.
+
 ## How a round works
 
 1. Today's Nutritionist chooses a Tyro Friend to help with one food-card swap.
