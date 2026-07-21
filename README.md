@@ -2,6 +2,8 @@
 
 [Play the public game](https://chews-freedom-mvp.vercel.app)
 
+![Illustrated Chews Freedom game table](assets/readme/chews-freedom-table-scene.png)
+
 Chews Freedom is an English-language, four-seat cooperative food-card game. Players take turns as **Today's Nutritionist**, **Assistant**, and two **Tyro Friends**, using thoughtful food-card swaps and the Orchard to help everyone reach their protein target.
 
 Chews Freedom is an educational game. It does not provide medical, nutritional, or individual dietary advice.
