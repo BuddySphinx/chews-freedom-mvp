@@ -681,7 +681,7 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
     <div className="rulebook-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section id="chews-rulebook" className="rulebook-dialog" role="dialog" aria-modal="true" aria-labelledby="rulebook-title" aria-describedby={spread === 0 ? "rulebook-description" : undefined}>
         <header className="rulebook-titlebar">
-          <div><span>The Chews Freedom guide</span><h2 id="rulebook-title">The little book of swaps</h2></div>
+          <div><span>The Chews Freedom Rulebook</span><h2 id="rulebook-title">The Rulebook of Swaps</h2></div>
           <div className="rulebook-title-actions">
             <nav className="rulebook-page-navigation" aria-label="Rule Book pages">
               <button className="rulebook-page-turn" type="button" onClick={() => turnPage("back")} disabled={spread === 0} aria-label="Turn to the previous pages">Previous</button>
