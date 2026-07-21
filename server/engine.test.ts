@@ -144,4 +144,32 @@ describe("Chews Freedom local prototype engine", () => {
     expect(game.lastRoundOutcome?.kind).toBe("UNRESOLVED");
     expect(() => validateState(game)).not.toThrow();
   });
+
+  it("keeps the fixed guided-round path available through every recovery stage", () => {
+    const game = createGame(["HUMAN", "HUMAN", "HUMAN", "HUMAN"], 1);
+    const { active, assistant, patient1, patient2 } = game.currentRoles;
+
+    expect(game.phase).toBe("ACTIVE_RESCUE");
+    command(game, { type: "RESCUE", expectedRevision: game.revision, actor: active, actorIndex: 0, target: patient1, targetIndex: 2 });
+    expect(game.phase).toBe("ASSISTANT_RESCUE");
+
+    command(game, { type: "RESCUE", expectedRevision: game.revision, actor: assistant, actorIndex: 0, target: patient2, targetIndex: 0 });
+    expect(game.phase).toBe("PATIENT_SWAP");
+
+    command(game, { type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: 2, patient2Index: 0 });
+    expect(game.phase).toBe("VEGETABLE_RESOLUTION");
+
+    let fruitPicks = 0;
+    while (game.phase === "VEGETABLE_RESOLUTION") {
+      const fruitPick = legalVegetableReplacements(game)[0];
+      expect(fruitPick).toBeDefined();
+      command(game, { type: "TAKE_VEGETABLE", expectedRevision: game.revision, patient: fruitPick!.patient, cardIndex: fruitPick!.cardIndex });
+      fruitPicks += 1;
+    }
+
+    expect(fruitPicks).toBe(3);
+    expect(game.round).toBe(2);
+    expect(game.phase).toBe("ACTIVE_RESCUE");
+    expect(() => validateState(game)).not.toThrow();
+  });
 });

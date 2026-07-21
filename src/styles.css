@@ -807,8 +807,27 @@ body {
 .tutorial-dialog { max-width: 555px; }.tutorial-steps { min-height: 166px; margin-top: 20px; padding: 18px; border: 2px solid #bb955b; border-radius: 12px 9px 13px 10px; background: rgb(255 249 224 / 70%); box-shadow: inset 0 0 0 2px rgb(255 255 255 / 48%); }.tutorial-steps > span { color: #758b51; font-size: .68rem; font-weight: 900; letter-spacing: .08em; }.tutorial-steps h3 { margin: 7px 0; color: #4d321f; font-family: Georgia, "Palatino Linotype", serif; font-size: 1.22rem; }.tutorial-steps p { margin: 0; color: #6c5037; line-height: 1.5; }
 .mutual-aid-overlay { z-index: 70; }.mutual-aid-dialog { max-width: 485px; text-align: center; }.mutual-aid-dialog .primary-button { margin-top: 21px; }
 
+/* The playable tutorial is a true board spotlight. It keeps the active control
+   clickable while quietly dimming every other possible interaction. */
+.tutorial-running button:not([data-tutorial-allowed]), .tutorial-running a { pointer-events: none; }
+.tutorial-running.tutorial-focus-nutritionist-seat [data-tutorial-target="nutritionist-seat"] .food-card,
+.tutorial-running.tutorial-focus-assistant-seat [data-tutorial-target="assistant-seat"] .food-card,
+.tutorial-running.tutorial-focus-friend-one-seat [data-tutorial-target="friend-one-seat"] .food-card,
+.tutorial-running.tutorial-focus-friend-two-seat [data-tutorial-target="friend-two-seat"] .food-card,
+.tutorial-running.tutorial-focus-confirm-swap [data-tutorial-target="confirm-swap"] button { pointer-events: auto; }
+.tutorial-spotlight-layer { position: fixed; z-index: 74; inset: 0; pointer-events: none; }
+.tutorial-spotlight-hole { position: fixed; display: block; border: 3px solid #f5d468; border-radius: 18px 14px 19px 13px; box-shadow: 0 0 0 100vmax rgb(32 25 17 / 67%), 0 0 0 7px rgb(255 247 196 / 28%), 0 0 28px rgb(255 223 109 / 66%); }
+.tutorial-coach { position: fixed; z-index: 75; right: 24px; bottom: 22px; width: min(420px, calc(100% - 40px)); padding: 19px 20px; border: 3px solid #895f33; border-radius: 17px 13px 19px 14px; background: radial-gradient(circle at 12% 11%, rgb(255 255 255 / 72%) 0 1px, transparent 1.6px) 0 0 / 13px 13px, linear-gradient(145deg, #fffcec, #efd7a0); box-shadow: inset 0 0 0 3px rgb(255 255 255 / 62%), 0 17px 34px rgb(40 28 16 / 39%); color: #573b25; }
+.tutorial-coach-kicker { margin: 0 0 5px; color: #668547; font-size: .63rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.tutorial-coach h2 { margin: 0; color: #4c301e; font-family: Georgia, "Palatino Linotype", serif; font-size: 1.28rem; letter-spacing: -.04em; line-height: 1.04; }
+.tutorial-coach > p { margin: 8px 0 0; color: #6a4d34; font-size: .77rem; line-height: 1.42; }
+.tutorial-coach > small { display: block; margin-top: 9px; color: #697d50; font-size: .65rem; font-weight: 900; }
+.tutorial-coach-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.tutorial-coach-actions .primary-button, .tutorial-coach-actions .secondary-button { min-height: 34px; padding: 7px 10px; font-size: .67rem; }
+
 @media (max-width: 680px) {
   .garden-crop { min-height: 42px; }.orchard-fruit { width: 40px; height: 40px; }
   .dynamic-prompt-bar > .turn-flow.is-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .game-dialog-overlay { align-items: center; padding: 12px; }.game-dialog { padding: 22px 18px; }.name-input-grid { grid-template-columns: 1fr; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100%; }
+  .tutorial-coach { right: 10px; bottom: 10px; width: calc(100% - 20px); padding: 16px; }.tutorial-coach-actions { flex-direction: column; }.tutorial-coach-actions button { width: 100%; }
 }

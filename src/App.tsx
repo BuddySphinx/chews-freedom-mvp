@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { io } from "socket.io-client";
 import type { Card, Command, Controller, GameState, Seat } from "./game-types";
 import { FOOD_DECK, FOOD_DECK_BY_ID } from "./food-deck";
@@ -18,6 +18,8 @@ const usesBrowserGameSave = !supportsSocketUpdates;
 const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
 const PLAYER_NAMES_KEY = "chews-freedom-player-names-v1";
 const DEFAULT_PLAYER_NAMES = ["Sam", "Maya", "Leo", "Zoe"];
+const TUTORIAL_SEED = 1;
+const TUTORIAL_CONTROLLERS: Controller[] = ["HUMAN", "HUMAN", "HUMAN", "HUMAN"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PLAYER_PORTRAITS = [samPortrait, mayaPortrait, leoPortrait, zoePortrait];
 const FOOD_ART = import.meta.glob("./assets/food-cards/*.png", { eager: true, import: "default", query: "?url" }) as Record<string, string>;
@@ -508,9 +510,16 @@ function SeatPanel({ game, names, seat, selectedActorCard, selectedPatientCards,
   const handTotal = total(game.hands[seat]);
   const withinLimit = !isPatient || handTotal <= game.threshold;
   const highestTargetValue = isTarget ? Math.max(...game.hands[seat].map((card) => card.value)) : -1;
+  const tutorialTarget = seat === game.currentRoles.active
+    ? "nutritionist-seat"
+    : seat === game.currentRoles.assistant
+      ? "assistant-seat"
+      : seat === game.currentRoles.patient1
+        ? "friend-one-seat"
+        : "friend-two-seat";
 
   return (
-    <article className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
+    <article data-tutorial-target={tutorialTarget} className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div className="seat-identity">
           <PlayerCharacter seat={seat} isTodaysNutritionist={seat === game.currentRoles.active} />
@@ -593,25 +602,93 @@ function PlayerNameDialog({ names, setNames, onStart, onClose, loading }: { name
   </div>;
 }
 
-const TUTORIAL_STEPS = [
-  { title: "1. Today’s Nutritionist", body: "Choose one food card to give away, then select a Garden Friend’s higher-protein card to receive." },
-  { title: "2. Assistant", body: "If a Garden Friend still needs help, the Assistant gets one independent rescue attempt." },
-  { title: "3. Garden Friends", body: "Only when help is still needed, the two Garden Friends may each choose one card for one shared swap." },
-  { title: "4. Orchard", body: "If a Garden Friend is still over the protein limit, replace highlighted food with zero-protein Orchard fruit until everyone is within the limit or the Orchard is empty." }
-];
+type TutorialStep = "round" | "event" | "nutritionist-card" | "nutritionist-target" | "assistant-card" | "assistant-target" | "friends-first" | "friends-second" | "friends-confirm" | "orchard-intro" | "orchard-pick" | "complete";
 
-function TutorialDialog({ page, setPage, onClose, onStart }: { page: number; setPage: (page: number) => void; onClose: () => void; onStart: () => void }) {
-  const step = TUTORIAL_STEPS[page];
+function TutorialStartDialog({ onClose, onStart, loading }: { onClose: () => void; onStart: () => void; loading: boolean }) {
   return <div className="game-dialog-overlay" role="presentation">
     <section className="game-dialog tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
       <p className="dialog-kicker">Tutorial level</p>
-      <h2 id="tutorial-title">Learn one round at a time</h2>
-      <div className="tutorial-steps" aria-label={`Tutorial step ${page + 1} of ${TUTORIAL_STEPS.length}`}>
-        <span>{page + 1} / {TUTORIAL_STEPS.length}</span><h3>{step.title}</h3><p>{step.body}</p>
-      </div>
-      <div className="dialog-actions"><button className="secondary-button" type="button" onClick={page === 0 ? onClose : () => setPage(page - 1)}>{page === 0 ? "Close" : "Previous"}</button>{page < TUTORIAL_STEPS.length - 1 ? <button className="primary-button" type="button" onClick={() => setPage(page + 1)}>Next</button> : <button className="primary-button" type="button" onClick={onStart}>Name players & start</button>}</div>
+      <h2 id="tutorial-title">Play one guided round</h2>
+      <p>This prepared round pauses at every part of the board. The rest of the table dims while the next card, panel, or button is highlighted.</p>
+      <div className="tutorial-steps"><h3>You will try every option</h3><p>See an event, make both support swaps, choose one Garden Friend card from each hand, then use zero-protein Orchard fruit when the Orchard is triggered.</p></div>
+      <div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Back</button><button className="primary-button" type="button" onClick={onStart} disabled={loading}>{loading ? "Preparing round..." : "Start guided round"}</button></div>
     </section>
   </div>;
+}
+
+function tutorialTargetFor(step: TutorialStep, game: GameState): string {
+  if (step === "round") return "round-wheel";
+  if (step === "event") return "event-card";
+  if (step === "nutritionist-card" || step === "nutritionist-target") return step === "nutritionist-card" ? "nutritionist-seat" : "friend-one-seat";
+  if (step === "assistant-card" || step === "assistant-target") return step === "assistant-card" ? "assistant-seat" : "friend-two-seat";
+  if (step === "friends-first") return "friend-one-seat";
+  if (step === "friends-second") return "friend-two-seat";
+  if (step === "friends-confirm") return "confirm-swap";
+  if (step === "orchard-intro") return "orchard";
+  if (step === "orchard-pick") {
+    return strictTarget(game) === game.currentRoles.patient1 ? "friend-one-seat" : "friend-two-seat";
+  }
+  return "prompt-bar";
+}
+
+function TutorialSpotlight({ target }: { target: string }) {
+  const [box, setBox] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const element = document.querySelector<HTMLElement>(`[data-tutorial-target="${target}"]`);
+    if (!element) { setBox(null); return; }
+    const update = () => {
+      const rect = element.getBoundingClientRect();
+      setBox({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    window.addEventListener("resize", update);
+    return () => { observer.disconnect(); window.removeEventListener("resize", update); };
+  }, [target]);
+
+  const style = box ? {
+    top: `${Math.max(8, box.top - 8)}px`,
+    left: `${Math.max(8, box.left - 8)}px`,
+    width: `${box.width + 16}px`,
+    height: `${box.height + 16}px`
+  } : undefined;
+  return <div className="tutorial-spotlight-layer" aria-hidden="true">{box && <span className="tutorial-spotlight-hole" style={style} />}</div>;
+}
+
+function TutorialCoach({ step, game, names, onAdvance, onContinue, onExit }: { step: TutorialStep; game: GameState; names: string[]; onAdvance: () => void; onContinue: () => void; onExit: () => void }) {
+  const nutritionist = nameFor(names, game.currentRoles.active);
+  const assistant = nameFor(names, game.currentRoles.assistant);
+  const firstFriend = nameFor(names, game.currentRoles.patient1);
+  const secondFriend = nameFor(names, game.currentRoles.patient2);
+  const copy: Record<TutorialStep, { title: string; body: string; action?: string }> = {
+    round: { title: "A round begins on the calendar", body: `This tutorial uses one prepared round so every stage appears. Day ${game.round} shows who leads first and when the food table will turn over.`, action: "See today’s event" },
+    event: { title: `${game.currentEvent?.name ?? "Clear day"} is this round’s event`, body: game.currentEvent ? `${game.currentEvent.summary} Events can change the protein limit or the Orchard. Read this card before deciding how many swaps may be needed.` : "A clear day keeps the usual protein limit and Orchard supply.", action: "Begin the first rescue" },
+    "nutritionist-card": { title: `${nutritionist} leads as Today’s Nutritionist`, body: `Start by choosing Kidney Beans, worth 5 protein, from ${nutritionist}’s hand. Only the glowing card can move first.` },
+    "nutritionist-target": { title: `Give help to ${firstFriend}`, body: `Now choose ${firstFriend}’s Almonds, worth 7 protein. This trade lowers ${firstFriend}’s total and shows how a rescue swap works.` },
+    "assistant-card": { title: `${assistant} gets one independent rescue`, body: `${firstFriend} is safe, but ${secondFriend} still needs help. Choose Mussels, worth 9 protein, from ${assistant}’s hand.` },
+    "assistant-target": { title: `Help ${secondFriend} next`, body: `Choose ${secondFriend}’s Lamb Leg, worth 11 protein. The Assistant may choose either Garden Friend who needs help, not just the first one.` },
+    "friends-first": { title: "Garden Friends now have one shared swap", body: `${firstFriend}, choose your Kidney Beans card. Each Garden Friend selects one card to trade away before either card moves.` },
+    "friends-second": { title: `${secondFriend}, choose your card`, body: `Choose Mussels from ${secondFriend}’s hand. The two selections stay visible so everyone can confirm what will be traded.` },
+    "friends-confirm": { title: "Confirm the Garden Friend swap", body: "Both cards are selected. Use the highlighted confirmation button to make the one shared swap. This panel appears only when the support swaps have not solved the round." },
+    "orchard-intro": { title: "The Orchard is now triggered", body: "The Orchard opens only when a Garden Friend still needs help after the available swaps. Its fruit is always worth zero protein, and it can be used again whenever this phase is triggered.", action: "Show the card to replace" },
+    "orchard-pick": { title: "Pick fruit for the highlighted card", body: `Choose the highlighted highest-protein card on ${nameFor(names, strictTarget(game) ?? game.currentRoles.patient2)}. Each pick replaces one food card with zero-protein Orchard fruit. Continue while the Orchard is active.` },
+    complete: { title: "This guided round is complete", body: "You have seen the full recovery path: event, Nutritionist, Assistant, Garden Friend mutual aid, and Orchard fruit. In a normal round, later steps are skipped whenever everyone is already within the protein limit." }
+  };
+  const current = copy[step];
+  const waitingForAction = !current.action && step !== "complete";
+  return <section className="tutorial-coach" role="status" aria-live="polite" data-tutorial-allowed>
+    <p className="tutorial-coach-kicker">Guided round</p>
+    <h2>{current.title}</h2>
+    <p>{current.body}</p>
+    {waitingForAction && <small>Use the highlighted part of the board to continue.</small>}
+    <div className="tutorial-coach-actions">
+      {current.action && <button className="primary-button" type="button" onClick={onAdvance} data-tutorial-allowed>{current.action}</button>}
+      {step === "complete" && <button className="primary-button" type="button" onClick={onContinue} data-tutorial-allowed>Continue this game</button>}
+      <button className="secondary-button" type="button" onClick={onExit} data-tutorial-allowed>{step === "complete" ? "Back to setup" : "Leave tutorial"}</button>
+    </div>
+  </section>;
 }
 
 function MutualAidDialog({ game, names, onReady }: { game: GameState; names: string[]; onReady: () => void }) {
@@ -651,7 +728,7 @@ function RulebookFoodPage({ foods, pageNumber }: { foods: typeof FOOD_DECK; page
   const end = start + foods.length - 1;
   return (
     <section className={`rulebook-page rulebook-deck-page ${pageNumber === 3 ? "rulebook-deck-left-page" : "rulebook-deck-right-page"}`}>
-      <header className="deck-page-heading"><div><span>Food deck</span><h3>Cards {start}–{end}</h3></div><p>Each badge is that card’s protein level for its listed child portion.</p></header>
+      <header className="deck-page-heading"><div><span>Food deck</span><h3>Cards {start}-{end}</h3></div><p>Each badge is that card’s protein level for its listed child portion.</p></header>
       <ol className="food-index" aria-label={`Food cards ${start} through ${end} and their protein levels`}>
         {foods.map((food) => {
           const art = FOOD_ART[`./assets/food-cards/${food.id}.png`];
@@ -685,7 +762,7 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
           <div className="rulebook-title-actions">
             <nav className="rulebook-page-navigation" aria-label="Rule Book pages">
               <button className="rulebook-page-turn" type="button" onClick={() => turnPage("back")} disabled={spread === 0} aria-label="Turn to the previous pages">Previous</button>
-              <span aria-live="polite">Pages {firstPage}–{firstPage + 1} of 4</span>
+              <span aria-live="polite">Pages {firstPage}-{firstPage + 1} of 4</span>
               <button className="rulebook-page-turn" type="button" onClick={() => turnPage("forward")} disabled={spread === 1} aria-label="Turn to the next pages">Next</button>
             </nav>
             <button ref={closeRef} className="rulebook-close" type="button" onClick={onClose}>Close book</button>
@@ -778,8 +855,8 @@ export function App() {
   const [showRoundWheel, setShowRoundWheel] = useState(false);
   const [rulebookOpen, setRulebookOpen] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [tutorialPage, setTutorialPage] = useState(0);
+  const [tutorialIntroOpen, setTutorialIntroOpen] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState<TutorialStep | null>(null);
   const [mutualAidOpen, setMutualAidOpen] = useState(false);
   const [actionSummary, setActionSummary] = useState<ActionSummary | null>(null);
   const seenRound = useRef<number | null>(null);
@@ -832,7 +909,7 @@ export function App() {
   useEffect(() => { setSelectedActorCard(null); setSelectedPatientCards([null, null]); }, [game?.revision, game?.phase]);
 
   useEffect(() => {
-    if (!game || game.phase !== "PATIENT_SWAP" || (game.controllers[game.currentRoles.patient1] === "AI" && game.controllers[game.currentRoles.patient2] === "AI")) {
+    if (tutorialStep || !game || game.phase !== "PATIENT_SWAP" || (game.controllers[game.currentRoles.patient1] === "AI" && game.controllers[game.currentRoles.patient2] === "AI")) {
       if (!game || game.phase !== "PATIENT_SWAP") mutualAidSeen.current = null;
       setMutualAidOpen(false);
       return;
@@ -842,7 +919,7 @@ export function App() {
       mutualAidSeen.current = key;
       setMutualAidOpen(true);
     }
-  }, [game?.round, game?.phase, game?.controllers]);
+  }, [game?.round, game?.phase, game?.controllers, tutorialStep]);
 
   const closeRulebook = () => {
     setRulebookOpen(false);
@@ -859,6 +936,7 @@ export function App() {
 
   const send = async (input: Command) => {
     const before = game;
+    const tutorialStepBeforeAction = tutorialStep;
     setLoading(true);
     try {
       const response = await fetch(`${SERVER_URL}/api/game/command`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(usesBrowserGameSave ? { ...input, game } : input) });
@@ -870,21 +948,29 @@ export function App() {
       const summary = before ? summarizeAction(before, data.game, input, playerNames) : null;
       setActionSummary(summary);
       setMessage(summary?.title ?? "Action accepted.");
+      if (tutorialStepBeforeAction === "nutritionist-target" && input.type === "RESCUE") setTutorialStep("assistant-card");
+      if (tutorialStepBeforeAction === "assistant-target" && input.type === "RESCUE") setTutorialStep("friends-first");
+      if (tutorialStepBeforeAction === "friends-confirm" && input.type === "PATIENT_SWAP") setTutorialStep("orchard-intro");
+      if (tutorialStepBeforeAction === "orchard-pick" && input.type === "TAKE_VEGETABLE" && before && data.game.round > before.round) {
+        setTutorialStep("complete");
+        setShowRoundWheel(false);
+      }
     } catch (error) { setMessage(error instanceof Error ? error.message : "Action rejected."); }
     finally { setLoading(false); }
   };
 
-  const start = async () => {
+  const start = async (options: { tutorial?: boolean } = {}) => {
+    const isTutorial = options.tutorial === true;
     const normalizedNames = playerNames.map((name, index) => name.trim() || DEFAULT_PLAYER_NAMES[index]);
     setPlayerNames(normalizedNames);
     savePlayerNames(normalizedNames);
     setLoading(true);
     try {
-      const response = await fetch(`${SERVER_URL}/api/game`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ controllers }) });
+      const response = await fetch(`${SERVER_URL}/api/game`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ controllers: isTutorial ? TUTORIAL_CONTROLLERS : controllers, seed: isTutorial ? TUTORIAL_SEED : undefined }) });
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Unable to start the game.");
       if (!data.game) throw new Error("The game service did not return a new game.");
-      saveBrowserGame(data.game); setGame(data.game); setShowSetup(false); setNameDialogOpen(false); setActionSummary(null); setMessage("A new game has started. Event cards are enabled.");
+      saveBrowserGame(data.game); setGame(data.game); setShowSetup(false); setNameDialogOpen(false); setTutorialIntroOpen(false); setActionSummary(null); setTutorialStep(isTutorial ? "round" : null); setShowRoundWheel(isTutorial); setMessage(isTutorial ? "Tutorial round ready. Follow the highlighted board area." : "A new game has started. Event cards are enabled.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start the game."); }
     finally { setLoading(false); }
   };
@@ -893,6 +979,14 @@ export function App() {
     if (!game || showSetup) {
       seenRound.current = null;
       seenOutcomeRound.current = null;
+      setShowRoundWheel(false);
+      return;
+    }
+    if (tutorialStep === "round") {
+      setShowRoundWheel(true);
+      return;
+    }
+    if (tutorialStep === "complete") {
       setShowRoundWheel(false);
       return;
     }
@@ -905,7 +999,7 @@ export function App() {
     setShowRoundWheel(true);
     const timer = window.setTimeout(() => setShowRoundWheel(false), 2_800);
     return () => window.clearTimeout(timer);
-  }, [game?.round, game?.lastRoundOutcome?.round, showSetup]);
+  }, [game?.round, game?.lastRoundOutcome?.round, showSetup, tutorialStep]);
 
   useEffect(() => {
     if (!game || showSetup || loading || !aiDecisionIsDue(game)) {
@@ -920,17 +1014,48 @@ export function App() {
 
   const onSelect = (seat: Seat, index: number) => {
     if (!game) return;
+    const expectedTutorialPick = tutorialStep === "nutritionist-card"
+      ? { seat: game.currentRoles.active, index: 0, label: "Kidney Beans" }
+      : tutorialStep === "nutritionist-target"
+        ? { seat: game.currentRoles.patient1, index: 2, label: "Almonds" }
+        : tutorialStep === "assistant-card"
+          ? { seat: game.currentRoles.assistant, index: 0, label: "Mussels" }
+          : tutorialStep === "assistant-target"
+            ? { seat: game.currentRoles.patient2, index: 0, label: "Lamb Leg" }
+            : tutorialStep === "friends-first"
+              ? { seat: game.currentRoles.patient1, index: 2, label: "Kidney Beans" }
+              : tutorialStep === "friends-second"
+                ? { seat: game.currentRoles.patient2, index: 0, label: "Mussels" }
+                : null;
+    if (tutorialStep && !expectedTutorialPick && tutorialStep !== "orchard-pick") {
+      setMessage("Follow the highlighted tutorial control to continue.");
+      return;
+    }
+    if (expectedTutorialPick && (seat !== expectedTutorialPick.seat || index !== expectedTutorialPick.index)) {
+      setMessage(`For this guided round, choose ${expectedTutorialPick.label}.`);
+      return;
+    }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       void send({ type: "TAKE_VEGETABLE", expectedRevision: game.revision, patient: seat, cardIndex: index });
       return;
     }
     if (game.phase === "PATIENT_SWAP") {
       if (game.controllers[seat] === "AI") return;
-      if (seat === game.currentRoles.patient1) setSelectedPatientCards(([_, second]) => [index, second]);
-      if (seat === game.currentRoles.patient2) setSelectedPatientCards(([first]) => [first, index]);
+      if (seat === game.currentRoles.patient1) {
+        setSelectedPatientCards(([_, second]) => [index, second]);
+        if (tutorialStep === "friends-first") setTutorialStep("friends-second");
+      }
+      if (seat === game.currentRoles.patient2) {
+        setSelectedPatientCards(([first]) => [first, index]);
+        if (tutorialStep === "friends-second") setTutorialStep("friends-confirm");
+      }
       return;
     }
-    if (seat === currentActor(game)) setSelectedActorCard(index);
+    if (seat === currentActor(game)) {
+      setSelectedActorCard(index);
+      if (tutorialStep === "nutritionist-card") setTutorialStep("nutritionist-target");
+      if (tutorialStep === "assistant-card") setTutorialStep("assistant-target");
+    }
     const activeMayChoose = game.phase === "ACTIVE_RESCUE" && (seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2) && total(game.hands[seat]) > game.threshold;
     const assistantMayChoose = game.phase === "ASSISTANT_RESCUE" && (seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2) && total(game.hands[seat]) > game.threshold;
     if ((activeMayChoose || assistantMayChoose) && selectedActorCard !== null) {
@@ -962,7 +1087,7 @@ export function App() {
     const actorCard = selectedActorCard === null ? null : game.hands[actor][selectedActorCard];
     const friendNames = friends.map((seat) => nameFor(playerNames, seat));
     const roleName = game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant";
-    if (actorCard) return `Giving: ${foodForCard(actorCard).name} — ${actorCard.value} protein. Choose a higher-protein card from ${friendNames.join(" or ")} to receive.`;
+    if (actorCard) return `Giving: ${foodForCard(actorCard).name}, ${actorCard.value} protein. Choose a higher-protein card from ${friendNames.join(" or ")} to receive.`;
     if (game.phase === "ACTIVE_RESCUE") {
       if (!friends.length) return `${roleName} has no Garden Friend to rescue. The round will continue.`;
       if (friends.length === 1) return `${nameFor(playerNames, actor)}’s turn. ${nameFor(playerNames, friends[0])} needs help; the other Garden Friend is already on target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
@@ -973,7 +1098,29 @@ export function App() {
     return `${nameFor(playerNames, actor)}’s Assistant rescue. Help ${friendNames.join(" or ")} by choosing a card to give away.`;
   }, [game, playerNames, selectedActorCard, selectedPatientCards]);
 
-  if (showSetup || !game) return <><Setup controllers={controllers} setControllers={setControllers} names={playerNames} openNameDialog={() => setNameDialogOpen(true)} openTutorial={() => { setTutorialPage(0); setTutorialOpen(true); }} loading={loading} />{nameDialogOpen && <PlayerNameDialog names={playerNames} setNames={setPlayerNames} onStart={() => void start()} onClose={() => setNameDialogOpen(false)} loading={loading} />}{tutorialOpen && <TutorialDialog page={tutorialPage} setPage={setTutorialPage} onClose={() => setTutorialOpen(false)} onStart={() => { setTutorialOpen(false); setNameDialogOpen(true); }} />}</>;
+  const advanceTutorial = () => {
+    if (tutorialStep === "round") { setShowRoundWheel(false); setTutorialStep("event"); }
+    if (tutorialStep === "event") setTutorialStep("nutritionist-card");
+    if (tutorialStep === "orchard-intro") setTutorialStep("orchard-pick");
+  };
+  const continueTutorialGame = () => {
+    setTutorialStep(null);
+    setShowRoundWheel(false);
+    setMessage("Tutorial complete. Continue playing this game whenever you are ready.");
+  };
+  const leaveTutorial = () => {
+    setTutorialStep(null);
+    setTutorialIntroOpen(false);
+    setMutualAidOpen(false);
+    setShowRoundWheel(false);
+    setActionSummary(null);
+    if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY);
+    setGame(null);
+    setShowSetup(true);
+    setMessage("Tutorial closed. Choose names and controllers to start a game.");
+  };
+
+  if (showSetup || !game) return <><Setup controllers={controllers} setControllers={setControllers} names={playerNames} openNameDialog={() => setNameDialogOpen(true)} openTutorial={() => setTutorialIntroOpen(true)} loading={loading} />{nameDialogOpen && <PlayerNameDialog names={playerNames} setNames={setPlayerNames} onStart={() => void start()} onClose={() => setNameDialogOpen(false)} loading={loading} />}{tutorialIntroOpen && <TutorialStartDialog onClose={() => setTutorialIntroOpen(false)} onStart={() => void start({ tutorial: true })} loading={loading} />}</>;
 
   const actor = currentActor(game);
   const patient1Ai = game.controllers[game.currentRoles.patient1] === "AI";
@@ -982,29 +1129,30 @@ export function App() {
   const aiTurn = aiDecisionIsDue(game);
   const rescuePhase = game.phase === "ACTIVE_RESCUE" || game.phase === "ASSISTANT_RESCUE";
   const noHelpfulRescue = rescuePhase && actor !== null && game.controllers[actor] === "HUMAN" && !hasHelpfulRescue(game, actor);
+  const tutorialTarget = tutorialStep ? tutorialTargetFor(tutorialStep, game) : null;
   const actionHeading = loading
     ? "Checking action..."
     : aiTurn
-      ? "AI turn — choosing a move"
+      ? "AI turn: choosing a move"
       : noHelpfulRescue
         ? `${nameFor(playerNames, actor!)} has no helpful rescue`
         : game.phase === "VEGETABLE_RESOLUTION"
-          ? "Orchard turn — choose a highlighted replacement"
+          ? "Orchard turn: choose a highlighted replacement"
           : game.phase === "PATIENT_SWAP"
-            ? "Garden Friend turn — choose one card from each Garden Friend"
+            ? "Garden Friend turn: choose one card from each Garden Friend"
             : actor === null
               ? "Your turn board"
               : `${nameFor(playerNames, actor)}’s turn · ${game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant"}`;
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${tutorialTarget ? `tutorial-running tutorial-focus-${tutorialTarget}` : ""}`}>
       <header className="app-header">
         <a className="wordmark" href="/" aria-label="Chews Freedom home"><span className="wordmark-leaf">✦</span><span>Chews Freedom</span></a>
         <div className="header-meta"><span>Round {game.round}</span><span>Public food</span><button type="button" className="quiet-button" onClick={() => { if (usesBrowserGameSave) window.localStorage.removeItem(BROWSER_GAME_KEY); setShowSetup(true); setMessage("Choose controllers and start a new game."); }}>New game</button></div>
       </header>
       <section className="game-layout">
         <aside className="left-rail">
-          <div className="event-card-panel">
+          <div className="event-card-panel" data-tutorial-target="event-card">
             <div className="panel-heading"><span>Event card</span><strong>{game.currentEvent ? game.currentEvent.shortName : "Clear round"}</strong></div>
             <h2>{game.currentEvent?.name ?? "No event this round"}</h2>
             <p>{game.currentEvent?.summary ?? "The standard rules apply this round."}</p>
@@ -1014,9 +1162,9 @@ export function App() {
           <div className="rule-panel"><h2>Dynamic prompt</h2><p>{prompt}</p></div>
         </aside>
         <section className="table-area" aria-label="Chews Freedom game board">
-          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our Orchard</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Pick a highlighted food card for fruit replacement." : "Zero-protein fruit replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
+          <div data-tutorial-target="orchard" className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our Orchard</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Pick a highlighted food card for fruit replacement." : "Zero-protein fruit replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
           <TurnFlow game={game} names={playerNames} />
-          <div className={`board-flip-stage ${showRoundWheel ? "show-wheel" : "show-table"}`}>
+          <div data-tutorial-target="round-wheel" className={`board-flip-stage ${showRoundWheel ? "show-wheel" : "show-table"}`}>
             <div className="board-flip-inner">
               <div className="board-face board-face-wheel"><RoundWheel game={game} names={playerNames} /></div>
               <div className="board-face board-face-table">
@@ -1036,10 +1184,10 @@ export function App() {
             </div>
           </div>
           <div className="action-tray">
-            <div className="dynamic-prompt-bar"><TurnFlow game={game} names={playerNames} compact /><strong>{actionHeading}</strong><p>{prompt}</p>{actionSummary && <section className="action-summary" aria-live="polite"><strong>{actionSummary.title}</strong>{actionSummary.details.map((detail) => <span key={detail}>{detail}</span>)}</section>}<small>{message}</small></div>
-            <div className="action-buttons">
+            <div data-tutorial-target="prompt-bar" className="dynamic-prompt-bar"><TurnFlow game={game} names={playerNames} compact /><strong>{actionHeading}</strong><p>{prompt}</p>{actionSummary && <section className="action-summary" aria-live="polite"><strong>{actionSummary.title}</strong>{actionSummary.details.map((detail) => <span key={detail}>{detail}</span>)}</section>}<small>{message}</small></div>
+            <div data-tutorial-target="confirm-swap" className="action-buttons">
               {noHelpfulRescue && actor !== null && <button className="primary-button" type="button" onClick={() => void send({ type: "RESCUE_PASS", expectedRevision: game.revision, actor })} disabled={loading}>Continue</button>}
-              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Confirm swap with AI choice" : "Please confirm the swap"}</button></>}
+              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading || tutorialStep !== null}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Confirm swap with AI choice" : "Please confirm the swap"}</button></>}
             </div>
           </div>
         </section>
@@ -1050,6 +1198,7 @@ export function App() {
       </section>
       {rulebookOpen && <Rulebook onClose={closeRulebook} closeRef={rulebookCloseRef} />}
       {mutualAidOpen && <MutualAidDialog game={game} names={playerNames} onReady={() => setMutualAidOpen(false)} />}
+      {tutorialStep && tutorialTarget && <><TutorialSpotlight target={tutorialTarget} /><TutorialCoach step={tutorialStep} game={game} names={playerNames} onAdvance={advanceTutorial} onContinue={continueTutorialGame} onExit={leaveTutorial} /></>}
     </main>
   );
 }
