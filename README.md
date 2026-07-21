@@ -52,7 +52,3 @@ Each browser keeps its own game state. Selecting **New Game** or clearing browse
 - `server/` - local Fastify server and rules-engine tests
 - `api/` - Vercel serverless API routes for the public deployment
 - `vercel.json` - Vercel build and API routing configuration
-
-## Hackathon handoff
-
-This repository contains only the files required to install, test, build, run, and deploy the game. Local exports, design references, raw media, temporary image-generation output, saved game data, and IDE settings are excluded from version control.
