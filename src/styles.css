@@ -824,10 +824,13 @@ body {
 .tutorial-coach > small { display: block; margin-top: 9px; color: #697d50; font-size: .65rem; font-weight: 900; }
 .tutorial-coach-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .tutorial-coach-actions .primary-button, .tutorial-coach-actions .secondary-button { min-height: 34px; padding: 7px 10px; font-size: .67rem; }
+/* Keep the guide clear of the card or action it is asking the player to use. */
+.tutorial-running.tutorial-focus-friend-two-seat .tutorial-coach { right: auto; left: 24px; }
+.tutorial-running.tutorial-focus-confirm-swap .tutorial-coach { top: 24px; bottom: auto; }
 
 @media (max-width: 680px) {
   .garden-crop { min-height: 42px; }.orchard-fruit { width: 40px; height: 40px; }
   .dynamic-prompt-bar > .turn-flow.is-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .game-dialog-overlay { align-items: center; padding: 12px; }.game-dialog { padding: 22px 18px; }.name-input-grid { grid-template-columns: 1fr; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100%; }
-  .tutorial-coach { right: 10px; bottom: 10px; width: calc(100% - 20px); padding: 16px; }.tutorial-coach-actions { flex-direction: column; }.tutorial-coach-actions button { width: 100%; }
+  .tutorial-coach { right: 10px; bottom: 10px; width: calc(100% - 20px); padding: 16px; }.tutorial-running.tutorial-focus-friend-two-seat .tutorial-coach { right: auto; left: 10px; }.tutorial-running.tutorial-focus-confirm-swap .tutorial-coach { top: 10px; bottom: auto; }.tutorial-coach-actions { flex-direction: column; }.tutorial-coach-actions button { width: 100%; }
 }
