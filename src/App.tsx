@@ -979,11 +979,11 @@ export function App() {
       setShowRoundWheel(false);
       return;
     }
-    if (tutorialStep === "round") {
+    if (tutorialStep === "round" || tutorialStep === "event") {
       setShowRoundWheel(true);
       return;
     }
-    if (tutorialStep === "complete") {
+    if (tutorialStep) {
       setShowRoundWheel(false);
       return;
     }
