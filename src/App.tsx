@@ -5,9 +5,8 @@ import { FOOD_DECK, FOOD_DECK_BY_ID } from "./food-deck";
 import { EVENT_DEFINITIONS, EVENT_OCCURRENCE_PERCENT } from "./event-deck";
 import samPortrait from "./assets/characters-v2/sam.png";
 import mayaPortrait from "./assets/characters-v2/maya.png";
-import leoPortrait from "./assets/characters-v2/leo.png";
+import leoPortrait from "./assets/characters-v2/leo-standing.png";
 import zoePortrait from "./assets/characters-v2/zoe-clean.png";
-import gardenCabbageArt from "./assets/garden/cabbage-detailed.png";
 import setupTableScene from "./assets/setup/chews-freedom-table-scene.png";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
@@ -17,10 +16,17 @@ const SERVER_URL = isLocalVite ? "http://127.0.0.1:5174" : window.location.origi
 const supportsSocketUpdates = isLocalVite || window.location.port === "5174";
 const usesBrowserGameSave = !supportsSocketUpdates;
 const BROWSER_GAME_KEY = "chews-freedom-public-game-v2";
-const NAMES = ["Sam", "Maya", "Leo", "Zoe"];
+const PLAYER_NAMES_KEY = "chews-freedom-player-names-v1";
+const DEFAULT_PLAYER_NAMES = ["Sam", "Maya", "Leo", "Zoe"];
 const ART_SPRITE = "/Chews_Freedom_Artful_Sample.svg";
 const PLAYER_PORTRAITS = [samPortrait, mayaPortrait, leoPortrait, zoePortrait];
 const FOOD_ART = import.meta.glob("./assets/food-cards/*.png", { eager: true, import: "default", query: "?url" }) as Record<string, string>;
+const ORCHARD_FRUITS = [
+  { name: "Apple", artId: "food-01-apple", visual: "apple" as const },
+  { name: "Banana", artId: "food-04-banana", visual: "banana" as const },
+  { name: "Orange", artId: "food-05-orange", visual: "orange" as const },
+  { name: "Watermelon", artId: "food-03-watermelon", visual: "watermelon" as const }
+];
 type FoodVisual =
   | "apple" | "cucumber" | "watermelon" | "banana" | "orange" | "broccoli" | "potato" | "corn" | "peas" | "avocado" | "mushroom"
   | "rice" | "bread" | "pasta" | "oats" | "cornflakes" | "beans" | "milk" | "green-beans" | "egg" | "peanut" | "yogurt"
@@ -74,7 +80,10 @@ const CATEGORY_FALLBACK_VISUALS: Record<string, FoodVisual> = {
 };
 
 function foodForCard(card: Card): FoodCardDetail {
-  if (card.source === "VEGETABLE_SUPPLY") return { name: "Garden greens", visual: "broccoli", artId: "food-06-broccoli", tone: "leaf", dish: "greens", category: "Vegetable" };
+  if (card.source === "VEGETABLE_SUPPLY") {
+    const fruit = ORCHARD_FRUITS[[...card.id].reduce((sum, character) => sum + character.charCodeAt(0), 0) % ORCHARD_FRUITS.length];
+    return { name: `Orchard ${fruit.name}`, visual: fruit.visual, artId: fruit.artId, tone: "rose", dish: "porridge", category: "Fruit" };
+  }
   const workbookFood = card.foodId ? FOOD_DECK_BY_ID[card.foodId] : undefined;
   if (workbookFood) return {
     name: workbookFood.name,
@@ -245,19 +254,24 @@ function LegacyPlayerCharacter({ seat }: { seat: Seat }) {
   );
 }
 
-function PlayerCharacter({ seat }: { seat: Seat }) {
+function PlayerCharacter({ seat, isTodaysNutritionist = false }: { seat: Seat; isTodaysNutritionist?: boolean }) {
   return (
-    <span className={`portrait-token illustrated-character character-${seat}`} aria-hidden="true">
+    <span className={`portrait-token illustrated-character character-${seat} ${isTodaysNutritionist ? "is-todays-nutritionist" : ""}`} aria-hidden="true">
       <img src={PLAYER_PORTRAITS[seat]} alt="" />
+      {isTodaysNutritionist && <span className="nutritionist-uniform" aria-hidden="true"><i /><b>✦</b></span>}
     </span>
   );
 }
 
 function roleFor(game: GameState, seat: number): string {
-  if (game.currentRoles.active === seat) return "Active nutritionist";
+  if (game.currentRoles.active === seat) return "Today's Nutritionist";
   if (game.currentRoles.assistant === seat) return "Assistant";
-  if (game.currentRoles.patient1 === seat) return "Tyrosinemia Kid 1";
-  return "Tyrosinemia Kid 2";
+  if (game.currentRoles.patient1 === seat) return "Garden Friend 1";
+  return "Garden Friend 2";
+}
+
+function nameFor(names: string[], seat: number): string {
+  return names[seat]?.trim() || DEFAULT_PLAYER_NAMES[seat] || `Player ${seat + 1}`;
 }
 
 function currentActor(game: GameState): Seat | null {
@@ -311,7 +325,7 @@ function turnCue(game: GameState, seat: Seat): { label: string; current: boolean
       ? { label: "AI chooses with partner", current: false }
       : { label: "Choose a card", current: true };
   }
-  if (game.phase === "VEGETABLE_RESOLUTION" && strictTarget(game) === seat) return { label: "Choose a garden card", current: true };
+  if (game.phase === "VEGETABLE_RESOLUTION" && strictTarget(game) === seat) return { label: "Choose an Orchard card", current: true };
   return null;
 }
 
@@ -323,25 +337,25 @@ function currentStep(game: GameState): number {
   return 4;
 }
 
-function TurnFlow({ game }: { game: GameState }) {
+function TurnFlow({ game, names, compact = false }: { game: GameState; names: string[]; compact?: boolean }) {
   const step = currentStep(game);
   const items = [
-    { label: `${NAMES[game.currentRoles.active]} · nutritionist`, note: "rescue" },
-    { label: `${NAMES[game.currentRoles.assistant]} · assistant`, note: "only if needed" },
-    { label: `${NAMES[game.currentRoles.patient1]} + ${NAMES[game.currentRoles.patient2]}`, note: "Tyrosinemia Kid swap" },
-    { label: "Vegetable patch", note: "only if needed" }
+    { label: `Today's Nutritionist · ${nameFor(names, game.currentRoles.active)}`, note: "rescue" },
+    { label: `Assistant · ${nameFor(names, game.currentRoles.assistant)}`, note: "only if needed" },
+    { label: `Garden Friends · ${nameFor(names, game.currentRoles.patient1)} + ${nameFor(names, game.currentRoles.patient2)}`, note: "one shared swap" },
+    { label: "Orchard", note: "only if needed" }
   ];
   return (
-    <nav className="turn-flow" aria-label="Round turn order">
+    <nav className={`turn-flow ${compact ? "is-compact" : ""}`} aria-label="Round turn order">
       {items.map((item, index) => {
         const status = index < step ? "complete" : index === step ? "current" : "upcoming";
-        return <div className={`flow-step ${status}`} key={item.note}><span>{index + 1}</span><div><strong>{item.label}</strong><small>{status === "current" ? "Now" : status === "complete" ? "Done" : item.note}</small></div></div>;
+        return <div className={`flow-step ${status}`} key={item.label}><span>{index + 1}</span><div><strong>{item.label}</strong><small>{status === "current" ? "Now" : status === "complete" ? "Done" : item.note}</small></div></div>;
       })}
     </nav>
   );
 }
 
-function RoundWheel({ game }: { game: GameState }) {
+function RoundWheel({ game, names }: { game: GameState; names: string[] }) {
   const outcome = game.lastRoundOutcome?.round === game.round - 1 ? game.lastRoundOutcome : null;
   const day = ((game.round - 1) % 12) + 1;
   const players = [game.currentRoles.active, game.currentRoles.assistant, game.currentRoles.patient1, game.currentRoles.patient2];
@@ -386,8 +400,8 @@ function RoundWheel({ game }: { game: GameState }) {
                 key={seat}
                 style={{ "--wheel-angle": `${angle}deg`, "--wheel-counter-angle": `${-angle}deg`, "--marker-delay": `${index * 85}ms` } as CSSProperties}
               >
-                <PlayerCharacter seat={seat} />
-                <span>{NAMES[seat]}</span>
+                <PlayerCharacter seat={seat} isTodaysNutritionist={seat === game.currentRoles.active} />
+                <span>{nameFor(names, seat)}</span>
               </div>
             );
           })}
@@ -403,22 +417,21 @@ function RoundWheel({ game }: { game: GameState }) {
       </div>
       <div className="wheel-story-strip">
         {outcome && <span className={`wheel-outcome ${outcome.kind.toLowerCase()}`}>Yesterday · {outcome.title}</span>}
-        <h2>Good morning, Day {game.round}.</h2>
-        <p>{outcome ? outcome.detail : `${NAMES[game.currentRoles.active]} leads the first rescue after the board turns.`}</p>
+        <h2>Round {game.round}: {nameFor(names, game.currentRoles.active)} is now Today's Nutritionist.</h2>
+        <p>{outcome ? outcome.detail : `${nameFor(names, game.currentRoles.active)} leads the first rescue after the board turns.`}</p>
         <small>Players move around the calendar, then the board turns to the food table.</small>
       </div>
     </section>
   );
 }
 
-function CabbagePlant() {
-  return <img className="garden-cabbage" src={gardenCabbageArt} alt="" aria-hidden="true" />;
-}
-
 function GardenField({ tokens }: { tokens: number }) {
   return (
-    <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The cabbage field is empty" : `${tokens} cabbage plots are available for zero-protein cabbage replacements`}>
-      {Array.from({ length: tokens }, (_, index) => <span className="garden-crop" aria-hidden="true" key={`garden-crop-${index}`}><CabbagePlant /></span>)}
+    <div className={`garden-field ${tokens === 0 ? "is-empty" : ""}`} role="img" aria-label={tokens === 0 ? "The Orchard is empty" : `${tokens} zero-protein fruit picks are available in the Orchard`}>
+      {Array.from({ length: tokens }, (_, index) => {
+        const fruit = ORCHARD_FRUITS[index % ORCHARD_FRUITS.length];
+        return <span className="garden-crop" aria-hidden="true" key={`orchard-fruit-${index}`}><img className="orchard-fruit" src={FOOD_ART[`./assets/food-cards/${fruit.artId}.png`]} alt="" /></span>;
+      })}
     </div>
   );
 }
@@ -449,15 +462,30 @@ function saveBrowserGame(game: GameState): void {
   if (usesBrowserGameSave) window.localStorage.setItem(BROWSER_GAME_KEY, JSON.stringify(game));
 }
 
+function savedPlayerNames(): string[] {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(PLAYER_NAMES_KEY) ?? "null");
+    if (Array.isArray(stored) && stored.length === 4 && stored.every((name) => typeof name === "string")) return stored;
+  } catch {
+    // Default names keep the setup screen immediately playable.
+  }
+  return [...DEFAULT_PLAYER_NAMES];
+}
+
+function savePlayerNames(names: string[]): void {
+  window.localStorage.setItem(PLAYER_NAMES_KEY, JSON.stringify(names.map((name, index) => name.trim() || DEFAULT_PLAYER_NAMES[index])));
+}
+
 interface SeatPanelProps {
   game: GameState;
+  names: string[];
   seat: Seat;
   selectedActorCard: number | null;
   selectedPatientCards: [number | null, number | null];
   onSelect: (seat: Seat, index: number) => void;
 }
 
-function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSelect }: SeatPanelProps) {
+function SeatPanel({ game, names, seat, selectedActorCard, selectedPatientCards, onSelect }: SeatPanelProps) {
   const actor = currentActor(game);
   const target = game.phase === "VEGETABLE_RESOLUTION" ? strictTarget(game) : null;
   const isPatient = seat === game.currentRoles.patient1 || seat === game.currentRoles.patient2;
@@ -485,17 +513,17 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
     <article className={`seat-panel seat-${seat} ${boardRole} ${roleClass} ${isTarget ? "is-target" : ""} ${seat === actor ? "is-actor" : ""} ${cue?.current ? "is-turn" : ""}`}>
       <div className="seat-heading">
         <div className="seat-identity">
-          <PlayerCharacter seat={seat} />
+          <PlayerCharacter seat={seat} isTodaysNutritionist={seat === game.currentRoles.active} />
           <div>
             <p className="seat-number">Seat {seat + 1}</p>
-            <h3>{NAMES[seat]}</h3>
-            <span className="role-label">Role · {roleFor(game, seat)}</span>
+            <h3>{nameFor(names, seat)}</h3>
+            <span className="role-label">{roleFor(game, seat)}</span>
             {cue && <span className={`turn-cue ${cue.current ? "current" : ""}`}>{cue.label}</span>}
           </div>
         </div>
         <div className={`control-badge ${game.controllers[seat] === "AI" ? "ai" : "human"}`}>{game.controllers[seat] === "AI" ? "AI" : "Human"}</div>
       </div>
-      <div className="hand" aria-label={`${NAMES[seat]}'s public food cards`}>
+      <div className="hand" aria-label={`${nameFor(names, seat)}'s public food cards`}>
         {game.hands[seat].map((card, index) => {
           const vegetableChoice = game.phase === "VEGETABLE_RESOLUTION" && isTarget && card.value > 0 && card.value === highestTargetValue && game.gardenTokens > 0;
           const helpfulActorCard = rescueActorIsHuman && hasHelpfulRescueForCard(game, actor, index);
@@ -516,7 +544,7 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
               onClick={() => { if (cardInteractive) onSelect(seat, index); }}
               disabled={!cardInteractive}
               aria-pressed={cardIsSelected(index)}
-              aria-label={`${NAMES[seat]}: ${foodForCard(card).name}, protein level ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-protein cabbage" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", cabbage replacement" : ""}`}
+              aria-label={`${nameFor(names, seat)}: ${foodForCard(card).name}, protein level ${card.value}${actionLabel ? `. ${actionLabel}` : ""}${vegetableChoice ? ". Click to replace this card with a zero-protein Orchard fruit" : ""}${card.source === "VEGETABLE_SUPPLY" ? ", Orchard fruit replacement" : ""}`}
             >
               <FoodCardFace card={card} />
               {actionLabel && <span className="card-action-mark" aria-hidden="true">{actionLabel}</span>}
@@ -525,30 +553,78 @@ function SeatPanel({ game, seat, selectedActorCard, selectedPatientCards, onSele
         })}
       </div>
       {isPatient && <div className={`patient-total ${withinLimit ? "safe" : "risk"}`}><span>Protein total</span><strong>{handTotal} / {game.threshold}</strong><small>{withinLimit ? "Within protein limit" : "Over protein limit"}</small></div>}
-      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Nutritionist {game.scores[seat].nutritionistPoints} · Tyrosinemia Kid aid {game.scores[seat].patientMutualAidPoints}</small></div>
+      <div className="seat-score"><span>Rescue points</span><strong>{game.scores[seat].totalPoints}</strong><small>Today's Nutritionist {game.scores[seat].nutritionistPoints} · Garden Friend swap {game.scores[seat].patientMutualAidPoints}</small></div>
     </article>
   );
 }
 
-function Setup({ controllers, setControllers, start, loading }: { controllers: Controller[]; setControllers: (items: Controller[]) => void; start: () => void; loading: boolean }) {
+function Setup({ controllers, setControllers, names, openNameDialog, openTutorial, loading }: { controllers: Controller[]; setControllers: (items: Controller[]) => void; names: string[]; openNameDialog: () => void; openTutorial: () => void; loading: boolean }) {
   return (
     <main className="setup-shell">
       <section className="setup-copy">
         <p className="kicker">Chews Freedom</p>
         <h1>Help each other make the best food swap.</h1>
         <p className="intro">A local four-seat cooperative game. Event cards are enabled as configurable game-play mechanics.</p>
-        <div className="setup-actions"><button className="primary-button" type="button" onClick={start} disabled={loading}>{loading ? "Starting game..." : "Start local game"}</button></div>
+        <div className="setup-actions"><button className="primary-button" type="button" onClick={openNameDialog} disabled={loading}>{loading ? "Starting game..." : "Name players & start"}</button><button className="secondary-button" type="button" onClick={openTutorial}>Play the tutorial</button></div>
       </section>
       <section className="setup-art" aria-label="Hand-painted Chews Freedom game table"><img src={setupTableScene} alt="Four children play Chews Freedom around a hand-painted wooden table covered in detailed food cards and fresh ingredients" /></section>
       <section className="setup-seats" aria-labelledby="seat-setup-title">
         <div><h2 id="seat-setup-title">Choose who controls each seat</h2><p>Human seats are played on this computer. AI seats use the cooperative rule policy.</p></div>
         <div className="controller-grid">
-          {controllers.map((controller, index) => <label className="controller-choice" key={NAMES[index]}><span><strong>{NAMES[index]}</strong><small>Seat {index + 1}</small></span><select value={controller} onChange={(event) => { const next = [...controllers]; next[index] = event.target.value as Controller; setControllers(next); }}><option value="HUMAN">Human</option><option value="AI">AI</option></select></label>)}
+          {controllers.map((controller, index) => <label className="controller-choice" key={`${nameFor(names, index)}-${index}`}><span><strong>{nameFor(names, index)}</strong><small>Seat {index + 1}</small></span><select value={controller} onChange={(event) => { const next = [...controllers]; next[index] = event.target.value as Controller; setControllers(next); }}><option value="HUMAN">Human</option><option value="AI">AI</option></select></label>)}
         </div>
-        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; in a mixed Tyrosinemia Kid pair, the AI chooses its own card after the human Tyrosinemia Kid chooses theirs.</p>
+        <p className="tiny-note">All food cards stay visible. AI seats play automatically when their role is called; during a mixed Garden Friend swap, the AI chooses its own card after the human Garden Friend chooses theirs.</p>
       </section>
     </main>
   );
+}
+
+function PlayerNameDialog({ names, setNames, onStart, onClose, loading }: { names: string[]; setNames: (names: string[]) => void; onStart: () => void; onClose: () => void; loading: boolean }) {
+  return <div className="game-dialog-overlay" role="presentation">
+    <section className="game-dialog name-dialog" role="dialog" aria-modal="true" aria-labelledby="player-names-title">
+      <p className="dialog-kicker">Before the first round</p>
+      <h2 id="player-names-title">Name your players</h2>
+      <p>Each player is shown as their real name plus today’s rotating role.</p>
+      <div className="name-input-grid">
+        {names.map((name, index) => <label key={index}><span>Seat {index + 1}</span><input value={name} maxLength={18} onChange={(event) => { const next = [...names]; next[index] = event.target.value; setNames(next); }} placeholder={DEFAULT_PLAYER_NAMES[index]} autoFocus={index === 0} /></label>)}
+      </div>
+      <div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Back</button><button className="primary-button" type="button" onClick={onStart} disabled={loading}>{loading ? "Starting game..." : "Start the game"}</button></div>
+    </section>
+  </div>;
+}
+
+const TUTORIAL_STEPS = [
+  { title: "1. Today’s Nutritionist", body: "Choose one food card to give away, then select a Garden Friend’s higher-protein card to receive." },
+  { title: "2. Assistant", body: "If a Garden Friend still needs help, the Assistant gets one independent rescue attempt." },
+  { title: "3. Garden Friends", body: "Only when help is still needed, the two Garden Friends may each choose one card for one shared swap." },
+  { title: "4. Orchard", body: "If a Garden Friend is still over the protein limit, replace highlighted food with zero-protein Orchard fruit until everyone is within the limit or the Orchard is empty." }
+];
+
+function TutorialDialog({ page, setPage, onClose, onStart }: { page: number; setPage: (page: number) => void; onClose: () => void; onStart: () => void }) {
+  const step = TUTORIAL_STEPS[page];
+  return <div className="game-dialog-overlay" role="presentation">
+    <section className="game-dialog tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+      <p className="dialog-kicker">Tutorial level</p>
+      <h2 id="tutorial-title">Learn one round at a time</h2>
+      <div className="tutorial-steps" aria-label={`Tutorial step ${page + 1} of ${TUTORIAL_STEPS.length}`}>
+        <span>{page + 1} / {TUTORIAL_STEPS.length}</span><h3>{step.title}</h3><p>{step.body}</p>
+      </div>
+      <div className="dialog-actions"><button className="secondary-button" type="button" onClick={page === 0 ? onClose : () => setPage(page - 1)}>{page === 0 ? "Close" : "Previous"}</button>{page < TUTORIAL_STEPS.length - 1 ? <button className="primary-button" type="button" onClick={() => setPage(page + 1)}>Next</button> : <button className="primary-button" type="button" onClick={onStart}>Name players & start</button>}</div>
+    </section>
+  </div>;
+}
+
+function MutualAidDialog({ game, names, onReady }: { game: GameState; names: string[]; onReady: () => void }) {
+  const first = nameFor(names, game.currentRoles.patient1);
+  const second = nameFor(names, game.currentRoles.patient2);
+  return <div className="game-dialog-overlay mutual-aid-overlay" role="presentation">
+    <section className="game-dialog mutual-aid-dialog" role="dialog" aria-modal="true" aria-labelledby="mutual-aid-title">
+      <p className="dialog-kicker">Garden Friend swap</p>
+      <h2 id="mutual-aid-title">One shared chance to help</h2>
+      <p>{first} and {second}, please try swapping food once to lower protein intake. Please select the cards you each want to trade away.</p>
+      <button className="primary-button" type="button" onClick={onReady}>Ready to choose cards</button>
+    </section>
+  </div>;
 }
 
 function RulebookButton({ onOpen, triggerRef }: { onOpen: () => void; triggerRef: RefObject<HTMLButtonElement | null> }) {
@@ -619,22 +695,22 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
           <div className="rulebook-binding" aria-hidden="true"><i /><i /><i /></div>
           {spread === 0 ? <>
             <section className="rulebook-page rulebook-rules-page">
-              <p id="rulebook-description" className="rulebook-intro">Keep every Tyrosinemia Kid at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and Tyrosinemia Kid totals.</p>
+              <p id="rulebook-description" className="rulebook-intro">Keep every Garden Friend at or below this round’s protein limit. Food-card numbers are protein levels, used for swaps and Garden Friend totals.</p>
               <h3>How a round works</h3>
               <ol className="rulebook-steps">
-                <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the cabbage field.</p></li>
-                <li><span>2</span><p><strong>Nutritionist rescue.</strong> The active nutritionist may choose either Tyrosinemia Kid over the protein limit and swap in a lower-protein card for one of that Tyrosinemia Kid’s higher-protein cards.</p></li>
-                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the assistant gets one rescue attempt and may choose the same Tyrosinemia Kid or the other Tyrosinemia Kid.</p></li>
-                <li><span>4</span><p><strong>Tyrosinemia Kid swap.</strong> If needed, the two Tyrosinemia Kids may each choose one card for one shared swap, or they can pass.</p></li>
-                <li><span>5</span><p><strong>Vegetable field.</strong> If a Tyrosinemia Kid is still over, replace the highlighted highest-protein card with a zero-protein cabbage. Continue until everyone is within the limit or the field is empty.</p></li>
+                <li><span>1</span><p><strong>Event and deal.</strong> A day can reveal one event before everyone receives three food cards. An event can change this round’s limit or the Orchard.</p></li>
+                <li><span>2</span><p><strong>Today’s Nutritionist rescue.</strong> Today’s Nutritionist may choose either Garden Friend over the protein limit and swap in a lower-protein card for one of that Garden Friend’s higher-protein cards.</p></li>
+                <li><span>3</span><p><strong>Assistant rescue.</strong> If anyone is still over the protein limit, the Assistant gets one rescue attempt and may choose the same Garden Friend or the other Garden Friend.</p></li>
+                <li><span>4</span><p><strong>Garden Friend swap.</strong> If needed, the two Garden Friends may each choose one card for one shared swap, or they can pass.</p></li>
+                <li><span>5</span><p><strong>Orchard.</strong> If a Garden Friend is still over, replace the highlighted highest-protein card with a zero-protein Orchard fruit. Continue until everyone is within the limit or the Orchard is empty.</p></li>
               </ol>
               <section className="rulebook-score-note">
                 <h3>Points</h3>
-                <p>A nutritionist earns 1 point when their own swap brings the chosen Tyrosinemia Kid within the limit. After a Tyrosinemia Kid swap, both Tyrosinemia Kids earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Cabbages give no points.</p>
+                <p>Today’s Nutritionist earns 1 point when their own swap brings the chosen Garden Friend within the limit. After a Garden Friend swap, both Garden Friends earn 2 points each if both are within the limit, 1 point each if only one is within it, or 0 otherwise. Orchard fruit gives no points.</p>
               </section>
               <section className="rulebook-end-note">
                 <h3>How the game ends</h3>
-                <p>The game ends if the cabbage field runs out, or if a Tyrosinemia Kid is still over the protein limit after every nutritionist rescue, assistant rescue, Tyrosinemia Kid swap, and cabbage replacement has been tried.</p>
+                <p>The game ends if the Orchard runs out, or if a Garden Friend is still over the protein limit after every Today’s Nutritionist rescue, Assistant rescue, Garden Friend swap, and Orchard fruit replacement has been tried.</p>
               </section>
               <p className="rulebook-page-number">Page 1</p>
             </section>
@@ -643,7 +719,7 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
               <h3>The event deck</h3>
               <ol className="event-index" aria-label="All event cards and their effects">
                 {EVENT_DEFINITIONS.map((event) => {
-                  const effect = event.kind === "THRESHOLD" ? `${event.amount > 0 ? "+" : ""}${event.amount} protein limit` : `${event.amount > 0 ? "+" : ""}${event.amount} cabbage`;
+                  const effect = event.kind === "THRESHOLD" ? `${event.amount > 0 ? "+" : ""}${event.amount} protein limit` : `${event.amount > 0 ? "+" : ""}${event.amount} Orchard fruit`;
                   return <li className={`event-index-card ${event.kind.toLowerCase()}`} key={event.id}>
                     <span className="event-index-mark" aria-hidden="true"><i /></span>
                     <span className="event-index-copy"><strong>{event.name}</strong><small>{event.summary}</small></span>
@@ -663,19 +739,53 @@ function Rulebook({ onClose, closeRef }: { onClose: () => void; closeRef: RefObj
   );
 }
 
+type ActionSummary = { title: string; details: string[] };
+
+function summarizeAction(before: GameState, after: GameState, input: Command, names: string[]): ActionSummary | null {
+  if (input.type === "RESCUE") {
+    const target = input.target as Seat;
+    const actor = input.actor as Seat;
+    const beforeTotal = total(before.hands[target]);
+    const afterTotal = total(after.hands[target]);
+    const earned = after.scores[actor].nutritionistPoints - before.scores[actor].nutritionistPoints;
+    const details = [`${nameFor(names, target)}’s protein changed from ${beforeTotal} to ${afterTotal}.`];
+    if (earned > 0) details.push(`${nameFor(names, actor)} earns ${earned} point${earned === 1 ? "" : "s"}.`);
+    if (afterTotal > after.threshold) details.push(`${nameFor(names, target)} still needs help: ${afterTotal} is above the target of ${after.threshold}.`);
+    if (after.phase === "ASSISTANT_RESCUE") details.push(`${nameFor(names, after.currentRoles.assistant)} may now try one swap.`);
+    return { title: earned > 0 ? "Rescue successful!" : "Helpful swap completed.", details };
+  }
+  if (input.type === "PATIENT_SWAP") {
+    const first = after.currentRoles.patient1;
+    const second = after.currentRoles.patient2;
+    return { title: "Garden Friend swap completed.", details: [`${nameFor(names, first)} now has ${total(after.hands[first])} protein; ${nameFor(names, second)} now has ${total(after.hands[second])} protein.`, "The Orchard step begins only if more help is needed."] };
+  }
+  if (input.type === "TAKE_VEGETABLE") {
+    const target = input.patient as Seat;
+    return { title: "Orchard fruit collected!", details: [`${nameFor(names, target)}’s protein is now ${total(after.hands[target])}.`, `${after.gardenTokens} Orchard fruit pick${after.gardenTokens === 1 ? "" : "s"} remain.`] };
+  }
+  return null;
+}
+
 export function App() {
   const [game, setGame] = useState<GameState | null>(null);
   const [showSetup, setShowSetup] = useState(false);
   const [controllers, setControllers] = useState<Controller[]>(["HUMAN", "HUMAN", "HUMAN", "HUMAN"]);
+  const [playerNames, setPlayerNames] = useState<string[]>(() => savedPlayerNames());
   const [message, setMessage] = useState("Loading the local game service...");
   const [loading, setLoading] = useState(false);
   const [selectedActorCard, setSelectedActorCard] = useState<number | null>(null);
   const [selectedPatientCards, setSelectedPatientCards] = useState<[number | null, number | null]>([null, null]);
   const [showRoundWheel, setShowRoundWheel] = useState(false);
   const [rulebookOpen, setRulebookOpen] = useState(false);
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialPage, setTutorialPage] = useState(0);
+  const [mutualAidOpen, setMutualAidOpen] = useState(false);
+  const [actionSummary, setActionSummary] = useState<ActionSummary | null>(null);
   const seenRound = useRef<number | null>(null);
   const seenOutcomeRound = useRef<number | null>(null);
   const autoAdvancedRevision = useRef<number | null>(null);
+  const mutualAidSeen = useRef<string | null>(null);
   const rulebookTriggerRef = useRef<HTMLButtonElement | null>(null);
   const rulebookCloseRef = useRef<HTMLButtonElement | null>(null);
 
@@ -721,6 +831,19 @@ export function App() {
 
   useEffect(() => { setSelectedActorCard(null); setSelectedPatientCards([null, null]); }, [game?.revision, game?.phase]);
 
+  useEffect(() => {
+    if (!game || game.phase !== "PATIENT_SWAP" || (game.controllers[game.currentRoles.patient1] === "AI" && game.controllers[game.currentRoles.patient2] === "AI")) {
+      if (!game || game.phase !== "PATIENT_SWAP") mutualAidSeen.current = null;
+      setMutualAidOpen(false);
+      return;
+    }
+    const key = `${game.round}:${game.phase}`;
+    if (mutualAidSeen.current !== key) {
+      mutualAidSeen.current = key;
+      setMutualAidOpen(true);
+    }
+  }, [game?.round, game?.phase, game?.controllers]);
+
   const closeRulebook = () => {
     setRulebookOpen(false);
     window.requestAnimationFrame(() => rulebookTriggerRef.current?.focus());
@@ -735,25 +858,33 @@ export function App() {
   }, [rulebookOpen]);
 
   const send = async (input: Command) => {
+    const before = game;
     setLoading(true);
     try {
       const response = await fetch(`${SERVER_URL}/api/game/command`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(usesBrowserGameSave ? { ...input, game } : input) });
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Action rejected.");
       if (!data.game) throw new Error("The game service did not return an updated game.");
-      saveBrowserGame(data.game); setGame(data.game); setMessage("Action accepted.");
+      saveBrowserGame(data.game);
+      setGame(data.game);
+      const summary = before ? summarizeAction(before, data.game, input, playerNames) : null;
+      setActionSummary(summary);
+      setMessage(summary?.title ?? "Action accepted.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Action rejected."); }
     finally { setLoading(false); }
   };
 
   const start = async () => {
+    const normalizedNames = playerNames.map((name, index) => name.trim() || DEFAULT_PLAYER_NAMES[index]);
+    setPlayerNames(normalizedNames);
+    savePlayerNames(normalizedNames);
     setLoading(true);
     try {
       const response = await fetch(`${SERVER_URL}/api/game`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ controllers }) });
       const data = await responsePayload(response);
       if (!response.ok) throw new Error(data.error ?? "Unable to start the game.");
       if (!data.game) throw new Error("The game service did not return a new game.");
-      saveBrowserGame(data.game); setGame(data.game); setShowSetup(false); setMessage("A new game has started. Event cards are enabled.");
+      saveBrowserGame(data.game); setGame(data.game); setShowSetup(false); setNameDialogOpen(false); setActionSummary(null); setMessage("A new game has started. Event cards are enabled.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start the game."); }
     finally { setLoading(false); }
   };
@@ -813,24 +944,36 @@ export function App() {
     if (game.phase === "PATIENT_SWAP") {
       const { patient1, patient2 } = game.currentRoles;
       const humanPatients = [patient1, patient2].filter((seat) => game.controllers[seat] === "HUMAN");
-      if (!humanPatients.length) return "Both Tyrosinemia Kids are AI-controlled. They are choosing whether to swap.";
-      if (humanPatients.length === 1) return `${NAMES[humanPatients[0]]}, choose one card. The AI Tyrosinemia Kid will choose its own best card when you swap.`;
-      return "Each Tyrosinemia Kid chooses one card to swap, or the Tyrosinemia Kids may pass. If either Tyrosinemia Kid is still over the protein limit afterward, the players move to the garden step.";
+      const firstCard = selectedPatientCards[0] === null ? null : game.hands[patient1][selectedPatientCards[0]];
+      const secondCard = selectedPatientCards[1] === null ? null : game.hands[patient2][selectedPatientCards[1]];
+      if (!humanPatients.length) return "Both Garden Friends are AI-controlled. They are choosing whether to swap.";
+      if (firstCard && secondCard) return `Ready: ${nameFor(playerNames, patient1)} gives ${foodForCard(firstCard).name}; ${nameFor(playerNames, patient2)} gives ${foodForCard(secondCard).name}. Please confirm the swap.`;
+      if (humanPatients.length === 1) return `${nameFor(playerNames, humanPatients[0])}, choose one card. The AI Garden Friend will choose its own best card when you confirm.`;
+      if (firstCard) return `${nameFor(playerNames, patient2)}, choose one card to trade away with ${nameFor(playerNames, patient1)}.`;
+      if (secondCard) return `${nameFor(playerNames, patient1)}, choose one card to trade away with ${nameFor(playerNames, patient2)}.`;
+      return `${nameFor(playerNames, patient1)} and ${nameFor(playerNames, patient2)}, please try swapping food once to lower protein intake. Please select the cards you each want to trade away.`;
     }
     if (game.phase === "VEGETABLE_RESOLUTION") {
       const target = strictTarget(game);
-      return target === null ? "All Tyrosinemia Kids are within the protein limit." : `Garden turn: click a highlighted highest-protein card on ${NAMES[target]}. It will be replaced by one zero-protein cabbage. Keep taking cabbages until every Tyrosinemia Kid is within the protein limit or the field is empty.`;
+      return target === null ? "All Garden Friends are within the protein limit." : `Orchard turn: click a highlighted highest-protein card on ${nameFor(playerNames, target)}. It will be replaced by one zero-protein Orchard fruit. Keep choosing fruit until every Garden Friend is within the protein limit or the Orchard is empty.`;
     }
     const actor = currentActor(game)!;
+    const friends = [game.currentRoles.patient1, game.currentRoles.patient2].filter((seat) => total(game.hands[seat]) > game.threshold);
+    const actorCard = selectedActorCard === null ? null : game.hands[actor][selectedActorCard];
+    const friendNames = friends.map((seat) => nameFor(playerNames, seat));
+    const roleName = game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant";
+    if (actorCard) return `Giving: ${foodForCard(actorCard).name} — ${actorCard.value} protein. Choose a higher-protein card from ${friendNames.join(" or ")} to receive.`;
     if (game.phase === "ACTIVE_RESCUE") {
-      const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-      return hasFailingPatient ? `${NAMES[actor]} may choose either Tyrosinemia Kid who is over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the Tyrosinemia Kid you choose.` : `${roleFor(game, actor)} has no Tyrosinemia Kid to rescue. The server will continue the round.`;
+      if (!friends.length) return `${roleName} has no Garden Friend to rescue. The round will continue.`;
+      if (friends.length === 1) return `${nameFor(playerNames, actor)}’s turn. ${nameFor(playerNames, friends[0])} needs help; the other Garden Friend is already on target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
+      return `${nameFor(playerNames, actor)}’s turn. Help ${friendNames.join(" or ")} reach their protein target. Choose a card from ${nameFor(playerNames, actor)}’s hand to give away.`;
     }
-    const hasFailingPatient = [game.currentRoles.patient1, game.currentRoles.patient2].some((seat) => total(game.hands[seat]) > game.threshold);
-    return hasFailingPatient ? `The active nutritionist did not bring every Tyrosinemia Kid within the protein limit. ${NAMES[actor]} gets one support rescue and may independently choose either Tyrosinemia Kid who is still over the protein limit. Select one of ${NAMES[actor]}'s cards, then a lower-protein swap on the Tyrosinemia Kid you choose.` : "Both Tyrosinemia Kids are within the protein limit. The server will continue the round.";
-  }, [game]);
+    if (!friends.length) return "Both Garden Friends are within the protein limit. The round will continue.";
+    if (friends.length === 1) return `${nameFor(playerNames, friends[0])} still needs help. ${nameFor(playerNames, actor)} may try one Assistant rescue: choose a card to give away.`;
+    return `${nameFor(playerNames, actor)}’s Assistant rescue. Help ${friendNames.join(" or ")} by choosing a card to give away.`;
+  }, [game, playerNames, selectedActorCard, selectedPatientCards]);
 
-  if (showSetup || !game) return <Setup controllers={controllers} setControllers={setControllers} start={start} loading={loading} />;
+  if (showSetup || !game) return <><Setup controllers={controllers} setControllers={setControllers} names={playerNames} openNameDialog={() => setNameDialogOpen(true)} openTutorial={() => { setTutorialPage(0); setTutorialOpen(true); }} loading={loading} />{nameDialogOpen && <PlayerNameDialog names={playerNames} setNames={setPlayerNames} onStart={() => void start()} onClose={() => setNameDialogOpen(false)} loading={loading} />}{tutorialOpen && <TutorialDialog page={tutorialPage} setPage={setTutorialPage} onClose={() => setTutorialOpen(false)} onStart={() => { setTutorialOpen(false); setNameDialogOpen(true); }} />}</>;
 
   const actor = currentActor(game);
   const patient1Ai = game.controllers[game.currentRoles.patient1] === "AI";
@@ -844,14 +987,14 @@ export function App() {
     : aiTurn
       ? "AI turn — choosing a move"
       : noHelpfulRescue
-        ? `${NAMES[actor!]} has no helpful rescue`
+        ? `${nameFor(playerNames, actor!)} has no helpful rescue`
         : game.phase === "VEGETABLE_RESOLUTION"
-          ? "Garden turn — choose a highlighted replacement"
+          ? "Orchard turn — choose a highlighted replacement"
           : game.phase === "PATIENT_SWAP"
-            ? "Tyrosinemia Kid turn — choose one card from each Tyrosinemia Kid"
+            ? "Garden Friend turn — choose one card from each Garden Friend"
             : actor === null
               ? "Your turn board"
-              : `${NAMES[actor]}'s rescue turn`;
+              : `${nameFor(playerNames, actor)}’s turn · ${game.phase === "ACTIVE_RESCUE" ? "Today’s Nutritionist" : "Assistant"}`;
 
   return (
     <main className="app-shell">
@@ -868,44 +1011,45 @@ export function App() {
             <small>{game.eventPool.length} event cards remain in this game</small>
           </div>
           {game.lastRoundOutcome && <section className={`round-recap ${game.lastRoundOutcome.kind.toLowerCase()}`} aria-label={`Day ${game.lastRoundOutcome.round} result`}><span>Day {game.lastRoundOutcome.round} result</span><h2>{game.lastRoundOutcome.title}</h2><p>{game.lastRoundOutcome.detail}</p></section>}
-          <div className="rule-panel"><h2>Rule reason</h2><p>{prompt}</p></div>
+          <div className="rule-panel"><h2>Dynamic prompt</h2><p>{prompt}</p></div>
         </aside>
         <section className="table-area" aria-label="Chews Freedom game board">
-          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our garden</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Harvest a highlighted food card." : "Zero-protein cabbage replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
-          <TurnFlow game={game} />
+          <div className={`garden-panel board-garden ${game.phase === "VEGETABLE_RESOLUTION" ? "is-active" : ""}`}><div><span>Our Orchard</span><p>{game.phase === "VEGETABLE_RESOLUTION" ? "Pick a highlighted food card for fruit replacement." : "Zero-protein fruit replacements."}</p></div><GardenField tokens={game.gardenTokens} /></div>
+          <TurnFlow game={game} names={playerNames} />
           <div className={`board-flip-stage ${showRoundWheel ? "show-wheel" : "show-table"}`}>
             <div className="board-flip-inner">
-              <div className="board-face board-face-wheel"><RoundWheel game={game} /></div>
+              <div className="board-face board-face-wheel"><RoundWheel game={game} names={playerNames} /></div>
               <div className="board-face board-face-table">
                 <div className="table-felt">
-                  <SeatPanel game={game} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
-                  <SeatPanel game={game} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} names={playerNames} seat={game.currentRoles.active} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} names={playerNames} seat={game.currentRoles.patient1} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
                   <section className="centre-status" aria-live="polite">
                     <p className="phase-label">{game.phase.replaceAll("_", " ")}</p>
-                    <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Garden turn" : `${game.threshold} protein limit`}</strong>
-                    <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-protein cabbages ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
+                    <strong>{game.phase === "GAME_OVER" ? "Game complete" : aiTurn ? "AI is moving" : game.phase === "VEGETABLE_RESOLUTION" ? "Orchard turn" : `${game.threshold} protein limit`}</strong>
+                    <span>{game.phase === "GAME_OVER" && game.lastRoundOutcome ? game.lastRoundOutcome.title : game.phase === "VEGETABLE_RESOLUTION" ? `${game.gardenTokens} zero-protein fruit ready` : aiTurn ? "The game will advance automatically." : game.currentEvent ? "Event modifier active" : "Follow the highlighted player."}</span>
                     {game.phase === "GAME_OVER" && <button type="button" className="primary-button" onClick={() => void start()} disabled={loading}>Play again</button>}
                   </section>
-                  <SeatPanel game={game} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
-                  <SeatPanel game={game} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} names={playerNames} seat={game.currentRoles.patient2} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
+                  <SeatPanel game={game} names={playerNames} seat={game.currentRoles.assistant} selectedActorCard={selectedActorCard} selectedPatientCards={selectedPatientCards} onSelect={onSelect} />
                 </div>
               </div>
             </div>
           </div>
           <div className="action-tray">
-            <div><strong>{actionHeading}</strong><p>{prompt}</p><small>{message}</small></div>
+            <div className="dynamic-prompt-bar"><TurnFlow game={game} names={playerNames} compact /><strong>{actionHeading}</strong><p>{prompt}</p>{actionSummary && <section className="action-summary" aria-live="polite"><strong>{actionSummary.title}</strong>{actionSummary.details.map((detail) => <span key={detail}>{detail}</span>)}</section>}<small>{message}</small></div>
             <div className="action-buttons">
               {noHelpfulRescue && actor !== null && <button className="primary-button" type="button" onClick={() => void send({ type: "RESCUE_PASS", expectedRevision: game.revision, actor })} disabled={loading}>Continue</button>}
-              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Swap with AI choice" : "Swap selected food"}</button></>}
+              {game.phase === "PATIENT_SWAP" && !(patient1Ai && patient2Ai) && <><button className="secondary-button" type="button" onClick={() => void send({ type: "PATIENT_PASS", expectedRevision: game.revision })} disabled={loading}>Do not swap</button><button className="primary-button" type="button" onClick={() => void send({ type: "PATIENT_SWAP", expectedRevision: game.revision, patient1Index: selectedPatientCards[0] ?? undefined, patient2Index: selectedPatientCards[1] ?? undefined })} disabled={loading || !canSubmitPatientSwap}>{patient1Ai || patient2Ai ? "Confirm swap with AI choice" : "Please confirm the swap"}</button></>}
             </div>
           </div>
         </section>
         <aside className="right-rail">
-          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={NAMES[seat]}><span>{NAMES[seat]}</span><div><small>Nutritionist {score.nutritionistPoints} · Tyrosinemia Kid aid {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
+          <section className="scores-panel"><h2>Shared scoreboard</h2>{game.scores.map((score, seat) => <div className="score-row" key={nameFor(playerNames, seat)}><span>{nameFor(playerNames, seat)}</span><div><small>Today’s Nutritionist {score.nutritionistPoints} · Garden Friend swap {score.patientMutualAidPoints}</small><strong>{score.totalPoints}</strong></div></div>)}</section>
           <RulebookButton onOpen={() => setRulebookOpen(true)} triggerRef={rulebookTriggerRef} />
         </aside>
       </section>
       {rulebookOpen && <Rulebook onClose={closeRulebook} closeRef={rulebookCloseRef} />}
+      {mutualAidOpen && <MutualAidDialog game={game} names={playerNames} onReady={() => setMutualAidOpen(false)} />}
     </main>
   );
 }

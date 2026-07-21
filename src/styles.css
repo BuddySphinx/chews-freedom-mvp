@@ -766,7 +766,49 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .ancient-book-icon, .rulebook-close { transition: none; }.rulebook-spread.is-turning-forward, .rulebook-spread.is-turning-back { animation: none; } }
 
-/* The garden uses the same richly painted food-art treatment as the deck. */
+/* The Orchard uses the same richly painted food-art treatment as the deck. */
 .garden-crop { min-height: 50px; }
-.garden-cabbage { display: block; width: min(48px, 100%); height: auto; max-height: 48px; object-fit: contain; filter: drop-shadow(0 2px 1px rgb(42 45 22 / 34%)); }
-@media (max-width: 680px) { .garden-crop { min-height: 42px; }.garden-cabbage { width: 40px; height: 40px; } }
+.orchard-fruit { display: block; width: min(50px, 100%); height: auto; max-height: 52px; object-fit: contain; filter: drop-shadow(0 2px 1px rgb(42 45 22 / 34%)); }
+
+/* Today’s Nutritionist receives a small, cheerful storybook uniform overlay.
+   It keeps the same player portrait and gives the rotating role a clear visual cue. */
+.illustrated-character.is-todays-nutritionist { filter: drop-shadow(0 0 5px rgb(231 184 78 / 48%)); }
+.nutritionist-uniform { position: absolute; z-index: 3; right: 7px; bottom: 16px; display: grid; width: 25px; height: 32px; place-items: center; overflow: hidden; border: 1.5px solid #6d644d; border-radius: 8px 8px 5px 5px; background: linear-gradient(90deg, #f7f0d9 0 42%, #fffaf0 43% 56%, #e8ddbd 57%); box-shadow: inset 0 2px 0 rgb(255 255 255 / 72%), 1px 2px 0 rgb(70 48 27 / 27%); transform: rotate(5deg); pointer-events: none; }
+.nutritionist-uniform::before { position: absolute; top: -7px; left: 6px; width: 11px; height: 12px; border: 1.5px solid #6d644d; border-radius: 0 0 8px 8px; background: #c7dba0; content: ""; }
+.nutritionist-uniform i { position: absolute; right: 3px; bottom: 5px; width: 7px; height: 7px; border: 1px solid #5d8644; border-radius: 50%; background: #f5ce69; box-shadow: inset 0 1px 0 rgb(255 255 255 / 68%); }
+.nutritionist-uniform b { position: relative; z-index: 1; margin-top: 8px; color: #557944; font-size: .56rem; line-height: 1; text-shadow: 0 1px 0 #fff6d9; }
+.wheel-player-marker .nutritionist-uniform { right: 1px; bottom: 8px; width: 17px; height: 22px; border-width: 1px; transform: rotate(5deg) scale(.8); transform-origin: 100% 100%; }
+
+/* Dynamic turn guidance stays directly above the buttons, with the phase map
+   visible even when the central board is visually busy. */
+.dynamic-prompt-bar { display: grid; min-width: 0; flex: 1 1 460px; gap: 5px; }
+.dynamic-prompt-bar > .turn-flow.is-compact { margin: 0 0 3px; gap: 5px; }
+.turn-flow.is-compact .flow-step { min-height: 38px; padding: 5px 6px; }
+.turn-flow.is-compact .flow-step > span { width: 18px; height: 18px; font-size: .59rem; }
+.turn-flow.is-compact .flow-step strong { font-size: .57rem; }
+.turn-flow.is-compact .flow-step small { font-size: .5rem; }
+.action-summary { display: grid; gap: 3px; margin-top: 3px; padding: 7px 9px; border: 1px solid rgb(83 114 57 / 55%); border-radius: 8px 6px 9px 7px; background: linear-gradient(145deg, rgb(239 246 211 / 94%), rgb(220 234 184 / 85%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 72%); color: #435a31; }
+.action-summary strong { color: #36512b; font-size: .76rem; }
+.action-summary span { color: #596844; font-size: .64rem; font-weight: 800; line-height: 1.3; }
+
+/* Setup, tutorial, and mutual-aid prompts use the existing parchment language
+   instead of a generic browser dialog. */
+.game-dialog-overlay { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(45 32 21 / 54%); backdrop-filter: blur(3px); }
+.game-dialog { width: min(100%, 510px); padding: 27px; border: 3px solid #8d6438; border-radius: 18px 13px 20px 15px; background: radial-gradient(circle at 11% 12%, rgb(255 255 255 / 66%) 0 1px, transparent 1.6px) 0 0 / 13px 13px, linear-gradient(145deg, #fffdf0, #efd9a5); box-shadow: inset 0 0 0 3px rgb(255 255 255 / 68%), 0 20px 55px rgb(44 30 17 / 36%); color: #4f3722; }
+.game-dialog::before { display: block; width: 62px; height: 7px; margin: -30px auto 18px; border: 2px solid #6d4828; border-radius: 50%; background: #bd8b4c; box-shadow: inset 0 1px 0 #ffdf9c; content: ""; }
+.dialog-kicker { margin: 0 0 6px; color: #6d874d; font-size: .64rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.game-dialog h2 { margin: 0; color: #4d301d; font-family: Georgia, "Palatino Linotype", serif; font-size: clamp(1.65rem, 4vw, 2.15rem); letter-spacing: -.055em; }
+.game-dialog > p:not(.dialog-kicker) { margin: 10px 0 0; color: #72553a; font-size: .9rem; line-height: 1.5; }
+.name-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin-top: 20px; }
+.name-input-grid label { display: grid; gap: 5px; color: #5c442d; font-size: .68rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.name-input-grid input { width: 100%; border: 2px solid #c7a269; border-radius: 7px 5px 8px 6px; padding: 9px 10px; outline: none; background: rgb(255 253 239 / 83%); color: #49311f; font: 800 .92rem/1.2 Georgia, "Palatino Linotype", serif; box-shadow: inset 0 1px 2px rgb(106 71 34 / 12%); }
+.name-input-grid input:focus { border-color: #6e9651; box-shadow: 0 0 0 3px rgb(110 150 81 / 22%), inset 0 1px 2px rgb(106 71 34 / 12%); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+.tutorial-dialog { max-width: 555px; }.tutorial-steps { min-height: 166px; margin-top: 20px; padding: 18px; border: 2px solid #bb955b; border-radius: 12px 9px 13px 10px; background: rgb(255 249 224 / 70%); box-shadow: inset 0 0 0 2px rgb(255 255 255 / 48%); }.tutorial-steps > span { color: #758b51; font-size: .68rem; font-weight: 900; letter-spacing: .08em; }.tutorial-steps h3 { margin: 7px 0; color: #4d321f; font-family: Georgia, "Palatino Linotype", serif; font-size: 1.22rem; }.tutorial-steps p { margin: 0; color: #6c5037; line-height: 1.5; }
+.mutual-aid-overlay { z-index: 70; }.mutual-aid-dialog { max-width: 485px; text-align: center; }.mutual-aid-dialog .primary-button { margin-top: 21px; }
+
+@media (max-width: 680px) {
+  .garden-crop { min-height: 42px; }.orchard-fruit { width: 40px; height: 40px; }
+  .dynamic-prompt-bar > .turn-flow.is-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .game-dialog-overlay { align-items: center; padding: 12px; }.game-dialog { padding: 22px 18px; }.name-input-grid { grid-template-columns: 1fr; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100%; }
+}
