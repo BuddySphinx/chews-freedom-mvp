@@ -7,7 +7,7 @@ import samPortrait from "./assets/characters-v2/sam.png";
 import mayaPortrait from "./assets/characters-v2/maya.png";
 import leoPortrait from "./assets/characters-v2/leo-standing.png";
 import zoePortrait from "./assets/characters-v2/zoe-clean.png";
-import setupTableScene from "./assets/setup/chews-freedom-table-scene.png";
+import setupTableScene from "./assets/setup/chews-freedom-table-scene-v2.png";
 
 // Vite runs on 5173 while the local Fastify game service runs on 5174. In a
 // Vercel deployment, the serverless API shares the page's origin instead.
